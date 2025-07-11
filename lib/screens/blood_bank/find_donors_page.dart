@@ -5,7 +5,7 @@ class FindDonorsPage extends StatelessWidget {
 
   final List<Map<String, String>> donors = const [
     {
-      'name': 'Faisal171',
+      'name': 'Faria islam',
       'location': 'Nodda',
       'blood': 'B+',
       'avatar': '',
@@ -64,7 +64,7 @@ class FindDonorsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🩸 Find Blood Donors'),
+        title: const Text('Find Blood Donors'),
         backgroundColor: Colors.red.shade400,
         foregroundColor: Colors.white,
         actions: const [

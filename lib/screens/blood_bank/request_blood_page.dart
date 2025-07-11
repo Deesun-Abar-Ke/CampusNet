@@ -30,7 +30,7 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🙋 Request Blood'),
+        title: const Text('Request Blood'),
         backgroundColor: Colors.red.shade400,
         foregroundColor: Colors.white,
       ),

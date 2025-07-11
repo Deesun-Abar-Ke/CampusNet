@@ -4,6 +4,7 @@ import 'blood_bank/blood_bank_home_page.dart';
 import 'blood_bank/request_blood_page.dart';
 import 'blood_bank/find_donors_page.dart';
 import 'blood_bank/register_donor_page.dart';
+import 'blood_bank/all_blood_requests_page.dart';
 import 'tuition_page.dart';
 import 'chatbot_page.dart';
 import 'messages_page.dart';
@@ -24,6 +25,7 @@ class _LandingPageState extends State<LandingPage> {
     '/blood-bank/request': '🙋 Request Blood',
     '/blood-bank/find': '🔍 Find Donors',
     '/blood-bank/register': '🩸 Register as Donor',
+    '/blood-bank/all': '📄 All Blood Requests',
     '/tuition': '📚 Tuition',
     '/chatbot': '🤖 Chatbot',
     '/messages': '💬 Messages',
@@ -35,6 +37,7 @@ class _LandingPageState extends State<LandingPage> {
     '/blood-bank/request': Colors.red,
     '/blood-bank/find': Colors.red,
     '/blood-bank/register': Colors.red,
+    '/blood-bank/all': Colors.red,
     '/tuition': Colors.blue, // Tuition
     '/chatbot': Colors.deepPurple, // Chatbot
     '/messages': Colors.teal, // Messaging
@@ -50,6 +53,8 @@ class _LandingPageState extends State<LandingPage> {
         return const FindDonorsPage();
       case '/blood-bank/register':
         return const RegisterDonorPage();
+      case '/blood-bank/all':
+        return const AllBloodRequestsPage();
       case '/tuition':
         return const TuitionPage();
       case '/chatbot':

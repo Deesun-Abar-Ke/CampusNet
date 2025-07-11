@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'request_blood_page.dart';
 import 'find_donors_page.dart';
 import 'register_donor_page.dart';
+import 'all_blood_requests_page.dart';
 
 class BloodBankHomePage extends StatelessWidget {
   const BloodBankHomePage({super.key});
@@ -58,8 +59,9 @@ class BloodBankHomePage extends StatelessWidget {
               icon: Icons.list_alt,
               label: 'Blood Requests',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Blood requests coming soon!')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AllBloodRequestsPage()),
                 );
               },
             ),

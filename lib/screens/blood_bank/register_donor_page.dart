@@ -41,7 +41,7 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // You can handle submission logic here
+
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -62,7 +62,7 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("🩸 Register as Donor"),
+        title: const Text("Register as Donor"),
         backgroundColor: Colors.red.shade400,
         foregroundColor: Colors.white,
       ),

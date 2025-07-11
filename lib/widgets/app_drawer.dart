@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../screens/blood_bank/find_donors_page.dart';
+import '../screens/blood_bank/request_blood_page.dart';
+import '../screens/blood_bank/register_donor_page.dart';
+import '../screens/blood_bank/all_blood_requests_page.dart';
 
 class AppDrawer extends StatelessWidget {
   final void Function(String route) onNavigate;
@@ -29,16 +33,43 @@ class AppDrawer extends StatelessWidget {
             children: [
               ListTile(
                 title: const Text('Request Blood'),
-                onTap: () => onNavigate('/blood-bank/request'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RequestBloodPage()),
+                  );
+                },
+
               ),
               ListTile(
                 title: const Text('Find Donors'),
-                onTap: () => onNavigate('/blood-bank/find'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const FindDonorsPage()),
+                  );
+                },
               ),
               ListTile(
                 title: const Text('Register as Donor'),
-                onTap: () => onNavigate('/blood-bank/register'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RegisterDonorPage()),
+                  );
+                },
               ),
+              ListTile(
+                title: const Text('All Blood Requests'), // ✅ New item
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AllBloodRequestsPage()),
+                  );
+                },
+
+              ),
+
             ],
           ),
           ListTile(
