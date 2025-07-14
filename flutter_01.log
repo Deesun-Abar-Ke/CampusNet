@@ -1,0 +1,120 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter run --machine --start-paused -d emulator-5554 --devtools-server-address http://127.0.0.1:9100/ --target /home/thelagari/data/sdp_project/lib/main.dart
+
+## exception
+
+FormatException: FormatException: Unexpected character (at character 1)
+pthread_create failed
+^
+
+
+```
+#0      _ChunkedJsonParser.fail (dart:convert-patch/convert_patch.dart:1463:5)
+#1      _ChunkedJsonParser.parseNumber (dart:convert-patch/convert_patch.dart:1329:9)
+#2      _ChunkedJsonParser.parse (dart:convert-patch/convert_patch.dart:931:22)
+#3      _JsonStringDecoderSink.addSlice (dart:convert-patch/convert_patch.dart:1551:13)
+#4      _JsonStringDecoderSink.add (dart:convert-patch/convert_patch.dart:1556:5)
+#5      _ConverterStreamEventSink.add (dart:convert/chunked_conversion.dart:70:18)
+#6      _SinkTransformerStreamSubscription._handleData (dart:async/stream_transformers.dart:115:24)
+#7      _rootRunUnary (dart:async/zone.dart:1538:47)
+#8      _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#9      _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#10     _BufferingStreamSubscription._sendData (dart:async/stream_impl.dart:381:11)
+#11     _BufferingStreamSubscription._add (dart:async/stream_impl.dart:312:7)
+#12     _SinkTransformerStreamSubscription._add (dart:async/stream_transformers.dart:67:11)
+#13     _EventSinkWrapper.add (dart:async/stream_transformers.dart:13:11)
+#14     _StringAdapterSink.add (dart:convert/string_conversion.dart:228:11)
+#15     _StringAdapterSink.addSlice (dart:convert/string_conversion.dart:233:7)
+#16     _Utf8ConversionSink.addSlice (dart:convert/string_conversion.dart:313:20)
+#17     _Utf8ConversionSink.add (dart:convert/string_conversion.dart:306:5)
+#18     _ConverterStreamEventSink.add (dart:convert/chunked_conversion.dart:70:18)
+#19     _SinkTransformerStreamSubscription._handleData (dart:async/stream_transformers.dart:115:24)
+#20     _rootRunUnary (dart:async/zone.dart:1538:47)
+#21     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#22     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#23     _BufferingStreamSubscription._sendData (dart:async/stream_impl.dart:381:11)
+#24     _BufferingStreamSubscription._add (dart:async/stream_impl.dart:312:7)
+#25     _SyncStreamControllerDispatch._sendData (dart:async/stream_controller.dart:798:19)
+#26     _StreamController._add (dart:async/stream_controller.dart:663:7)
+#27     _StreamController.add (dart:async/stream_controller.dart:618:5)
+#28     _Socket._onData (dart:io-patch/socket_patch.dart:2907:41)
+#29     _rootRunUnary (dart:async/zone.dart:1546:13)
+#30     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#31     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#32     _BufferingStreamSubscription._sendData (dart:async/stream_impl.dart:381:11)
+#33     _BufferingStreamSubscription._add (dart:async/stream_impl.dart:312:7)
+#34     _SyncStreamControllerDispatch._sendData (dart:async/stream_controller.dart:798:19)
+#35     _StreamController._add (dart:async/stream_controller.dart:663:7)
+#36     _StreamController.add (dart:async/stream_controller.dart:618:5)
+#37     new _RawSocket.<anonymous closure> (dart:io-patch/socket_patch.dart:2326:31)
+#38     _NativeSocket.issueReadEvent.issue (dart:io-patch/socket_patch.dart:1649:14)
+#39     _microtaskLoop (dart:async/schedule_microtask.dart:40:21)
+#40     _startMicrotaskLoop (dart:async/schedule_microtask.dart:49:5)
+#41     _runPendingImmediateCallback (dart:isolate-patch/isolate_patch.dart:127:13)
+#42     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:194:5)
+```
+
+## flutter doctor
+
+```
+[✓] Flutter (Channel stable, 3.32.5, on Ubuntu 24.04.2 LTS 6.11.0-29-generic, locale en_US.UTF-8) [836ms]
+    • Flutter version 3.32.5 on channel stable at /home/thelagari/snap/flutter/common/flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision fcf2c11572 (3 weeks ago), 2025-06-24 11:44:07 -0700
+    • Engine revision dd93de6fb1
+    • Dart version 3.8.1
+    • DevTools version 2.45.1
+
+[✓] Android toolchain - develop for Android devices (Android SDK version 36.0.0) [51.1s]
+    • Android SDK at /home/thelagari/Android/Sdk
+    • Platform android-36, build-tools 36.0.0
+    • ANDROID_SDK_ROOT = /home/thelagari/Android/Sdk
+    • Java binary at: /snap/android-studio/197/jbr/bin/java
+      This is the JDK bundled with the latest Android Studio installation on this machine.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    • Java version OpenJDK Runtime Environment (build 21.0.6+-13391695-b895.109)
+    • All Android licenses accepted.
+
+[✗] Chrome - develop for the web (Cannot find Chrome executable at google-chrome) [123ms]
+    ! Cannot find Chrome. Try setting CHROME_EXECUTABLE to a Chrome executable.
+
+[✓] Linux toolchain - develop for Linux desktop [6.4s]
+    • clang version 10.0.0-4ubuntu1
+    • cmake version 3.16.3
+    • ninja version 1.10.0
+    • pkg-config version 0.29.1
+    • OpenGL core renderer: llvmpipe (LLVM 19.1.1, 256 bits)
+    • OpenGL core version: 4.5 (Core Profile) Mesa 24.2.8-1ubuntu1~24.04.1
+    • OpenGL core shading language version: 4.50
+    • OpenGL ES renderer: llvmpipe (LLVM 19.1.1, 256 bits)
+    • OpenGL ES version: OpenGL ES 3.2 Mesa 24.2.8-1ubuntu1~24.04.1
+    • OpenGL ES shading language version: OpenGL ES GLSL ES 3.20
+    • GL_EXT_framebuffer_blit: yes
+    • GL_EXT_texture_format_BGRA8888: yes
+
+[✓] Android Studio (version 2025.1.1) [106ms]
+    • Android Studio at /snap/android-studio/197
+    • Flutter plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
+    • Dart plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/6351-dart
+    • Java version OpenJDK Runtime Environment (build 21.0.6+-13391695-b895.109)
+
+[✓] VS Code (version unknown) [82ms]
+    • VS Code at /snap/code/current/usr/share/code
+    • Flutter extension version 3.114.0
+    ✗ Unable to determine VS Code version.
+
+[✓] Connected device (2 available) [1,153ms]
+    • sdk gphone64 x86 64 (mobile) • emulator-5554 • android-x64 • Android 16 (API 36) (emulator)
+    • Linux (desktop)              • linux         • linux-x64   • Ubuntu 24.04.2 LTS 6.11.0-29-generic
+
+[✓] Network resources [2.8s]
+    • All expected network resources are available.
+
+! Doctor found issues in 1 category.
+```
