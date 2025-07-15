@@ -1,0 +1,215 @@
+{
+   "checksum": "5cef2747afe93a75db4013e2dc630423",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "date_added": "13266838173398272",
+            "date_last_used": "0",
+            "guid": "7aa6c4ab-4d7a-4a7d-a857-8de1f072d355",
+            "id": "14",
+            "name": "Soccer - Sports24.stream",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://sports24.icu/soccer.php",
+            "visit_count": 0
+         }, {
+            "date_added": "13269545586127573",
+            "date_last_used": "0",
+            "guid": "84663a65-d033-4fcd-afc2-2d24496883b9",
+            "id": "15",
+            "name": "Telegram Web",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://web.telegram.org/k/",
+            "visit_count": 0
+         }, {
+            "date_added": "13283115148816357",
+            "date_last_used": "0",
+            "guid": "5df3300a-43d7-441e-8d9e-07aeee0a5b87",
+            "id": "16",
+            "name": "Soccer Football Vipbox Online Streams",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://vipbox1.com/soccer",
+            "visit_count": 0
+         }, {
+            "date_added": "13302428867090154",
+            "date_last_used": "0",
+            "guid": "47202cde-22a2-4a29-888a-60e2d121d668",
+            "id": "17",
+            "name": "Main Page - Algorithms for Competitive Programming",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://cp-algorithms.com/",
+            "visit_count": 0
+         }, {
+            "date_added": "13302428884158656",
+            "date_last_used": "0",
+            "guid": "f8cc1f67-31b8-479c-b774-fbbfb4ec3245",
+            "id": "18",
+            "name": "New Tab",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "chrome://newtab/",
+            "visit_count": 0
+         }, {
+            "date_added": "13303160448420178",
+            "date_last_used": "13329768654031619",
+            "guid": "01aaa7b7-7a30-4f41-88ed-9472ca6949fc",
+            "id": "19",
+            "name": "POJ online judge",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "http://poj.org/pastcontests",
+            "visit_count": 0
+         }, {
+            "date_added": "13303244650868874",
+            "date_last_used": "0",
+            "guid": "f2704b27-b2b7-474c-b052-0dd4677826ee",
+            "id": "20",
+            "name": "Display Company Information | Dhaka Stock Exchange",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://www.dsebd.org/displayCompany.php?name=SHASHADNIM",
+            "visit_count": 0
+         }, {
+            "date_added": "13303244678433646",
+            "date_last_used": "0",
+            "guid": "bc316316-c518-47d5-a9c5-290480dd716f",
+            "id": "21",
+            "name": "National Bank Ltd. (NBL) Company Report, News, Stock Price & Profile.",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://www.amarstock.com/stock/NBL",
+            "visit_count": 0
+         } ],
+         "date_added": "13396979041467401",
+         "date_last_used": "0",
+         "date_modified": "13303244678433646",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "Favorites bar",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13396979041467401",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "Other favorites",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [ {
+            "date_added": "13284933042024266",
+            "date_last_used": "0",
+            "guid": "fee23235-a048-45c8-9681-7c9582cd5a9b",
+            "id": "6",
+            "name": "Vector Analysis (Schaum'S Outline) - Spiegel - Google Books",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://books.google.com.bd/books?id=vKzq3P1x0aYC&pg=PA75&lpg=PA75&dq=Show+that++is+a+vector+perpendicular+to+the+surface++where++is+a+constant.+Let++be+the+position+vector+to+any+point++on+the+surface.+Then++lies+in+the+tangent+plane+to+the+surface+at++But&source=bl&ots=z4WH2Tjx_d&sig=ACfU3U2lNhVkzE3esA4HA2z_e_dVWdq5Ow&hl=en&sa=X&ved=2ahUKEwj15_W10__0AhWuTWwGHXR0CgkQ6AF6BAgtEAI#v=onepage&q=Show%20that%20%20is%20a%20vector%20perpendicular%20to%20the%20surface%20%20where%20%20is%20a%20constant.%20Let%20%20be%20the%20position%20vector%20to%20any%20point%20%20on%20the%20surface.%20Then%20%20lies%20in%20the%20tangent%20plane%20to%20the%20surface%20at%20%20But&f=false",
+            "visit_count": 0
+         }, {
+            "date_added": "13286488661105921",
+            "date_last_used": "0",
+            "guid": "f1e25ac0-2c6a-4892-ae26-035db931d535",
+            "id": "7",
+            "name": "Just another blocker :/",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://grrekey.xyz/",
+            "visit_count": 0
+         }, {
+            "date_added": "13291230763777523",
+            "date_last_used": "0",
+            "guid": "21fe800f-e26c-41fe-a01b-8104b610e8da",
+            "id": "8",
+            "name": "Chapterwise(Medical Dental) - Google Drive",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://drive.google.com/drive/folders/1mb93YGemkdEb3eAIE4ri6MGVgAmpT-A-",
+            "visit_count": 0
+         }, {
+            "date_added": "13294336451099316",
+            "date_last_used": "0",
+            "guid": "e75560d4-7237-4390-975b-dbd51ce2b60e",
+            "id": "9",
+            "name": "Md. Jakaria",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://jakariamd.github.io/CSE101MIST.html",
+            "visit_count": 0
+         }, {
+            "date_added": "13294572554057798",
+            "date_last_used": "0",
+            "guid": "9a14dd29-0ec8-470e-81f9-6e5dae17deee",
+            "id": "10",
+            "name": "New Tab",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "chrome://newtab/",
+            "visit_count": 0
+         }, {
+            "children": [ {
+               "date_added": "13298266199719473",
+               "date_last_used": "0",
+               "guid": "f38f2152-45c6-4a6d-b0e2-68379fdebe37",
+               "id": "12",
+               "name": "C programming exercises: Array - w3resource",
+               "show_icon": false,
+               "source": "sync",
+               "type": "url",
+               "url": "https://www.w3resource.com/c-programming-exercises/array/index.php",
+               "visit_count": 0
+            }, {
+               "date_added": "13298269787412112",
+               "date_last_used": "0",
+               "guid": "b29b2c6d-936b-4a71-b41d-6e1e9b1d3b7d",
+               "id": "13",
+               "name": "Solve PL Practice Contest Questions | Contests | HackerRank",
+               "show_icon": false,
+               "source": "sync",
+               "type": "url",
+               "url": "https://www.hackerrank.com/contests/practice-contest-1643220535/challenges",
+               "visit_count": 0
+            } ],
+            "date_added": "13307167176649030",
+            "date_last_used": "0",
+            "date_modified": "13307167176649030",
+            "guid": "68f444f7-9f0c-43e8-910a-b2450b0d3785",
+            "id": "11",
+            "name": "Coding Material ",
+            "source": "unknown",
+            "type": "folder"
+         } ],
+         "date_added": "13396979041467401",
+         "date_last_used": "0",
+         "date_modified": "13294572554057798",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "Mobile favorites",
+         "source": "unknown",
+         "type": "folder"
+      }
+   },
+   "sync_metadata": "CkEKHgiIgQISCGlwcgmYAQAAKg4QABgBIAAoBjAAOABAABIAKhhaK0FnOHpibURMTnVJQVlsY1VnZ3hnPT1IA6AGDBKtAQgUEqgBChxWeXo2TUNLMWhjcFRIRW00K0o3L1k5dkRyNVk9EiRmMjcwNGIyNy1iMmI3LTQ3NGMtYjA1Mi0wZGQ0Njc3ODI2ZWUYACAAKAAwwfSKgrIwONbNioKyMEDWzYqCsjBKHDdnU0svNHJGTVVzcXJVcC9EL3VmUXFNdXJETT1aHyId/VkvYVdnekNjTmNwUEhyb2xoL0ZKR2JGTkZ3UT1lmFYJ4sI+AmAFEq0BCBMSqAEKHFVveVhHM0FOUjhRZm9Zek5pMmVBKzk1clBJND0SJDAxYWFhN2I3LTdhMzAtNGY0MS04OGVkLTk0NzJjYTY5NDlmYxgAIAAoADCUnaebhjE4w86KgrIwQMPOioKyMEocVWhUSGtIN3B1Tm5ZajRqcmNFdVU3dVJ2Z0gwPVofIh37UGN4SmlQY1FmQ282Y0tMQml5SytLMVJKUmVVPWXbXQoDwj4CYAUSrQEIEhKoAQocdkwzbUUxakJNbHVwMy9ja2pZQ0tHT3loRXBvPRIkZjhjYzFmNjctMzFiOC00NzljLWI3NzQtZmJiZmI0ZWMzMjQ1GAAgACgAMPTHioKyMDinzYqCsjBAp82KgrIwShxERHdmVlI3ZjJpYS84dFQwb0Z2SmpCRElWRUk9Wh8iHfZWeU1sN3FXNnFNbUVKNm1HQUFlR3VIVDRrRzQ9ZQAAAADCPgJgBRKtAQgQEqgBChxpNm5zcm8wM1hjNFFRM2hXbC9wWUFHMmlUcDQ9EiQ1ZGYzMzAwYS00M2Q3LTQ0MWUtOGQ5ZS0wN2FlZWUwYTViODcYACAAKAAwwfSKgrIwONnMioKyMEDZzIqCsjBKHE15REY1blBNaXJJUXd4alo4R1hqUkJvMnZ0TT1aHyId2mRKZkdqUmw2ZzBXVERySUxORkw1c2lHYlpRUT1lmEGd/cI+AmAFEo4BCAISiQEKHFljU1RvbnZFU1B3cUNzNEwyY3JWaHY2OEw5OD0SJDdkNjhkYWVjLTNhMzUtNWE4My04YWZiLWYzYzFmYTE4YWIyYRgAIAAoADDf28GDsTA426e89pkwQNunvPaZMEocb1BWa2h3QlJiVjY1S0NXUjIrSU9OSFdvT3U4PVoAZQAAAADCPgJgABKsAQgMEqcBChxsQW5Ha3RtVktqbC9hdnV0NGFTNGdiSnp0Nlk9EiRmMzhmMjE1Mi00NWM2LTRhNmQtYjBlMi02ODM3OWZkZWJlMzcYACAAKAAwwfSKgrIwOLDKioKyMECwyoqCsjBKHE44WkJacWFEUWo0R0xBZUQya2trL3F6akgzZz1aHiIcTVRBUFB6bERtK0pkYXdXZ3B4QjhEK2NXcVUwPWXDocIrwj4CYAUSrQEIChKoAQocN0JLYmFlZ21nZllzKzVkc0M4VVpGZ0tIZWVBPRIkOWExNGRkMjktMGVjOC00NzBlLTgxZjktNmU1ZGFlMTdkZWVlGAAgACgAMPTHioKyMDjyzoqCsjBA8s6KgrIwShw5T251K1VXa1Y5QXdtUTRJZ3RHZXdYK0YvVmM9Wh8iHex3cWlrNlBMamVFbTZONnBaT2xnZndERUM1UVE9ZQAAAADCPgJgBRKtAQgPEqgBChxGTFg3cXF3b2RLN0xVcGN6dGEyc3JQU0dlSW89EiQ4NDY2M2E2NS1kMDMzLTRmY2QtYWZjMi0yZDI0NDk2ODgzYjkYACAAKAAwwfSKgrIwOP7KioKyMED+yoqCsjBKHGxGMGxpbnFPdzFkL3RHODFlK3luYk1HWlR4cz1aHyIdtERzRG9oTmZVMnVzSlU1amkrRUdHNGw3Z2s2ST1lxAwG/8I+AmAFEq0BCAkSqAEKHHpFMFZYZFpqZG9hWVRObGY0MjJ2STIxQWNKOD0SJGU3NTU2MGQ0LTcyMzctNDM5MC05NzViLWRiZDUxY2UyYjYwZRgAIAAoADDB9IqCsjA4zMuKgrIwQMzLioKyMEocSTFPUGNac01PYkxud3ppcVlOSWtKYktBaWxvPVofIh3YNlQ4L3ZyNnVROGxRb0ZHUDNMVEhDeittYlkwPWWy9Hhtwj4CYAUSjgEIARKJAQoceXhKLzZmdmtlY3I3a3A1RVF6QjR0V0xwZGJFPRIkYjgxNGVkOWUtY2U0MC01MGI1LWJmMjUtNjM1OWEzY2Q4Y2M5GAAgACgAMN/bwYOxMDi8p7z2mTBAvKe89pkwShxhUkNXTGdoRjliNUlucUtJRHZ1Si9qdlFrRmM9WgBlAAAAAMI+AmAAEq0BCBESqAEKHFFadUdhT1BCWkFrL2FhMHdVOGwxU1Zvc2Ftaz0SJDQ3MjAyY2RlLTIyYTItNGEyOS04ODhhLTYwZTJkMTIxZDY2OBgAIAAoADDkgZy9wzI4h82KgrIwQIfNioKyMEocU1UxV3VmR1lxRllGa2hzekVDRE1RZjFlTk9jPVofIh3tU3d3TVpvbUJaWDBkazFlMXExNEsvejgxVGhBPWX2tKurwj4CYAUSjgEIAxKJAQocbmpnRHU4OGVDcnZYcDg2cEQ3ZkhHY3FGcDg4PRIkYzc4YTlmNTEtOGRkMS01NzM0LWIzZWUtMmVmNmYwNzMwOGUyGAAgACgAMN/bwYOxMDjYqLz2mTBA2Ki89pkwShx5ek5CMDFjbjU0QTdjUlUwdVQrL1BnbVR0VW89WgBlAAAAAMI+AmAAEq0BCAsSqAEKHC9JKzJMakZxaXJJRSsrQVpyRjRhd0FPWlRkST0SJDY4ZjQ0NGY3LTlmMGMtNDNlOC05MTBhLWIyNDUwYjBkMzc4NRgAIAAoADD0x4qCsjA4hMmKgrIwQITJioKyMEocUTZpTksxMnNHRlc2QnBEeXhHQnJjMkJ3YUVzPVofIh32SDFKZ1M1LzVKdUloTlpqYmk4eU5sOEVVbkMwPWUAAAAAwj4CYAASrAEIBhKnAQocL3l2L29QSUJob1dwaWEyL2hxWS9HUUdIazAwPRIkZmVlMjMyMzUtYTA0OC00NWM4LTk2ODEtN2M5NTgyY2Q1YTliGAAgACgAMMH0ioKyMDiEzoqCsjBAhM6KgrIwShxOTGZFWHBzVUltTEZwZ0tFcmppN2d5VGVNNlk9Wh4iHElyeXFya05EK0YyUURhR05sbFFtVktWSGFiOD1lg9Mc+sI+AmAFEq0BCA0SqAEKHFFqZmE3TUZrU2VxQjZpbUN0VkluOW1JcHRmdz0SJGIyOWIyYzZkLTkzNmItNGE3MS1iNDFkLTZlMWU5YjFkM2I3ZBgAIAAoADDB9IqCsjA438qKgrIwQN/KioKyMEocN2RmTzJvWXV6czN2QlNXdWZRYmk4WHk3dEJrPVofIh2mQjRoTlRUY1d5SG9RVHQ1S0ZVa3Z4M1VDbHM0PWUtAffAwj4CYAUSrQEIFRKoAQocalNodU1JTGVEN2dxUTN1U2pOREFNdVlhazhVPRIkYmMzMTYzMTYtYzUxOC00N2Q1LWE5YzUtMjkwNDgwZGQ3MTZmGAAgACgAMMH0ioKyMDjry4qCsjBA68uKgrIwShxyUDRld05lYnFhRUhBd3k2STVKK212OGZTbTA9Wh8iHf5SL2dZSW16QVo4N2JLWFdTTXRKVWJETXFwMWM9ZfEYOn7CPgJgBRKsAQgOEqcBChxlYUhjOTdwQ09MeVVXL3pUY2pJV1QraEtkS0k9EiQ3YWE2YzRhYi00ZDdhLTRhN2QtYTg1Ny04ZGUxZjA3MmQzNTUYACAAKAAwwfSKgrIwOJrMioKyMECazIqCsjBKHEJBUXF5MDBmWGt4YmRYRVNQby9ZdW5BcTNYND1aHiIcaUFKdEpJdUZrSm1LUFBuZlppOGtacUNSTWlZPWUT53+9wj4CYAUSrAEIBxKnAQoccUNMb1M3aWhsV2Q5VHRXQWhNV2tQT29jblZrPRIkZjFlMjVhYzAtMmM2YS00ODkyLWFlMjYtMDM1ZGI5MzFkNTM1GAAgACgAMMH0ioKyMDi5zIqCsjBAucyKgrIwShx3QTNKSFV3c1dKeXpreWJwSG9mTGgzYTlmOVE9Wh4iHGNhS2dDZFdtRldxazh6cXJiSlgreWhuVTNVUT1lIIvaG8I+AmAFEq0BCAgSqAEKHFBDWS95U2ZUTWpmQnF3ekNMVzJFWkF0ZHNxND0SJDIxZmU4MDBmLWUyNmMtNDFmZS1hMDFiLTgxMDRiNjEwZThkYRgAIAAoADDB9IqCsjA4pM6KgrIwQKTOioKyMEocaWhCbW9UMitzamRIM1h1ZVM0d2lLd3o5eCtZPVofIh2xREk0VlRKeHVtZ3QxRk5MekR2cHZjTWJtcW9jPWW6CixRwj4CYAUwADgA",
+   "version": 1
+}

@@ -1,0 +1,165 @@
+{
+   "checksum": "685f1aaf1544841c6b57feab3842d5f8",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "date_added": "13266838173398272",
+            "date_last_used": "0",
+            "guid": "7aa6c4ab-4d7a-4a7d-a857-8de1f072d355",
+            "id": "14",
+            "name": "Soccer - Sports24.stream",
+            "type": "url",
+            "url": "https://sports24.icu/soccer.php"
+         }, {
+            "date_added": "13269545586127573",
+            "date_last_used": "0",
+            "guid": "84663a65-d033-4fcd-afc2-2d24496883b9",
+            "id": "15",
+            "name": "Telegram Web",
+            "type": "url",
+            "url": "https://web.telegram.org/k/"
+         }, {
+            "date_added": "13283115148816357",
+            "date_last_used": "0",
+            "guid": "5df3300a-43d7-441e-8d9e-07aeee0a5b87",
+            "id": "16",
+            "name": "Soccer Football Vipbox Online Streams",
+            "type": "url",
+            "url": "https://vipbox1.com/soccer"
+         }, {
+            "date_added": "13302428867090154",
+            "date_last_used": "0",
+            "guid": "47202cde-22a2-4a29-888a-60e2d121d668",
+            "id": "17",
+            "name": "Main Page - Algorithms for Competitive Programming",
+            "type": "url",
+            "url": "https://cp-algorithms.com/"
+         }, {
+            "date_added": "13302428884158656",
+            "date_last_used": "0",
+            "guid": "f8cc1f67-31b8-479c-b774-fbbfb4ec3245",
+            "id": "18",
+            "name": "New Tab",
+            "type": "url",
+            "url": "chrome://newtab/"
+         }, {
+            "date_added": "13303160448420178",
+            "date_last_used": "13329768654031619",
+            "guid": "01aaa7b7-7a30-4f41-88ed-9472ca6949fc",
+            "id": "19",
+            "name": "POJ online judge",
+            "type": "url",
+            "url": "http://poj.org/pastcontests"
+         }, {
+            "date_added": "13303244650868874",
+            "date_last_used": "0",
+            "guid": "f2704b27-b2b7-474c-b052-0dd4677826ee",
+            "id": "20",
+            "name": "Display Company Information | Dhaka Stock Exchange",
+            "type": "url",
+            "url": "https://www.dsebd.org/displayCompany.php?name=SHASHADNIM"
+         }, {
+            "date_added": "13303244678433646",
+            "date_last_used": "0",
+            "guid": "bc316316-c518-47d5-a9c5-290480dd716f",
+            "id": "21",
+            "name": "National Bank Ltd. (NBL) Company Report, News, Stock Price & Profile.",
+            "type": "url",
+            "url": "https://www.amarstock.com/stock/NBL"
+         } ],
+         "date_added": "13396979041467401",
+         "date_last_used": "0",
+         "date_modified": "13303244678433646",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "Bookmarks bar",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13396979041467401",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "Other bookmarks",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [ {
+            "date_added": "13284933042024266",
+            "date_last_used": "0",
+            "guid": "fee23235-a048-45c8-9681-7c9582cd5a9b",
+            "id": "6",
+            "name": "Vector Analysis (Schaum'S Outline) - Spiegel - Google Books",
+            "type": "url",
+            "url": "https://books.google.com.bd/books?id=vKzq3P1x0aYC&pg=PA75&lpg=PA75&dq=Show+that++is+a+vector+perpendicular+to+the+surface++where++is+a+constant.+Let++be+the+position+vector+to+any+point++on+the+surface.+Then++lies+in+the+tangent+plane+to+the+surface+at++But&source=bl&ots=z4WH2Tjx_d&sig=ACfU3U2lNhVkzE3esA4HA2z_e_dVWdq5Ow&hl=en&sa=X&ved=2ahUKEwj15_W10__0AhWuTWwGHXR0CgkQ6AF6BAgtEAI#v=onepage&q=Show%20that%20%20is%20a%20vector%20perpendicular%20to%20the%20surface%20%20where%20%20is%20a%20constant.%20Let%20%20be%20the%20position%20vector%20to%20any%20point%20%20on%20the%20surface.%20Then%20%20lies%20in%20the%20tangent%20plane%20to%20the%20surface%20at%20%20But&f=false"
+         }, {
+            "date_added": "13286488661105921",
+            "date_last_used": "0",
+            "guid": "f1e25ac0-2c6a-4892-ae26-035db931d535",
+            "id": "7",
+            "name": "Just another blocker :/",
+            "type": "url",
+            "url": "https://grrekey.xyz/"
+         }, {
+            "date_added": "13291230763777523",
+            "date_last_used": "0",
+            "guid": "21fe800f-e26c-41fe-a01b-8104b610e8da",
+            "id": "8",
+            "name": "Chapterwise(Medical Dental) - Google Drive",
+            "type": "url",
+            "url": "https://drive.google.com/drive/folders/1mb93YGemkdEb3eAIE4ri6MGVgAmpT-A-"
+         }, {
+            "date_added": "13294336451099316",
+            "date_last_used": "0",
+            "guid": "e75560d4-7237-4390-975b-dbd51ce2b60e",
+            "id": "9",
+            "name": "Md. Jakaria",
+            "type": "url",
+            "url": "https://jakariamd.github.io/CSE101MIST.html"
+         }, {
+            "date_added": "13294572554057798",
+            "date_last_used": "0",
+            "guid": "9a14dd29-0ec8-470e-81f9-6e5dae17deee",
+            "id": "10",
+            "name": "New Tab",
+            "type": "url",
+            "url": "chrome://newtab/"
+         }, {
+            "children": [ {
+               "date_added": "13298266199719473",
+               "date_last_used": "0",
+               "guid": "f38f2152-45c6-4a6d-b0e2-68379fdebe37",
+               "id": "12",
+               "name": "C programming exercises: Array - w3resource",
+               "type": "url",
+               "url": "https://www.w3resource.com/c-programming-exercises/array/index.php"
+            }, {
+               "date_added": "13298269787412112",
+               "date_last_used": "0",
+               "guid": "b29b2c6d-936b-4a71-b41d-6e1e9b1d3b7d",
+               "id": "13",
+               "name": "Solve PL Practice Contest Questions | Contests | HackerRank",
+               "type": "url",
+               "url": "https://www.hackerrank.com/contests/practice-contest-1643220535/challenges"
+            } ],
+            "date_added": "13307167176649030",
+            "date_last_used": "0",
+            "date_modified": "13307167176649030",
+            "guid": "68f444f7-9f0c-43e8-910a-b2450b0d3785",
+            "id": "11",
+            "name": "Coding Material ",
+            "type": "folder"
+         } ],
+         "date_added": "13396979041467401",
+         "date_last_used": "0",
+         "date_modified": "13294572554057798",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "Mobile bookmarks",
+         "type": "folder"
+      }
+   },
+   "version": 1
+}
