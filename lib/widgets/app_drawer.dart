@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/blood_bank/AmbulancePage.dart';
 import '../screens/blood_bank/find_donors_page.dart';
 import '../screens/blood_bank/request_blood_page.dart';
 import '../screens/blood_bank/register_donor_page.dart';
@@ -28,9 +29,18 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.bloodtype),
             title: GestureDetector(
               onTap: () => onNavigate('/blood-bank'),
-              child: const Text('Blood Bank'),
+              child: const Text('Emergency'),
             ),
             children: [
+              ListTile(
+                title: const Text('Ambulance'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AmbulancePage()),
+                  );
+                },
+              ),
               ListTile(
                 title: const Text('Request Blood'),
                 onTap: () {
@@ -39,7 +49,6 @@ class AppDrawer extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => const RequestBloodPage()),
                   );
                 },
-
               ),
               ListTile(
                 title: const Text('Find Donors'),
@@ -72,6 +81,12 @@ class AppDrawer extends StatelessWidget {
 
             ],
           ),
+          ListTile(
+            leading: const Icon(Icons.menu_book),
+            title: const Text('Study Materials'),
+            onTap: () => onNavigate('/study-materials'),
+          ),
+
           ListTile(
             leading: const Icon(Icons.school),
             title: const Text('Tuition'),
