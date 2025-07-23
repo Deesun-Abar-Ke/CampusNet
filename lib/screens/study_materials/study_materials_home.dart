@@ -1,102 +1,106 @@
+// lib/screens/study_materials/study_materials_home.dart
 import 'package:flutter/material.dart';
-import 'course_chapters_page.dart';
+import 'course_list_page.dart';
 
-class StudyMaterialsHome extends StatefulWidget {
+class StudyMaterialsHome extends StatelessWidget {
   const StudyMaterialsHome({Key? key}) : super(key: key);
 
-  @override
-  State<StudyMaterialsHome> createState() => _StudyMaterialsHomeState();
-}
-
-class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
-  final List<String> allCourses = [
-    'Artificial Intelligence',
-    'C Language Theory',
-    'Chemistry Fundamentals (CHEM - 101)',
-    'Compilers (CSE 303)',
+  final List<Map<String, dynamic>> departments = const [
+    {
+      'name': 'Computer Science & Engineering',
+      'icon': Icons.computer,
+      'courses': [
+        'Artificial Intelligence',
+        'C Language Theory',
+        'Compilers (CSE 303)',
+        'Data Structures',
+      ],
+    },
+    {
+      'name': 'Chemistry',
+      'icon': Icons.science,
+      'courses': [
+        'Chemistry Fundamentals (CHEM - 101)',
+        'Organic Chemistry',
+        'Inorganic Chemistry',
+      ],
+    },
+    {
+      'name': 'Mathematics',
+      'icon': Icons.calculate,
+      'courses': [
+        'Linear Algebra',
+        'Calculus',
+        'Discrete Mathematics',
+      ],
+    },
   ];
-
-  String searchQuery = '';
-
-  void _addNewCourse() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String newCourse = '';
-        return AlertDialog(
-          title: const Text('Add New Course'),
-          content: TextField(
-            onChanged: (val) => newCourse = val,
-            decoration: const InputDecoration(hintText: 'Enter course name'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context), // Cancel
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (newCourse.trim().isNotEmpty) {
-                  setState(() => allCourses.add(newCourse.trim()));
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = allCourses
-        .where((course) =>
-        course.toLowerCase().contains(searchQuery.toLowerCase()))
-        .toList();
-
     return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              onChanged: (val) => setState(() => searchQuery = val),
-              decoration: const InputDecoration(
-                hintText: 'Search courses...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: const Icon(Icons.folder),
-                  title: Text(filtered[index]),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CourseChaptersPage(
-                          courseName: filtered[index],
-                        ),
-                      ),
-                    );
-                  },
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          children: departments.map((dept) {
+            return _buildTile(
+              context,
+              icon: dept['icon'],
+              label: dept['name'],
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CourseListPage(
+                      departmentName: dept['name'],
+                      courses: List<String>.from(dept['courses']),
+                    ),
+                  ),
                 );
               },
-            ),
-          ),
-        ],
+            );
+          }).toList(),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addNewCourse,
-        tooltip: 'Add New Course',
-        child: const Icon(Icons.add),
+    );
+  }
+
+  Widget _buildTile(
+      BuildContext context, {
+        required IconData icon,
+        required String label,
+        required VoidCallback onTap,
+      }) {
+    return Material(
+      color: const Color(0xFFECEBFD),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        splashColor: Colors.deepPurple.shade100,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 40, color: Colors.deepPurple[700]),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[900],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

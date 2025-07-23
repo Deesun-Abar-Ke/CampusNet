@@ -26,7 +26,7 @@ class _LandingPageState extends State<LandingPage> {
 
   final Map<String, String> _titles = {
     '/home': '🏠 Home',
-    '/blood-bank': '🩸 Blood Bank',
+    '/blood-bank': 'Emergency',
     '/blood-bank/ambulance': 'Call Ambulance',
     '/blood-bank/request' : '🙋 Request Blood',
     '/blood-bank/find': '🔍 Find Donors',
