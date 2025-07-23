@@ -83,3 +83,4 @@ venv.bak/
 
 # Cython debug symbols
 cython_debug/
+.dart_tool/

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'AmbulancePage.dart';
 import 'request_blood_page.dart';
 import 'find_donors_page.dart';
 import 'register_donor_page.dart';
 import 'all_blood_requests_page.dart';
+
 
 class BloodBankHomePage extends StatelessWidget {
   const BloodBankHomePage({super.key});
@@ -21,6 +23,17 @@ class BloodBankHomePage extends StatelessWidget {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
+            _buildTile(
+              context,
+              icon: Icons.local_hospital,
+              label: 'Ambulance',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AmbulancePage()),
+                );
+              },
+            ),
             _buildTile(
               context,
               icon: Icons.search,
