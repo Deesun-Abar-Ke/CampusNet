@@ -17,7 +17,7 @@ class StudyMaterialsHome extends StatelessWidget {
       ],
     },
     {
-      'name': 'Chemistry',
+      'name': 'Chemical Engineering',
       'icon': Icons.science,
       'courses': [
         'Chemistry Fundamentals (CHEM - 101)',
@@ -26,7 +26,7 @@ class StudyMaterialsHome extends StatelessWidget {
       ],
     },
     {
-      'name': 'Mathematics',
+      'name': 'Architecture',
       'icon': Icons.calculate,
       'courses': [
         'Linear Algebra',
