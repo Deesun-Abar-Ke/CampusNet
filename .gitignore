@@ -83,4 +83,10 @@ venv.bak/
 
 # Cython debug symbols
 cython_debug/
+# Flutter/Dart specific
 .dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool/
+.idea/
