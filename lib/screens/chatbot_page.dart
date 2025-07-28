@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart'; // For local storag
 import 'package:uuid/uuid.dart'; // For generating unique IDs
 import 'package:intl/intl.dart'; // For date formatting
 import 'dart:convert'; // For JSON encoding/decoding
+import '../widgets/common_app_bar.dart';
 
 // A simple enum to distinguish between the user and the AI.
 enum ChatUser { user, ai }
@@ -402,7 +403,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF2C2F33), // Dark theme background
-      appBar: AppBar(
+      appBar: CommonAppBar(
         title: const Text(
           "NetBOT",
           style: TextStyle(
@@ -411,6 +412,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
             letterSpacing: 1.2,
           ),
         ),
+        showBackButton: true,
         centerTitle: true,
         elevation: 4,
         backgroundColor: const Color(0xFF23272A), // Darker app bar

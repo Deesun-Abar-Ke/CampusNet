@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
 
 class FindDonorsPage extends StatelessWidget {
   const FindDonorsPage({super.key});
 
   final List<Map<String, String>> donors = const [
-    {
-      'name': 'Faria islam',
-      'location': 'Nodda',
-      'blood': 'B+',
-      'avatar': '',
-    },
+    {'name': 'Faria islam', 'location': 'Nodda', 'blood': 'B+', 'avatar': ''},
     {
       'name': 'Symum.Hasan',
       'location': 'Mirpur 10',
@@ -63,19 +60,24 @@ class FindDonorsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Find Blood Donors'),
-        backgroundColor: Colors.red.shade400,
-        foregroundColor: Colors.white,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 12.0),
-            child: Icon(Icons.search),
-          )
-        ],
-      ),
+      appBar: CommonAppBar(title: const Text('Find Blood Donors'), showBackButton: true),
       body: Column(
         children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search donors...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
+              ),
+            ),
+          ),
           // Blood group filters
           Container(
             color: Colors.red.shade50,
@@ -92,7 +94,7 @@ class FindDonorsPage extends StatelessWidget {
                     'B+',
                     'B-',
                     'O+',
-                    'O-'
+                    'O-',
                   ])
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),

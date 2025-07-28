@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
 
 class AllBloodRequestsPage extends StatelessWidget {
   const AllBloodRequestsPage({super.key});
@@ -12,7 +14,7 @@ class AllBloodRequestsPage extends StatelessWidget {
       'time': 'Jun 17 at 7:36 AM',
       'neededTime': 'Jun 18 at 12:00 PM',
       'reason': 'surgery patient',
-      'phone': '01621900722'
+      'phone': '01621900722',
     },
     {
       'blood': 'O-',
@@ -22,7 +24,7 @@ class AllBloodRequestsPage extends StatelessWidget {
       'time': 'Jun 15 at 3:54 AM',
       'neededTime': 'Jun 16 at 12:00 PM',
       'reason': '',
-      'phone': '01954567008'
+      'phone': '01954567008',
     },
     {
       'blood': 'A-',
@@ -32,18 +34,14 @@ class AllBloodRequestsPage extends StatelessWidget {
       'time': 'Apr 18 at 4:55 AM',
       'neededTime': 'Apr 19 at 10:00 AM',
       'reason': 'Required for a 2 day old baby',
-      'phone': '01552335202'
+      'phone': '01552335202',
     },
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('All Blood Requests'),
-        backgroundColor: Colors.red.shade400,
-        foregroundColor: Colors.white,
-      ),
+      appBar: CommonAppBar(title: const Text('All Blood Requests'), showBackButton: true),
       body: ListView.builder(
         itemCount: bloodRequests.length,
         itemBuilder: (context, index) {
@@ -69,7 +67,9 @@ class AllBloodRequestsPage extends StatelessWidget {
                         child: Text(
                           '${request['bags']} Bag (${request['blood']}) Blood Needed',
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ],
@@ -102,7 +102,6 @@ class AllBloodRequestsPage extends StatelessWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.chat_bubble_outline),
@@ -126,7 +125,7 @@ class AllBloodRequestsPage extends StatelessWidget {
                         },
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),

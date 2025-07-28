@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
 
 class AmbulancePage extends StatefulWidget {
   const AmbulancePage({super.key});
@@ -46,11 +48,12 @@ class _AmbulancePageState extends State<AmbulancePage> {
 
   List<Map<String, String>> get filteredAmbulances {
     return allAmbulances.where((amb) {
-      final matchType =
-          selectedType == 'All' || amb['type'] == selectedType;
+      final matchType = selectedType == 'All' || amb['type'] == selectedType;
       final matchAvail =
-          selectedAvailability == 'All' || amb['availability'] == selectedAvailability;
-      final matchSearch = amb['provider']!.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          selectedAvailability == 'All' ||
+          amb['availability'] == selectedAvailability;
+      final matchSearch =
+          amb['provider']!.toLowerCase().contains(searchQuery.toLowerCase()) ||
           amb['location']!.toLowerCase().contains(searchQuery.toLowerCase());
       return matchType && matchAvail && matchSearch;
     }).toList();
@@ -63,15 +66,10 @@ class _AmbulancePageState extends State<AmbulancePage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ambulance Services'),
-        backgroundColor: Colors.red.shade400,
-        foregroundColor: Colors.white,
-      ),
+      appBar: CommonAppBar(title: const Text('Ambulance Services'), showBackButton: true),
       body: Column(
         children: [
           Padding(
@@ -102,10 +100,14 @@ class _AmbulancePageState extends State<AmbulancePage> {
                 const SizedBox(width: 20),
                 DropdownButton<String>(
                   value: selectedAvailability,
-                  onChanged: (val) => setState(() => selectedAvailability = val!),
+                  onChanged: (val) =>
+                      setState(() => selectedAvailability = val!),
                   items: const [
                     DropdownMenuItem(value: 'All', child: Text('All Status')),
-                    DropdownMenuItem(value: 'Available', child: Text('Available')),
+                    DropdownMenuItem(
+                      value: 'Available',
+                      child: Text('Available'),
+                    ),
                     DropdownMenuItem(value: 'Busy', child: Text('Busy')),
                   ],
                 ),
@@ -119,9 +121,15 @@ class _AmbulancePageState extends State<AmbulancePage> {
               itemBuilder: (context, index) {
                 final amb = filteredAmbulances[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   child: ListTile(
-                    leading: const Icon(Icons.local_hospital, color: Colors.red),
+                    leading: const Icon(
+                      Icons.local_hospital,
+                      color: Colors.red,
+                    ),
                     title: Text(
                       amb['provider']!,
                       style: const TextStyle(fontWeight: FontWeight.bold),

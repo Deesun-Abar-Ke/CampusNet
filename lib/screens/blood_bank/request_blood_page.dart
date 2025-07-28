@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
 
 class RequestBloodPage extends StatefulWidget {
   const RequestBloodPage({super.key});
@@ -29,11 +31,7 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Request Blood'),
-        backgroundColor: Colors.red.shade400,
-        foregroundColor: Colors.white,
-      ),
+      appBar: CommonAppBar(title: const Text('Request Blood'), showBackButton: true),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -50,7 +48,7 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
                 }).toList(),
                 onChanged: (value) => setState(() => bloodGroup = value),
                 validator: (value) =>
-                value == null ? 'Please select a blood group' : null,
+                    value == null ? 'Please select a blood group' : null,
               ),
               const SizedBox(height: 16),
 
@@ -61,8 +59,9 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
                 ),
                 keyboardType: TextInputType.number,
                 onChanged: (value) => amount = value,
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Enter amount needed' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Enter amount needed'
+                    : null,
               ),
               const SizedBox(height: 16),
 
@@ -73,7 +72,7 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
                 ),
                 onChanged: (value) => location = value,
                 validator: (value) =>
-                value == null || value.isEmpty ? 'Enter location' : null,
+                    value == null || value.isEmpty ? 'Enter location' : null,
               ),
               const SizedBox(height: 16),
 
@@ -84,8 +83,9 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
                 ),
                 keyboardType: TextInputType.phone,
                 onChanged: (value) => contact = value,
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Enter contact info' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Enter contact info'
+                    : null,
               ),
               const SizedBox(height: 16),
 
@@ -107,7 +107,9 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
                       context: context,
                       builder: (_) => AlertDialog(
                         title: const Text('Request Submitted'),
-                        content: const Text('Your blood request has been submitted.'),
+                        content: const Text(
+                          'Your blood request has been submitted.',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
