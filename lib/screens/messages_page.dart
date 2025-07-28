@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import '../widgets/common_app_bar.dart';
 
 class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text("💬 Messages Page", style: TextStyle(fontSize: 20)),
+    return Scaffold(
+      appBar: CommonAppBar(title: 'Messages', showBackButton: true),
+      body: const Center(
+        child: Text("💬 Messages Page", style: TextStyle(fontSize: 20)),
+      ),
     );
   }
 }

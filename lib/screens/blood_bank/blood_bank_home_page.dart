@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common_app_bar.dart';
 import 'AmbulancePage.dart';
 import 'request_blood_page.dart';
 import 'find_donors_page.dart';
 import 'register_donor_page.dart';
 import 'all_blood_requests_page.dart';
-
 
 class BloodBankHomePage extends StatelessWidget {
   const BloodBankHomePage({super.key});
@@ -12,10 +12,8 @@ class BloodBankHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Soft, clean background
-
-
-
+      backgroundColor: Colors.white,
+      appBar: CommonAppBar(title: 'Blood Bank', showBackButton: true),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: GridView.count(
@@ -30,7 +28,9 @@ class BloodBankHomePage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AmbulancePage()),
+                  MaterialPageRoute(
+                    builder: (context) => const AmbulancePage(),
+                  ),
                 );
               },
             ),
@@ -41,7 +41,9 @@ class BloodBankHomePage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const FindDonorsPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const FindDonorsPage(),
+                  ),
                 );
               },
             ),
@@ -52,7 +54,9 @@ class BloodBankHomePage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RequestBloodPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const RequestBloodPage(),
+                  ),
                 );
               },
             ),
@@ -63,7 +67,9 @@ class BloodBankHomePage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RegisterDonorPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const RegisterDonorPage(),
+                  ),
                 );
               },
             ),
@@ -74,7 +80,9 @@ class BloodBankHomePage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AllBloodRequestsPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const AllBloodRequestsPage(),
+                  ),
                 );
               },
             ),
@@ -85,11 +93,11 @@ class BloodBankHomePage extends StatelessWidget {
   }
 
   Widget _buildTile(
-      BuildContext context, {
-        required IconData icon,
-        required String label,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return Material(
       color: const Color(0xFFFDECEC), // Very soft red tone
       borderRadius: BorderRadius.circular(12),

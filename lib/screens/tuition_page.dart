@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../widgets/common_app_bar.dart';
+import 'landing_page.dart';
 
 class TuitionPage extends StatelessWidget {
   const TuitionPage({super.key});
@@ -12,25 +14,36 @@ class TuitionPage extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: Colors.blue[800],
           foregroundColor: Colors.white,
-          toolbarHeight: 0, // Remove all toolbar space
-          elevation: 0,
-          automaticallyImplyLeading: false, // Remove back button space
+          title: const Text('Tuition'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.home),
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LandingPage()),
+                  (route) => false,
+                );
+              },
+            ),
+          ],
           bottom: const TabBar(
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
+            indicatorWeight: 3,
+            labelStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             tabs: [
               Tab(text: 'TUTORS'),
               Tab(text: 'REQUESTS'),
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            TutorsList(),
-            RequestsList(),
-          ],
-        ),
+        body: const TabBarView(children: [TutorsList(), RequestsList()]),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showCreatePostDialog(context),
           backgroundColor: Colors.blue[800],
@@ -166,7 +179,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               // Subject Field
               _buildTextField(
                 label: 'Subject',
-                hint: isTutor ? 'What subject do you teach?' : 'Which subject do you need help with?',
+                hint: isTutor
+                    ? 'What subject do you teach?'
+                    : 'Which subject do you need help with?',
                 icon: Icons.book,
                 onChanged: (value) => subject = value,
               ),
@@ -217,8 +232,11 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                         child: Row(
                           children: [
                             Icon(
-                              value == 'Male' ? Icons.male : 
-                              value == 'Female' ? Icons.female : Icons.people,
+                              value == 'Male'
+                                  ? Icons.male
+                                  : value == 'Female'
+                                  ? Icons.female
+                                  : Icons.people,
                               color: Colors.blue[600],
                               size: 20,
                             ),
@@ -259,9 +277,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               const SizedBox(height: 8),
               TextField(
                 decoration: InputDecoration(
-                  hintText: isTutor 
-                    ? 'Describe your teaching experience, qualifications, and approach...'
-                    : 'Describe what help you need, your current level, and expectations...',
+                  hintText: isTutor
+                      ? 'Describe your teaching experience, qualifications, and approach...'
+                      : 'Describe what help you need, your current level, and expectations...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey[300]!),
@@ -335,9 +353,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    isTutor 
-                      ? 'Tutoring offer posted successfully!' 
-                      : 'Tutor request posted successfully!',
+                    isTutor
+                        ? 'Tutoring offer posted successfully!'
+                        : 'Tutor request posted successfully!',
                   ),
                   backgroundColor: Colors.green,
                   behavior: SnackBarBehavior.floating,
@@ -389,7 +407,10 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               borderSide: BorderSide(color: Colors.blue[600]!, width: 2),
             ),
             prefixIcon: Icon(icon, color: Colors.blue[600]),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
           onChanged: onChanged,
         ),
@@ -399,10 +420,10 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
 
   bool _validateForm() {
     return subject.isNotEmpty &&
-           classLevel.isNotEmpty &&
-           location.isNotEmpty &&
-           salary.isNotEmpty &&
-           description.isNotEmpty;
+        classLevel.isNotEmpty &&
+        location.isNotEmpty &&
+        salary.isNotEmpty &&
+        description.isNotEmpty;
   }
 }
 
@@ -420,7 +441,8 @@ class TutorsList extends StatelessWidget {
           classLevel: 'University Level',
           location: 'Online (Zoom)',
           remuneration: '৳8000/month',
-          description: 'Experienced math tutor with 5+ years of teaching. Specialized in business mathematics and statistics. Can help with assignments and exam preparation.',
+          description:
+              'Experienced math tutor with 5+ years of teaching. Specialized in business mathematics and statistics. Can help with assignments and exam preparation.',
         ),
         TutorCard(
           name: 'Fatima Rahman',
@@ -428,7 +450,8 @@ class TutorsList extends StatelessWidget {
           classLevel: 'A-Level',
           location: 'Dhanmondi, Dhaka',
           remuneration: '৳6000/month',
-          description: 'MSc in Physics from DU. Expert in A-level science subjects. Proven track record of excellent results. Patient and friendly teaching approach.',
+          description:
+              'MSc in Physics from DU. Expert in A-level science subjects. Proven track record of excellent results. Patient and friendly teaching approach.',
         ),
       ],
     );
@@ -449,7 +472,8 @@ class RequestsList extends StatelessWidget {
           classLevel: 'AS Level',
           location: 'Uttara, Dhaka',
           remuneration: '৳5000/month',
-          description: 'Looking for an experienced tutor for AS level preparation. Need help with practical accounting problems and business case studies. Exam in January 2024.',
+          description:
+              'Looking for an experienced tutor for AS level preparation. Need help with practical accounting problems and business case studies. Exam in January 2024.',
         ),
         TutorCard(
           name: 'Jannatul Ferdous',
@@ -457,7 +481,8 @@ class RequestsList extends StatelessWidget {
           classLevel: 'University (3rd Year)',
           location: 'Bonosree, Dhaka',
           remuneration: '৳4000/month',
-          description: 'University student seeking help with advanced English grammar and syntax course. Prefer online sessions. Need assistance with assignments and exam preparation.',
+          description:
+              'University student seeking help with advanced English grammar and syntax course. Prefer online sessions. Need assistance with assignments and exam preparation.',
         ),
         TutorCard(
           name: 'Rakib Ahmed',
@@ -465,7 +490,8 @@ class RequestsList extends StatelessWidget {
           classLevel: 'SSC',
           location: 'Mirpur, Dhaka',
           remuneration: '৳3500/month',
-          description: 'SSC candidate needs tutor for math and physics. Weak in calculus and mechanics. Looking for patient teacher who can explain concepts clearly.',
+          description:
+              'SSC candidate needs tutor for math and physics. Weak in calculus and mechanics. Looking for patient teacher who can explain concepts clearly.',
         ),
       ],
     );
@@ -512,11 +538,7 @@ class TutorCard extends StatelessWidget {
                     color: Colors.blue[100],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.blue[800],
-                    size: 24,
-                  ),
+                  child: Icon(Icons.person, color: Colors.blue[800], size: 24),
                 ),
                 const SizedBox(width: 12),
                 // Name
@@ -563,7 +585,8 @@ class TutorCard extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => MessagesPageWrapper(contactName: name),
+                                  builder: (context) =>
+                                      MessagesPageWrapper(contactName: name),
                                 ),
                               );
                             },
@@ -577,7 +600,7 @@ class TutorCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Subject
             _buildInfoRow(
               icon: Icons.book,
@@ -586,7 +609,7 @@ class TutorCard extends StatelessWidget {
               color: Colors.purple,
             ),
             const SizedBox(height: 8),
-            
+
             // Class
             _buildInfoRow(
               icon: Icons.grade,
@@ -595,7 +618,7 @@ class TutorCard extends StatelessWidget {
               color: Colors.orange,
             ),
             const SizedBox(height: 8),
-            
+
             // Location
             _buildInfoRow(
               icon: Icons.location_on,
@@ -604,7 +627,7 @@ class TutorCard extends StatelessWidget {
               color: Colors.red,
             ),
             const SizedBox(height: 8),
-            
+
             // Remuneration
             _buildInfoRow(
               icon: Icons.attach_money,
@@ -613,7 +636,7 @@ class TutorCard extends StatelessWidget {
               color: Colors.green,
             ),
             const SizedBox(height: 12),
-            
+
             // Description
             Container(
               width: double.infinity,
@@ -628,7 +651,11 @@ class TutorCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.description, size: 16, color: Colors.grey[600]),
+                      Icon(
+                        Icons.description,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'Description',
@@ -672,11 +699,7 @@ class TutorCard extends StatelessWidget {
             color: color[50],
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Icon(
-            icon,
-            size: 16,
-            color: color[700],
-          ),
+          child: Icon(icon, size: 16, color: color[700]),
         ),
         const SizedBox(width: 8),
         Text(
@@ -690,10 +713,7 @@ class TutorCard extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
           ),
         ),
       ],
@@ -776,7 +796,7 @@ class MessagesPageWrapper extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Placeholder for chat interface
             Expanded(
               child: Container(
@@ -808,17 +828,16 @@ class MessagesPageWrapper extends StatelessWidget {
                     Text(
                       'You can start a conversation with $contactName here.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.grey[500]),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Chat functionality will be implemented soon!'),
+                            content: Text(
+                              'Chat functionality will be implemented soon!',
+                            ),
                             backgroundColor: Colors.orange,
                           ),
                         );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common_app_bar.dart';
 import 'course_chapters_page.dart';
 
 class StudyMaterialsHome extends StatefulWidget {
@@ -52,41 +53,68 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
   @override
   Widget build(BuildContext context) {
     final filtered = allCourses
-        .where((course) =>
-        course.toLowerCase().contains(searchQuery.toLowerCase()))
+        .where(
+          (course) => course.toLowerCase().contains(searchQuery.toLowerCase()),
+        )
         .toList();
 
     return Scaffold(
+      appBar: CommonAppBar(title: 'Study Materials', showBackButton: true),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0),
             child: TextField(
               onChanged: (val) => setState(() => searchQuery = val),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search courses...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
               ),
             ),
           ),
           Expanded(
             child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: filtered.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  leading: const Icon(Icons.folder),
-                  title: Text(filtered[index]),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CourseChaptersPage(
-                          courseName: filtered[index],
-                        ),
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    leading: Icon(
+                      Icons.folder,
+                      color: Colors.teal[600],
+                      size: 28,
+                    ),
+                    title: Text(
+                      filtered[index],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
                       ),
-                    );
-                  },
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              CourseChaptersPage(courseName: filtered[index]),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -95,6 +123,7 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addNewCourse,
+        backgroundColor: Colors.teal,
         tooltip: 'Add New Course',
         child: const Icon(Icons.add),
       ),

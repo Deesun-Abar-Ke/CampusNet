@@ -1,11 +1,13 @@
-// lib/screens/study_materials/course_chapters_page.dart
 import 'package:flutter/material.dart';
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
 import 'upload_note_dialog.dart';
 
 class CourseChaptersPage extends StatelessWidget {
   final String courseName;
 
-  const CourseChaptersPage({Key? key, required this.courseName}) : super(key: key);
+  const CourseChaptersPage({Key? key, required this.courseName})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,21 +19,14 @@ class CourseChaptersPage extends StatelessWidget {
     ];
 
     IconData getFileIcon(String filename) {
-      if (filename.endsWith('.ppt') || filename.endsWith('.pptx')) return Icons.slideshow;
+      if (filename.endsWith('.ppt') || filename.endsWith('.pptx'))
+        return Icons.slideshow;
       return Icons.picture_as_pdf;
     }
 
     return Scaffold(
-
-      appBar: AppBar(
-        title: Text(
-          courseName,
-          style: TextStyle(color: Colors.white), // ✅ white text
-        ),
-        backgroundColor: Colors.teal, // ✅ green background
-        iconTheme: IconThemeData(color: Colors.white), // ✅ makes the back icon white too
-      ),
-
+      backgroundColor: Colors.white,
+      appBar: CommonAppBar(title: courseName, showBackButton: true),
 
       body: ListView.builder(
         itemCount: notes.length,
