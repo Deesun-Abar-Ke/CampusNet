@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/common_app_bar.dart';
+import 'messages_page.dart';
 import 'landing_page.dart';
 
 class TuitionPage extends StatelessWidget {
@@ -564,33 +564,11 @@ class TutorCard extends StatelessWidget {
                       size: 20,
                     ),
                     onPressed: () {
-                      // First show confirmation that message is being opened
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Icon(Icons.message, color: Colors.white),
-                              const SizedBox(width: 8),
-                              Text('Opening chat with $name...'),
-                            ],
-                          ),
-                          backgroundColor: Colors.teal,
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
-                          action: SnackBarAction(
-                            label: 'GO TO MESSAGES',
-                            textColor: Colors.white,
-                            onPressed: () {
-                              // This creates a new route to the messages page
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      MessagesPageWrapper(contactName: name),
-                                ),
-                              );
-                            },
-                          ),
+                      // Directly navigate to messages page with the contact
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MessagesPageWrapper(contactName: name),
                         ),
                       );
                     },
@@ -729,140 +707,22 @@ class MessagesPageWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('💬 Chat with $contactName'),
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
-        elevation: 2,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Contact Info Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.teal[50]!, Colors.teal[100]!],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.teal[200]!),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.teal[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.teal[800],
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          contactName,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.teal[800],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Tuition Contact',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.teal[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.verified, color: Colors.teal[600], size: 20),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
+    // Get avatar for the contact (you can create a mapping function)
+    String getAvatarForContact(String name) {
+      // Simple mapping - you can make this more sophisticated
+      if (name.contains('Rahman')) return '👨‍🏫';
+      if (name.contains('Ahmed')) return '👨‍🔬';
+      if (name.contains('Sarah')) return '👩‍💻';
+      if (name.contains('Nadia')) return '👩‍🎓';
+      return '👨‍🎓';
+    }
 
-            // Placeholder for chat interface
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Chat Feature Coming Soon!',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'You can start a conversation with $contactName here.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Colors.grey[500]),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Chat functionality will be implemented soon!',
-                            ),
-                            backgroundColor: Colors.orange,
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.message),
-                      label: const Text('Start Conversation'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    // Directly open ChatScreen instead of MessagesPage
+    return ChatScreen(
+      contactName: contactName,
+      avatar: getAvatarForContact(contactName),
+      isOnline: true,
+      initialMessage: 'Hi! I saw your tutoring profile and I\'m interested in your services.',
     );
   }
 }

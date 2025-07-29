@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common_app_bar.dart';
 import '../landing_page.dart';
+import '../messages_page.dart';
 
 class FindDonorsPage extends StatelessWidget {
   const FindDonorsPage({super.key});
@@ -132,10 +133,20 @@ class FindDonorsPage extends StatelessWidget {
                   subtitle: Text(donor['location']!),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.call, color: Colors.grey),
-                      SizedBox(width: 16),
-                      Icon(Icons.message, color: Colors.grey),
+                    children: [
+                      const Icon(Icons.call, color: Colors.grey),
+                      const SizedBox(width: 16),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BloodBankMessagesWrapper(contactName: donor['name']!),
+                            ),
+                          );
+                        },
+                        child: const Icon(Icons.message, color: Colors.red),
+                      ),
                     ],
                   ),
                 );
@@ -144,6 +155,34 @@ class FindDonorsPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Wrapper for Messages Page to handle blood donor messaging
+class BloodBankMessagesWrapper extends StatelessWidget {
+  final String contactName;
+
+  const BloodBankMessagesWrapper({super.key, required this.contactName});
+
+  @override
+  Widget build(BuildContext context) {
+    // Get avatar for the contact (blood donor related)
+    String getAvatarForContact(String name) {
+      // Simple mapping for blood donors
+      if (name.contains('Faria')) return '👩‍⚕️';
+      if (name.contains('Ahmed')) return '👨‍⚕️';
+      if (name.contains('Rahman')) return '🩸';
+      if (name.contains('Khan')) return '👨‍🔬';
+      return '🩸';
+    }
+
+    // Directly open ChatScreen for blood bank contact
+    return ChatScreen(
+      contactName: contactName,
+      avatar: getAvatarForContact(contactName),
+      isOnline: true,
+      initialMessage: 'Hi! I saw your blood donor profile and would like to get in touch regarding blood donation.',
     );
   }
 }

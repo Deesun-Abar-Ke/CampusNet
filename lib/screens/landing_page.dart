@@ -1,12 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_drawer.dart';
 import 'blood_bank/blood_bank_home_page.dart';
-import 'blood_bank/request_blood_page.dart';
-import 'blood_bank/find_donors_page.dart';
-import 'blood_bank/register_donor_page.dart';
-import 'blood_bank/all_blood_requests_page.dart';
-import 'blood_bank/AmbulancePage.dart';
-
 import 'tuition_page.dart';
 import 'chatbot_page.dart';
 import 'messages_page.dart';
@@ -50,44 +43,8 @@ class _LandingPageState extends State<LandingPage> {
     },
   ];
 
-  final Map<String, String> _titles = {
-    '/home': '🏠 Home',
-    '/blood-bank': 'Emergency',
-    '/blood-bank/ambulance': 'Call Ambulance',
-    '/blood-bank/request': '🙋 Request Blood',
-    '/blood-bank/find': '🔍 Find Donors',
-    '/blood-bank/register': '🩸 Register as Donor',
-    '/blood-bank/all': '📄 All Blood Requests',
-    '/study-materials': '📚 Study Materials',
-    '/tuition': '📚 Tuition',
-    '/chatbot': '🤖 Chatbot',
-    '/messages': '💬 Messages',
-  };
-
-  final Map<String, Color> _appBarColors = {
-    '/home': Color(0xFF003366), // Navy Blue
-    '/blood-bank': Colors.red, // Blood Bank main
-    '/blood-bank/ambulance': Colors.red,
-    '/blood-bank/request': Colors.red,
-    '/blood-bank/find': Colors.red,
-    '/blood-bank/register': Colors.red,
-    '/blood-bank/all': Colors.red,
-    '/study-materials': Colors.teal,
-    '/tuition': Colors.blue, // Tuition
-    '/chatbot': Colors.deepPurple, // Chatbot
-    '/messages': Colors.teal, // Messaging
-  };
-
   void _navigateToPage(Widget page) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => page));
-  }
-
-  void _navigateToHome() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LandingPage()),
-      (route) => false,
-    );
   }
 
   Widget _buildDashboard() {
@@ -155,8 +112,8 @@ class _LandingPageState extends State<LandingPage> {
                   scrollDirection: Axis.horizontal,
                   children: [
                     FeatureIcon(
-                      label: 'Study\nMaterials',
-                      icon: Icons.book,
+                      label: 'Resource\nBank',
+                      icon: Icons.library_books,
                       color: Colors.blue,
                       onTap: () => _navigateToPage(const StudyMaterialsHome()),
                     ),
@@ -222,34 +179,6 @@ class _LandingPageState extends State<LandingPage> {
         ),
       ],
     );
-  }
-
-  Widget _getPage(String route) {
-    switch (route) {
-      case '/blood-bank':
-        return const BloodBankHomePage();
-      case '/blood-bank/ambulance':
-        return const AmbulancePage();
-      case '/blood-bank/request':
-        return const RequestBloodPage();
-      case '/blood-bank/find':
-        return const FindDonorsPage();
-      case '/blood-bank/register':
-        return const RegisterDonorPage();
-      case '/blood-bank/all':
-        return const AllBloodRequestsPage();
-      case '/study-materials':
-        return const StudyMaterialsHome();
-      case '/tuition':
-        return const TuitionPage();
-      case '/chatbot':
-        return const ChatbotPage();
-      case '/messages':
-        return const MessagesPage();
-      case '/home':
-      default:
-        return _buildDashboard();
-    }
   }
 
   @override
