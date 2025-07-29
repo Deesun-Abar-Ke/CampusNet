@@ -14,24 +14,12 @@ class ProfilePage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Top Banner + Profile
-            Stack(
-              children: [
-                Container(
-                  height: 150,
-                  width: double.infinity,
-                  color: Colors.indigo,
-                ),
-                Positioned(
-                  top: 40,
-                  left: MediaQuery.of(context).size.width / 2 - 50,
-                  child: const CircleAvatar(
-                    radius: 50,
-                    backgroundImage: AssetImage('profile.png'),
-                    backgroundColor: Colors.white,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 40),
+            // Profile Picture
+            const CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage('profile.png'),
+              backgroundColor: Colors.white,
             ),
             const SizedBox(height: 20),
 

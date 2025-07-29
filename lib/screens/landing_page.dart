@@ -112,8 +112,8 @@ class _LandingPageState extends State<LandingPage> {
                   scrollDirection: Axis.horizontal,
                   children: [
                     FeatureIcon(
-                      label: 'Study\nMaterials',
-                      icon: Icons.book,
+                      label: 'Resource\nBank',
+                      icon: Icons.library_books,
                       color: Colors.blue,
                       onTap: () => _navigateToPage(const StudyMaterialsHome()),
                     ),

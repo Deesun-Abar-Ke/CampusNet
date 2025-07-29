@@ -1,41 +1,29 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common_app_bar.dart';
 import 'upload_note_dialog.dart';
-import 'folder_contents_page.dart';
 
-class CourseChaptersPage extends StatefulWidget {
-  final String courseName;
+class FolderContentsPage extends StatefulWidget {
+  final String folderName;
+  final List<Map<String, dynamic>> folderItems;
 
-  const CourseChaptersPage({Key? key, required this.courseName})
-    : super(key: key);
+  const FolderContentsPage({
+    Key? key,
+    required this.folderName,
+    required this.folderItems,
+  }) : super(key: key);
 
   @override
-  State<CourseChaptersPage> createState() => _CourseChaptersPageState();
+  State<FolderContentsPage> createState() => _FolderContentsPageState();
 }
 
-class _CourseChaptersPageState extends State<CourseChaptersPage> {
-  List<Map<String, dynamic>> items = [
-    {
-      'name': 'Chapter 1_Final.pptx',
-      'type': 'file',
-      'icon': Icons.slideshow,
-    },
-    {
-      'name': 'Chapter 3.pdf',
-      'type': 'file',
-      'icon': Icons.picture_as_pdf,
-    },
-    {
-      'name': 'CSE-303 Chapter-05 Final.pdf',
-      'type': 'file',
-      'icon': Icons.picture_as_pdf,
-    },
-    {
-      'name': 'How to install flex in your home computer.pdf',
-      'type': 'file',
-      'icon': Icons.picture_as_pdf,
-    },
-  ];
+class _FolderContentsPageState extends State<FolderContentsPage> {
+  late List<Map<String, dynamic>> items;
+
+  @override
+  void initState() {
+    super.initState();
+    items = List.from(widget.folderItems);
+  }
 
   IconData getFileIcon(String filename) {
     if (filename.endsWith('.ppt') || filename.endsWith('.pptx'))
@@ -184,41 +172,69 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CommonAppBar(title: Text(widget.courseName), showBackButton: true),
-
-      body: ListView.builder(
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return GestureDetector(
-            onLongPress: () => _showDeleteDialog(index),
-            child: ListTile(
-              leading: Icon(
-                item['icon'],
-                color: item['type'] == 'folder' ? Colors.amber[600] : Colors.blue[600],
-              ),
-              title: Text(item['name']),
-              trailing: item['type'] == 'folder' ? const Icon(Icons.chevron_right) : null,
-              onTap: () {
-                if (item['type'] == 'folder') {
-                  // Navigate to folder contents
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => FolderContentsPage(
-                        folderName: item['name'],
-                        folderItems: item['items'] ?? [],
-                      ),
+      appBar: CommonAppBar(title: Text(widget.folderName), showBackButton: true),
+      body: items.isEmpty
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.folder_open,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'This folder is empty',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey,
                     ),
-                  );
-                } else {
-                  // TODO: Implement file open/view
-                }
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Add files or folders using the + button',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return GestureDetector(
+                  onLongPress: () => _showDeleteDialog(index),
+                  child: ListTile(
+                    leading: Icon(
+                      item['icon'],
+                      color: item['type'] == 'folder' ? Colors.amber[600] : Colors.blue[600],
+                    ),
+                    title: Text(item['name']),
+                    trailing: item['type'] == 'folder' ? const Icon(Icons.chevron_right) : null,
+                    onTap: () {
+                      if (item['type'] == 'folder') {
+                        // Navigate to nested folder contents
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FolderContentsPage(
+                              folderName: item['name'],
+                              folderItems: item['items'] ?? [],
+                            ),
+                          ),
+                        );
+                      } else {
+                        // TODO: Implement file open/view
+                      }
+                    },
+                  ),
+                );
               },
             ),
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDialog,
         backgroundColor: Colors.blue,

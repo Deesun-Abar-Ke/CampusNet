@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common_app_bar.dart';
 import '../landing_page.dart';
+import '../messages_page.dart';
 
 class AllBloodRequestsPage extends StatelessWidget {
   const AllBloodRequestsPage({super.key});
@@ -110,7 +111,14 @@ class AllBloodRequestsPage extends StatelessWidget {
                           backgroundColor: Colors.grey.shade300,
                           foregroundColor: Colors.black,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BloodRequestMessagesWrapper(contactName: request['name']!),
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 10),
                       ElevatedButton.icon(
@@ -132,6 +140,34 @@ class AllBloodRequestsPage extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+// Wrapper for Messages Page to handle blood request messaging
+class BloodRequestMessagesWrapper extends StatelessWidget {
+  final String contactName;
+
+  const BloodRequestMessagesWrapper({super.key, required this.contactName});
+
+  @override
+  Widget build(BuildContext context) {
+    // Get avatar for the contact (blood request related)
+    String getAvatarForContact(String name) {
+      // Simple mapping for blood requesters
+      if (name.contains('Ahmed')) return '🆘';
+      if (name.contains('Rahman')) return '🩸';
+      if (name.contains('Khan')) return '🏥';
+      if (name.contains('Begum')) return '👩‍⚕️';
+      return '🆘';
+    }
+
+    // Directly open ChatScreen for blood request contact
+    return ChatScreen(
+      contactName: contactName,
+      avatar: getAvatarForContact(contactName),
+      isOnline: true,
+      initialMessage: 'Hi! I saw your blood request and would like to help. Please let me know the details.',
     );
   }
 }
