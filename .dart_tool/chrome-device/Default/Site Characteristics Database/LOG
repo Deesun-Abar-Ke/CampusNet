@@ -1,3 +1,7 @@
-2025/07/29-13:23:43.731 44c9 Reusing MANIFEST /tmp/flutter_tools.CDWNHP/flutter_tools_chrome_device.KPFZFT/Default/Site Characteristics Database/MANIFEST-000001
-2025/07/29-13:23:43.731 44c9 Recovering log #3
-2025/07/29-13:23:43.731 44c9 Reusing old log /tmp/flutter_tools.CDWNHP/flutter_tools_chrome_device.KPFZFT/Default/Site Characteristics Database/000003.log 
+2025/07/29-13:58:14.682 20af Reusing MANIFEST /tmp/flutter_tools.JGEVZC/flutter_tools_chrome_device.CIVKOW/Default/Site Characteristics Database/MANIFEST-000001
+2025/07/29-13:58:14.686 20af Recovering log #10
+2025/07/29-13:58:14.686 20af Reusing old log /tmp/flutter_tools.JGEVZC/flutter_tools_chrome_device.CIVKOW/Default/Site Characteristics Database/000010.log 
+2025/07/29-13:58:14.686 20af Delete type=0 #3
+2025/07/29-13:58:14.686 20af Delete type=2 #8
+2025/07/29-13:58:14.686 20af Delete type=2 #7
+2025/07/29-13:58:14.686 20af Delete type=2 #12
