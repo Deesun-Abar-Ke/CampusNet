@@ -46,11 +46,7 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
     {
       'name': 'Architecture',
       'icon': Icons.calculate,
-      'courses': [
-        'Linear Algebra',
-        'Calculus',
-        'Discrete Mathematics',
-      ],
+      'courses': ['Linear Algebra', 'Calculus', 'Discrete Mathematics'],
     },
   ];
 
@@ -63,7 +59,10 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
         .toList();
 
     return Scaffold(
-      appBar: CommonAppBar(title: const Text('Study Materials'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('Study Materials'),
+        showBackButton: true,
+      ),
       body: Column(
         children: [
           Padding(

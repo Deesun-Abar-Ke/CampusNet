@@ -124,7 +124,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
   void _startNewSession() {
     setState(() {
-      _currentSessionId = _uuid.v4(); // Generate a new unique ID for the session
+      _currentSessionId = _uuid
+          .v4(); // Generate a new unique ID for the session
       _messages = [
         ChatMessage(
           text: "Hello, Boss!\nI'm NetBOT, ready to help you!",
@@ -140,11 +141,14 @@ class _ChatbotPageState extends State<ChatbotPage> {
         ),
       ];
       // Add or update the current session in the list
-      _updateSessionList(ChatSession(
-        id: _currentSessionId,
-        title: "New Chat ${DateFormat('MMM d, hh:mm a').format(DateTime.now())}",
-        lastMessageTime: DateTime.now(),
-      ));
+      _updateSessionList(
+        ChatSession(
+          id: _currentSessionId,
+          title:
+              "New Chat ${DateFormat('MMM d, hh:mm a').format(DateTime.now())}",
+          lastMessageTime: DateTime.now(),
+        ),
+      );
       _saveMessages(); // Save initial messages
       _saveSessions(); // Save updated session list
     });
@@ -159,14 +163,18 @@ class _ChatbotPageState extends State<ChatbotPage> {
       setState(() {
         _sessions = decoded.map((s) => ChatSession.fromJson(s)).toList();
         // Sort sessions by last message time, newest first
-        _sessions.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+        _sessions.sort(
+          (a, b) => b.lastMessageTime.compareTo(a.lastMessageTime),
+        );
       });
     }
   }
 
   Future<void> _saveSessions() async {
     final prefs = await SharedPreferences.getInstance();
-    final String sessionsJson = jsonEncode(_sessions.map((s) => s.toJson()).toList());
+    final String sessionsJson = jsonEncode(
+      _sessions.map((s) => s.toJson()).toList(),
+    );
     await prefs.setString('chat_sessions', sessionsJson);
   }
 
@@ -187,7 +195,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
   Future<void> _saveMessages() async {
     final prefs = await SharedPreferences.getInstance();
-    final String messagesJson = jsonEncode(_messages.map((m) => m.toJson()).toList());
+    final String messagesJson = jsonEncode(
+      _messages.map((m) => m.toJson()).toList(),
+    );
     await prefs.setString('session_$_currentSessionId', messagesJson);
   }
 
@@ -229,17 +239,22 @@ class _ChatbotPageState extends State<ChatbotPage> {
       _saveMessages(); // Save user message
 
       // Update current session's last message time
-      _updateSessionList(ChatSession(
-        id: _currentSessionId,
-        title: _messages.first.text.split('\n').first, // Use first message as title
-        lastMessageTime: newMessage.timestamp,
-      ));
+      _updateSessionList(
+        ChatSession(
+          id: _currentSessionId,
+          title: _messages.first.text
+              .split('\n')
+              .first, // Use first message as title
+          lastMessageTime: newMessage.timestamp,
+        ),
+      );
       _saveSessions();
 
       // --- AI Response Simulation ---
       Future.delayed(const Duration(milliseconds: 800), () {
         final aiResponse = ChatMessage(
-          text: "Understood! I'm processing your request now. How else can I help?",
+          text:
+              "Understood! I'm processing your request now. How else can I help?",
           user: ChatUser.ai,
           sessionId: _currentSessionId,
           timestamp: DateTime.now(),
@@ -250,11 +265,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
         _scrollToBottom();
         _saveMessages(); // Save AI response
 
-        _updateSessionList(ChatSession(
-          id: _currentSessionId,
-          title: _messages.first.text.split('\n').first,
-          lastMessageTime: aiResponse.timestamp,
-        ));
+        _updateSessionList(
+          ChatSession(
+            id: _currentSessionId,
+            title: _messages.first.text.split('\n').first,
+            lastMessageTime: aiResponse.timestamp,
+          ),
+        );
         _saveSessions();
       });
     }
@@ -274,14 +291,17 @@ class _ChatbotPageState extends State<ChatbotPage> {
       final XFile? image = await picker.pickImage(source: source);
       if (image != null) {
         _sendMessage(
-          text: "Here's an image from my ${source == ImageSource.camera ? 'camera' : 'gallery'}.",
+          text:
+              "Here's an image from my ${source == ImageSource.camera ? 'camera' : 'gallery'}.",
           image: File(image.path),
         );
       }
     } else if (status.isDenied) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Permission to access ${source == ImageSource.camera ? 'camera' : 'gallery'} was denied."),
+          content: Text(
+            "Permission to access ${source == ImageSource.camera ? 'camera' : 'gallery'} was denied.",
+          ),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -289,7 +309,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
       openAppSettings();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Permission to access ${source == ImageSource.camera ? 'camera' : 'gallery'} permanently denied. Please enable from settings."),
+          content: Text(
+            "Permission to access ${source == ImageSource.camera ? 'camera' : 'gallery'} permanently denied. Please enable from settings.",
+          ),
           duration: const Duration(seconds: 5),
         ),
       );
@@ -330,7 +352,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text("Voice input error: ${errorNotification.errorMsg}"),
+                content: Text(
+                  "Voice input error: ${errorNotification.errorMsg}",
+                ),
                 duration: const Duration(seconds: 3),
               ),
             );
@@ -341,13 +365,15 @@ class _ChatbotPageState extends State<ChatbotPage> {
           setState(() {
             _isListening = true;
             _speechText = '';
-            _textController.clear(); // Clear text field when starting voice input
+            _textController
+                .clear(); // Clear text field when starting voice input
           });
           _speech.listen(
             onResult: (result) {
               setState(() {
                 _speechText = result.recognizedWords;
-                _textController.text = _speechText; // Update text field in real-time
+                _textController.text =
+                    _speechText; // Update text field in real-time
               });
             },
           );
@@ -379,7 +405,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
         openAppSettings();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Permission to access microphone permanently denied. Please enable from settings."),
+            content: Text(
+              "Permission to access microphone permanently denied. Please enable from settings.",
+            ),
             duration: Duration(seconds: 5),
           ),
         );
@@ -436,7 +464,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
         children: [
           // Predefined suggestions
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -444,8 +475,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: ActionChip(
-                      label: Text(suggestion, style: const TextStyle(color: Colors.white70)),
-                      backgroundColor: const Color(0xFF424549), // Darker chip background
+                      label: Text(
+                        suggestion,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      backgroundColor: const Color(
+                        0xFF424549,
+                      ), // Darker chip background
                       onPressed: () {
                         _textController.text = suggestion;
                         _sendMessage();
@@ -492,7 +528,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
                       'Chat History',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
@@ -503,7 +540,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
                         ? Center(
                             child: Text(
                               "No chat sessions yet.",
-                              style: TextStyle(color: Colors.white54, fontSize: 16),
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 16,
+                              ),
                             ),
                           )
                         : ListView.builder(
@@ -512,40 +552,64 @@ class _ChatbotPageState extends State<ChatbotPage> {
                             itemBuilder: (context, index) {
                               final session = _sessions[index];
                               return Card(
-                                color: const Color(0xFF2C2F33), // Card background
-                                margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                                color: const Color(
+                                  0xFF2C2F33,
+                                ), // Card background
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                  vertical: 4.0,
+                                ),
                                 elevation: 2,
                                 child: ListTile(
-                                  leading: const Icon(Icons.chat_bubble_outline, color: Colors.blueAccent),
+                                  leading: const Icon(
+                                    Icons.chat_bubble_outline,
+                                    color: Colors.blueAccent,
+                                  ),
                                   title: Text(
                                     session.title,
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   subtitle: Text(
-                                    DateFormat('MMM d, yyyy hh:mm a').format(session.lastMessageTime),
-                                    style: const TextStyle(color: Colors.white70),
+                                    DateFormat(
+                                      'MMM d, yyyy hh:mm a',
+                                    ).format(session.lastMessageTime),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                    ),
                                   ),
                                   onTap: () {
-                                    Navigator.pop(context); // Close the bottom sheet
+                                    Navigator.pop(
+                                      context,
+                                    ); // Close the bottom sheet
                                     _loadMessages(session.id);
                                   },
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.redAccent,
+                                    ),
                                     onPressed: () async {
                                       final confirm = await showDialog<bool>(
                                         context: context,
                                         builder: (context) => AlertDialog(
                                           title: const Text('Delete Chat?'),
-                                          content: const Text('Are you sure you want to delete this chat history?'),
+                                          content: const Text(
+                                            'Are you sure you want to delete this chat history?',
+                                          ),
                                           actions: [
                                             TextButton(
-                                              onPressed: () => Navigator.pop(context, false),
+                                              onPressed: () =>
+                                                  Navigator.pop(context, false),
                                               child: const Text('Cancel'),
                                             ),
                                             TextButton(
-                                              onPressed: () => Navigator.pop(context, true),
+                                              onPressed: () =>
+                                                  Navigator.pop(context, true),
                                               child: const Text('Delete'),
                                             ),
                                           ],
@@ -580,9 +644,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
       }
       _saveSessions(); // Save updated session list
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Chat session deleted.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Chat session deleted.')));
   }
 
   Widget _buildMessageInput() {
@@ -602,28 +666,45 @@ class _ChatbotPageState extends State<ChatbotPage> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.add_photo_alternate_outlined, color: Color(0xFF99AAB5)), // Lighter icon color
+              icon: const Icon(
+                Icons.add_photo_alternate_outlined,
+                color: Color(0xFF99AAB5),
+              ), // Lighter icon color
               onPressed: () {
                 showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
                     return SafeArea(
                       child: Container(
-                        color: const Color(0xFF2C2F33), // Bottom sheet background
+                        color: const Color(
+                          0xFF2C2F33,
+                        ), // Bottom sheet background
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
                             ListTile(
-                              leading: const Icon(Icons.camera_alt, color: Colors.white70),
-                              title: const Text('Take Photo', style: TextStyle(color: Colors.white)),
+                              leading: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white70,
+                              ),
+                              title: const Text(
+                                'Take Photo',
+                                style: TextStyle(color: Colors.white),
+                              ),
                               onTap: () {
                                 Navigator.pop(context);
                                 _pickImage(ImageSource.camera);
                               },
                             ),
                             ListTile(
-                              leading: const Icon(Icons.photo_library, color: Colors.white70),
-                              title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
+                              leading: const Icon(
+                                Icons.photo_library,
+                                color: Colors.white70,
+                              ),
+                              title: const Text(
+                                'Choose from Gallery',
+                                style: TextStyle(color: Colors.white),
+                              ),
                               onTap: () {
                                 Navigator.pop(context);
                                 _pickImage(ImageSource.gallery);
@@ -647,7 +728,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
                 ),
                 child: TextField(
                   controller: _textController,
-                  style: const TextStyle(color: Colors.white), // Text input color
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ), // Text input color
                   decoration: const InputDecoration(
                     hintText: "Ask NetBOT...",
                     border: InputBorder.none,
@@ -714,7 +797,8 @@ class ChatBubble extends StatelessWidget {
         ? const Color(0xFF7289DA) // AI-themed blue for user
         : const Color(0xFF424549); // Darker grey for AI
 
-    final textColor = Colors.white; // White for both for better contrast on dark background
+    final textColor =
+        Colors.white; // White for both for better contrast on dark background
 
     final borderRadius = message.user == ChatUser.user
         ? const BorderRadius.only(
@@ -742,7 +826,7 @@ class ChatBubble extends StatelessWidget {
                 color: Colors.black.withOpacity(0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           constraints: BoxConstraints(
@@ -765,7 +849,9 @@ class ChatBubble extends StatelessWidget {
                 ),
               // Optional: Display timestamp for each message
               Padding(
-                padding: EdgeInsets.only(top: message.image != null ? 8.0 : 4.0),
+                padding: EdgeInsets.only(
+                  top: message.image != null ? 8.0 : 4.0,
+                ),
                 child: Text(
                   DateFormat('hh:mm a').format(message.timestamp),
                   style: TextStyle(

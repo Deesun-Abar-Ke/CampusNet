@@ -10,7 +10,10 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
-      appBar: CommonAppBar(title: const Text("My Profile"), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text("My Profile"),
+        showBackButton: true,
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [

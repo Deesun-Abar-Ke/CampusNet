@@ -7,7 +7,10 @@ class NotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: const Text('Notifications'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('Notifications'),
+        showBackButton: true,
+      ),
       body: _buildNotificationsList(),
     );
   }

@@ -60,7 +60,10 @@ class FindDonorsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: const Text('Find Blood Donors'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('Find Blood Donors'),
+        showBackButton: true,
+      ),
       body: Column(
         children: [
           // Search bar

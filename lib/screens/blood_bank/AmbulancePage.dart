@@ -69,7 +69,10 @@ class _AmbulancePageState extends State<AmbulancePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: const Text('Ambulance Services'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('Ambulance Services'),
+        showBackButton: true,
+      ),
       body: Column(
         children: [
           Padding(

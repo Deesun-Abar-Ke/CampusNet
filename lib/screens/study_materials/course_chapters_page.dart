@@ -21,11 +21,11 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
     'How to install flex in your home computer.pdf',
   ];
 
-    IconData getFileIcon(String filename) {
-      if (filename.endsWith('.ppt') || filename.endsWith('.pptx'))
-        return Icons.slideshow;
-      return Icons.picture_as_pdf;
-    }
+  IconData getFileIcon(String filename) {
+    if (filename.endsWith('.ppt') || filename.endsWith('.pptx'))
+      return Icons.slideshow;
+    return Icons.picture_as_pdf;
+  }
 
   void _showDeleteDialog(int index) {
     showModalBottomSheet(
@@ -49,7 +49,7 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
                 leading: const Icon(Icons.cancel),
                 title: const Text("Cancel"),
                 onTap: () => Navigator.pop(context),
-              )
+              ),
             ],
           ),
         );
@@ -61,7 +61,10 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CommonAppBar(title: Text(widget.courseName), showBackButton: true),
+      appBar: CommonAppBar(
+        title: Text(widget.courseName),
+        showBackButton: true,
+      ),
 
       body: ListView.builder(
         itemCount: notes.length,

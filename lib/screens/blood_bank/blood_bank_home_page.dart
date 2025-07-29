@@ -13,7 +13,10 @@ class BloodBankHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CommonAppBar(title: const Text('Blood Bank'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('Blood Bank'),
+        showBackButton: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: GridView.count(
