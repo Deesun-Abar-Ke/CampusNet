@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'study_materials/group_resources_page.dart';
+import '../widgets/common_app_bar.dart';
 
 class MessagesPage extends StatefulWidget {
   final String? initialContact;
@@ -51,34 +52,40 @@ class _MessagesPageState extends State<MessagesPage> with TickerProviderStateMix
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
+      appBar: const CommonAppBar(
+        title: Text('Messages'),
         backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
-        toolbarHeight: 0,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          tabs: const [
-            Tab(text: 'CHATS'),
-            Tab(text: 'GROUPS'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          IndividualChatsTab(),
-          GroupChatsTab(),
+      body: Column(
+        children: [
+          Container(
+            color: Colors.teal,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: Colors.white,
+              tabs: const [
+                Tab(text: 'CHATS'),
+                Tab(text: 'GROUPS'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                IndividualChatsTab(),
+                GroupChatsTab(),
+              ],
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateOptions(context),
         backgroundColor: Colors.teal,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add),
       ),
     );
   }

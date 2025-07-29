@@ -1,9 +1,27 @@
 // lib/screens/study_materials/study_materials_home.dart
 import 'package:flutter/material.dart';
-import 'course_list_page.dart';
+import '../../widgets/common_app_bar.dart';
+import 'department_courses_page.dart';
 
-class StudyMaterialsHome extends StatelessWidget {
+class StudyMaterialsHome extends StatefulWidget {
   const StudyMaterialsHome({Key? key}) : super(key: key);
+
+  @override
+  State<StudyMaterialsHome> createState() => _StudyMaterialsHomeState();
+}
+
+class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
+  String searchQuery = '';
+  List<String> allCourses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Populate allCourses from departments
+    for (var dept in departments) {
+      allCourses.addAll(dept['courses'] as List<String>);
+    }
+  }
 
   final List<Map<String, dynamic>> departments = const [
     {
@@ -38,69 +56,109 @@ class StudyMaterialsHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final filtered = departments
+        .where(
+          (dept) => dept['name'].toString().toLowerCase().contains(searchQuery.toLowerCase()),
+        )
+        .toList();
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: departments.map((dept) {
-            return _buildTile(
-              context,
-              icon: dept['icon'],
-              label: dept['name'],
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CourseListPage(
-                      departmentName: dept['name'],
-                      courses: List<String>.from(dept['courses']),
+      appBar: CommonAppBar(title: const Text('Study Materials'), showBackButton: true),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              onChanged: (val) => setState(() => searchQuery = val),
+              decoration: InputDecoration(
+                hintText: 'Search departments...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final department = filtered[index];
+                final courses = department['courses'] as List<String>;
+                
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
+                    leading: Icon(
+                      department['icon'] as IconData,
+                      color: Colors.teal[600],
+                      size: 28,
+                    ),
+                    title: Text(
+                      department['name'],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${courses.length} courses',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DepartmentCoursesPage(
+                            departmentName: department['name'],
+                            courses: courses,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
-            );
-          }).toList(),
-        ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addNewDepartment,
+        backgroundColor: Colors.teal,
+        tooltip: 'Add New Department',
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget _buildTile(
-      BuildContext context, {
-        required IconData icon,
-        required String label,
-        required VoidCallback onTap,
-      }) {
-    return Material(
-      color: const Color(0xFFECEBFD),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        splashColor: Colors.deepPurple.shade100,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 40, color: Colors.deepPurple[700]),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[900],
-                ),
-              ),
-            ],
+  void _addNewDepartment() {
+    // TODO: Implement adding new department functionality
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add New Department'),
+        content: const Text('This feature will be implemented soon.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
           ),
-        ),
+        ],
       ),
     );
   }

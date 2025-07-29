@@ -1,11 +1,13 @@
-// lib/screens/study_materials/course_chapters_page.dart
 import 'package:flutter/material.dart';
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
 import 'upload_note_dialog.dart';
 
 class CourseChaptersPage extends StatefulWidget {
   final String courseName;
 
-  const CourseChaptersPage({Key? key, required this.courseName}) : super(key: key);
+  const CourseChaptersPage({Key? key, required this.courseName})
+    : super(key: key);
 
   @override
   State<CourseChaptersPage> createState() => _CourseChaptersPageState();
@@ -19,10 +21,11 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
     'How to install flex in your home computer.pdf',
   ];
 
-  IconData getFileIcon(String filename) {
-    if (filename.endsWith('.ppt') || filename.endsWith('.pptx')) return Icons.slideshow;
-    return Icons.picture_as_pdf;
-  }
+    IconData getFileIcon(String filename) {
+      if (filename.endsWith('.ppt') || filename.endsWith('.pptx'))
+        return Icons.slideshow;
+      return Icons.picture_as_pdf;
+    }
 
   void _showDeleteDialog(int index) {
     showModalBottomSheet(
@@ -57,14 +60,9 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.courseName,
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.teal,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
+      backgroundColor: Colors.white,
+      appBar: CommonAppBar(title: Text(widget.courseName), showBackButton: true),
+
       body: ListView.builder(
         itemCount: notes.length,
         itemBuilder: (context, index) {
