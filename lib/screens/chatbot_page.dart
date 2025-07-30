@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart'; // For generating unique IDs
 import 'package:intl/intl.dart'; // For date formatting
 import 'dart:convert'; // For JSON encoding/decoding
 import '../widgets/common_app_bar.dart';
+import '../services/groq_service.dart'; // Import our Groq service
 
 // A simple enum to distinguish between the user and the AI.
 enum ChatUser { user, ai }
@@ -92,19 +93,23 @@ class _ChatbotPageState extends State<ChatbotPage> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
   String _speechText = '';
+  bool _isTyping = false; // Show typing indicator when AI is responding
 
   final Uuid _uuid = const Uuid(); // For generating unique session IDs
   late String _currentSessionId;
   List<ChatSession> _sessions = []; // List of all chat sessions
   List<ChatMessage> _messages = []; // Messages for the current session
+  
+  // Initialize Groq AI service
+  final GroqService _groqService = GroqService();
 
   final List<String> _predefinedSuggestions = [
-    "Summarize this document for me.",
-    "Explain quantum physics in simple terms.",
-    "Write a short story about a talking cat.",
-    "Give me some ideas for a healthy dinner.",
-    "What's the weather like in Dhaka?",
-    "Help me brainstorm ideas for a new app.",
+    "How do I register for courses at MIST?",
+    "Tell me about MIST departments and towers",
+    "Where is the CSE laboratory located?",
+    "Campus emergency services information",
+    "MIST study tips for engineering exams",
+    "How to navigate MIST campus buildings?",
   ];
 
   @override
@@ -128,13 +133,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
           .v4(); // Generate a new unique ID for the session
       _messages = [
         ChatMessage(
-          text: "Hello, Boss!\nI'm NetBOT, ready to help you!",
+          text: "🎖️ Welcome to MIST, Cadet!\nI'm NetBOT, your dedicated AI assistant for Military Institute of Science & Technology.",
           user: ChatUser.ai,
           sessionId: _currentSessionId,
           timestamp: DateTime.now(),
         ),
         ChatMessage(
-          text: "Ask me anything that's on your mind. I'm here to assist you!",
+          text: "I'm here to help you with:\n🎓 Academic guidance\n🏛️ Campus navigation\n🔬 Lab locations\n📚 Study resources\n⚡ Emergency services\n\nHow can I assist you today?",
           user: ChatUser.ai,
           sessionId: _currentSessionId,
           timestamp: DateTime.now(),
@@ -214,7 +219,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
     _sessions.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
   }
 
-  void _sendMessage({String? text, File? image}) {
+  void _sendMessage({String? text, File? image}) async {
     String messageText = text ?? _textController.text;
 
     if (messageText.trim().isNotEmpty || image != null) {
@@ -228,6 +233,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
       setState(() {
         _messages.add(newMessage);
+        _isTyping = true; // Show typing indicator
       });
 
       // Clear the text field if the message came from it
@@ -239,42 +245,81 @@ class _ChatbotPageState extends State<ChatbotPage> {
       _saveMessages(); // Save user message
 
       // Update current session's last message time
-      _updateSessionList(
-        ChatSession(
-          id: _currentSessionId,
-          title: _messages.first.text
-              .split('\n')
-              .first, // Use first message as title
-          lastMessageTime: newMessage.timestamp,
-        ),
-      );
+      _updateSessionList(ChatSession(
+        id: _currentSessionId,
+        title: _generateSessionTitle(),
+        lastMessageTime: newMessage.timestamp,
+      ));
       _saveSessions();
 
-      // --- AI Response Simulation ---
-      Future.delayed(const Duration(milliseconds: 800), () {
+      // --- Get Real AI Response from Groq ---
+      try {
+        print('🤖 Getting response from Groq AI...');
+        
+        // Send message to Groq AI
+        final aiResponseText = await _groqService.sendMessage(
+          messageText,
+          image: image,
+        );
+
         final aiResponse = ChatMessage(
-          text:
-              "Understood! I'm processing your request now. How else can I help?",
+          text: aiResponseText,
           user: ChatUser.ai,
           sessionId: _currentSessionId,
           timestamp: DateTime.now(),
         );
+
         setState(() {
           _messages.add(aiResponse);
+          _isTyping = false; // Hide typing indicator
         });
+
         _scrollToBottom();
         _saveMessages(); // Save AI response
 
-        _updateSessionList(
-          ChatSession(
-            id: _currentSessionId,
-            title: _messages.first.text.split('\n').first,
-            lastMessageTime: aiResponse.timestamp,
-          ),
-        );
+        _updateSessionList(ChatSession(
+          id: _currentSessionId,
+          title: _generateSessionTitle(),
+          lastMessageTime: aiResponse.timestamp,
+        ));
         _saveSessions();
-      });
+
+        print('✅ AI response added successfully');
+
+      } catch (e) {
+        print('❌ Error getting AI response: $e');
+        
+        // Handle errors gracefully
+        final errorResponse = ChatMessage(
+          text: "Sorry, I'm having trouble connecting right now. Please check your internet connection and try again. 🌐\n\nFor immediate MIST assistance, you can:\n• Contact your department office\n• Visit the IT help desk\n• Ask a fellow cadet",
+          user: ChatUser.ai,
+          sessionId: _currentSessionId,
+          timestamp: DateTime.now(),
+        );
+
+        setState(() {
+          _messages.add(errorResponse);
+          _isTyping = false; // Hide typing indicator
+        });
+
+        _scrollToBottom();
+        _saveMessages();
+      }
     }
+  }
+
+  /// Generate a short title for the chat session based on first user message
+  String _generateSessionTitle() {
+    // Find first user message for session title
+    final userMessages = _messages.where((msg) => msg.user == ChatUser.user).toList();
+    if (userMessages.isNotEmpty) {
+      final firstMessage = userMessages.first.text;
+      if (firstMessage.length > 30) {
+        return '${firstMessage.substring(0, 30)}...';
+      }
+      return firstMessage;
+    }
+    return "New Chat ${DateFormat('MMM d, hh:mm a').format(DateTime.now())}";
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -318,7 +363,52 @@ class _ChatbotPageState extends State<ChatbotPage> {
     }
   }
 
-  Future<void> _recordVoice() async {
+  /// Build typing indicator widget to show when AI is responding
+  Widget _buildTypingIndicator() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: const BoxDecoration(
+              color: Color(0xFF424549), // Same as AI message bubble
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+                topLeft: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "NetBOT is thinking",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _toggleListening() async {
     if (_isListening) {
       _speech.stop();
       setState(() {
@@ -496,8 +586,12 @@ class _ChatbotPageState extends State<ChatbotPage> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16.0),
-              itemCount: _messages.length,
+              itemCount: _messages.length + (_isTyping ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == _messages.length && _isTyping) {
+                  // Show typing indicator at the bottom
+                  return _buildTypingIndicator();
+                }
                 final message = _messages[index];
                 return ChatBubble(message: message);
               },
@@ -749,7 +843,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                     backgroundColor: const Color(0xFF7289DA), // AI-themed blue
                     child: IconButton(
                       icon: const Icon(Icons.mic, color: Colors.white),
-                      onPressed: _recordVoice,
+                      onPressed: _toggleListening,
                       tooltip: 'Voice Input',
                     ),
                   );
@@ -758,7 +852,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                     backgroundColor: Colors.redAccent, // Indicate recording
                     child: IconButton(
                       icon: const Icon(Icons.stop, color: Colors.white),
-                      onPressed: _recordVoice,
+                      onPressed: _toggleListening,
                       tooltip: 'Stop Recording',
                     ),
                   );

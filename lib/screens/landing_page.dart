@@ -6,6 +6,7 @@ import 'messages_page.dart';
 import 'profile_page.dart';
 import 'study_materials/study_materials_home.dart';
 import 'notifications.dart';
+import 'institutional_map/institutional_map_page.dart';
 import '_feature_icon.dart';
 import '_club_post_card.dart';
 
@@ -277,6 +278,13 @@ class _LandingPageState extends State<LandingPage> {
                       icon: Icons.emergency,
                       color: Colors.red.shade600,
                       onTap: () => _navigateToPage(const BloodBankHomePage()),
+                    ),
+                    const SizedBox(width: 20),
+                    FeatureIcon(
+                      label: 'Campus Map',
+                      icon: Icons.location_city,
+                      color: Colors.indigo.shade600,
+                      onTap: () => _navigateToPage(const InstitutionalMapPage()),
                     ),
                     const SizedBox(width: 20),
                     FeatureIcon(
