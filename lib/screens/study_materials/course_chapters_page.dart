@@ -188,7 +188,23 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CommonAppBar(title: Text(widget.courseName), showBackButton: true),
+      appBar: CommonAppBar(
+        title: Text(widget.courseName), 
+        showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
+            },
+          ),
+        ],
+      ),
 
       body: ListView.builder(
         itemCount: items.length,

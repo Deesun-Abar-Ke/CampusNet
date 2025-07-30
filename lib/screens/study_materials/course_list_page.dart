@@ -68,6 +68,19 @@ class _CourseListPageState extends State<CourseListPage> {
         title: Text(widget.departmentName),
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

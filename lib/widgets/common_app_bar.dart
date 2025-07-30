@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../screens/landing_page.dart';
 
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget title;
@@ -37,16 +36,6 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
             )
           : null,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.home),
-          onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const LandingPage()),
-              (route) => false,
-            );
-          },
-        ),
         if (actions != null) ...actions!,
       ],
     );

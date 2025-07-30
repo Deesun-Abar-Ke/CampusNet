@@ -42,8 +42,21 @@ class AllBloodRequestsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CommonAppBar(
-        title: const Text('All Blood Requests'),
+        title: const Text('All Blood Requests'), 
         showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: bloodRequests.length,

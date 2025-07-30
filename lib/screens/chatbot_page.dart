@@ -115,6 +115,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   void initState() {
     super.initState();
+    _groqService = GroqService(); // Initialize Groq AI service
     _startNewSession(); // Start a new session on app launch
     _loadSessions(); // Load existing sessions
   }
@@ -505,6 +506,51 @@ class _ChatbotPageState extends State<ChatbotPage> {
     }
   }
 
+  /// Build typing indicator widget to show when AI is responding
+  Widget _buildTypingIndicator() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: const BoxDecoration(
+              color: Color(0xFF424549), // Same as AI message bubble
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+                topLeft: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "NetBOT is thinking",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -536,6 +582,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
         backgroundColor: const Color(0xFF23272A), // Darker app bar
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/');
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.history),
             tooltip: 'Chat History',

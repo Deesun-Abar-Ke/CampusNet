@@ -69,8 +69,21 @@ class _AmbulancePageState extends State<AmbulancePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CommonAppBar(
-        title: const Text('Ambulance Services'),
+        title: const Text('Ambulance Services'), 
         showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

@@ -226,7 +226,23 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
         .toList();
 
     return Scaffold(
-      appBar: CommonAppBar(title: const Text('Resource Bank'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('Study Materials'), 
+        showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(

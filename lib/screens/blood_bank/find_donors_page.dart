@@ -61,8 +61,21 @@ class FindDonorsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CommonAppBar(
-        title: const Text('Find Blood Donors'),
+        title: const Text('Find Blood Donors'), 
         showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

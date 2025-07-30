@@ -14,8 +14,21 @@ class BloodBankHomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CommonAppBar(
-        title: const Text('Emergency'),
+        title: const Text('Blood Bank'), 
         showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
