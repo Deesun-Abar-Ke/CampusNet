@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'study_materials/group_resources_page.dart';
 import '../widgets/common_app_bar.dart';
+import 'profile_page.dart';
 
 class MessagesPage extends StatefulWidget {
   final String? initialContact;
@@ -500,48 +501,182 @@ class NewChatDialog extends StatefulWidget {
 
 class _NewChatDialogState extends State<NewChatDialog> {
   String searchQuery = '';
+  String selectedDepartment = 'All';
+  String selectedBatch = 'All';
+  String selectedLevel = 'All';
   
   final List<Map<String, dynamic>> allUsers = [
-    {'name': 'Rakib Ahmed', 'avatar': '👨‍🎓', 'isOnline': true},
-    {'name': 'Sarah Khan', 'avatar': '👩‍💻', 'isOnline': false},
-    {'name': 'Ahmed Hassan', 'avatar': '👨‍🔬', 'isOnline': true},
-    {'name': 'Nadia Rahman', 'avatar': '👩‍🎓', 'isOnline': true},
-    {'name': 'Karim Uddin', 'avatar': '👨‍💼', 'isOnline': false},
+    {
+      'name': 'Rakib Ahmed', 
+      'avatar': '👨‍🎓', 
+      'isOnline': true,
+      'studentId': '190204001',
+      'department': 'Computer Science',
+      'batch': '2020',
+      'phone': '+8801712345678',
+      'level': 'Level 4'
+    },
+    {
+      'name': 'Sarah Khan', 
+      'avatar': '👩‍💻', 
+      'isOnline': false,
+      'studentId': '190204002',
+      'department': 'Computer Science',
+      'batch': '2020',
+      'phone': '+8801798765432',
+      'level': 'Level 4'
+    },
+    {
+      'name': 'Ahmed Hassan', 
+      'avatar': '👨‍🔬', 
+      'isOnline': true,
+      'studentId': '210204003',
+      'department': 'Chemical Engineering',
+      'batch': '2021',
+      'phone': '+8801612345678',
+      'level': 'Level 3'
+    },
+    {
+      'name': 'Nadia Rahman', 
+      'avatar': '👩‍🎓', 
+      'isOnline': true,
+      'studentId': '190404004',
+      'department': 'Architecture',
+      'batch': '2019',
+      'phone': '+8801534567890',
+      'level': 'Level 4'
+    },
+    {
+      'name': 'Karim Uddin', 
+      'avatar': '👨‍💼', 
+      'isOnline': false,
+      'studentId': '220204005',
+      'department': 'Computer Science',
+      'batch': '2022',
+      'phone': '+8801687654321',
+      'level': 'Level 2'
+    },
+    {
+      'name': 'Fatima Islam', 
+      'avatar': '👩‍🔬', 
+      'isOnline': true,
+      'studentId': '230204006',
+      'department': 'Electrical Engineering',
+      'batch': '2023',
+      'phone': '+8801543210987',
+      'level': 'Level 1'
+    },
   ];
+
+  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet().toList()];
+  List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
+  List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
+
+  List<Map<String, dynamic>> get filteredUsers {
+    return allUsers.where((user) {
+      final matchesSearch = user['name'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+                           user['studentId'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+                           user['phone'].toLowerCase().contains(searchQuery.toLowerCase());
+      final matchesDepartment = selectedDepartment == 'All' || user['department'] == selectedDepartment;
+      final matchesBatch = selectedBatch == 'All' || user['batch'] == selectedBatch;
+      final matchesLevel = selectedLevel == 'All' || user['level'] == selectedLevel;
+      
+      return matchesSearch && matchesDepartment && matchesBatch && matchesLevel;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filteredUsers = allUsers
-        .where((user) => user['name']
-            .toLowerCase()
-            .contains(searchQuery.toLowerCase()))
-        .toList();
-
     return AlertDialog(
       title: const Text('Start New Chat'),
       content: SizedBox(
         width: double.maxFinite,
+        height: 400,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Search Field
             TextField(
               decoration: InputDecoration(
-                hintText: 'Search users...',
+                hintText: 'Search by name, ID, or phone',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               onChanged: (value) {
-                setState(() {
-                  searchQuery = value;
-                });
+                setState(() => searchQuery = value);
               },
             ),
-            const SizedBox(height: 16),
-            Flexible(
+            const SizedBox(height: 8),
+            
+            // Filter Row
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedDepartment,
+                    decoration: const InputDecoration(
+                      labelText: 'Dept',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                    items: departments.map((dept) => DropdownMenuItem(
+                      value: dept,
+                      child: Text(
+                        dept == 'All' ? 'All' : dept.split(' ').first,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedDepartment = value!),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedBatch,
+                    decoration: const InputDecoration(
+                      labelText: 'Batch',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                    items: batches.map((batch) => DropdownMenuItem(
+                      value: batch,
+                      child: Text(batch, style: const TextStyle(fontSize: 12)),
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedBatch = value!),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedLevel,
+                    decoration: const InputDecoration(
+                      labelText: 'Level',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                    items: levels.map((level) => DropdownMenuItem(
+                      value: level,
+                      child: Text(level, style: const TextStyle(fontSize: 12)),
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedLevel = value!),
+                  ),
+                ),
+              ],
+            ),
+            
+            Text('${filteredUsers.length} students found', 
+                 style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 8),
+            
+            Expanded(
               child: ListView.builder(
-                shrinkWrap: true,
                 itemCount: filteredUsers.length,
                 itemBuilder: (context, index) {
                   final user = filteredUsers[index];
@@ -569,7 +704,12 @@ class _NewChatDialogState extends State<NewChatDialog> {
                       ],
                     ),
                     title: Text(user['name']),
-                    subtitle: Text(user['isOnline'] ? 'Online' : 'Offline'),
+                    subtitle: Text('${user['studentId']} • ${user['department'].split(' ').first} • Batch ${user['batch']}'),
+                    trailing: Text(user['isOnline'] ? 'Online' : 'Offline', 
+                                   style: TextStyle(
+                                     color: user['isOnline'] ? Colors.green : Colors.grey,
+                                     fontSize: 12
+                                   )),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -609,34 +749,85 @@ class CreateGroupDialog extends StatefulWidget {
 
 class _CreateGroupDialogState extends State<CreateGroupDialog> {
   String groupName = '';
-  String selectedCourse = '';
   final List<String> selectedMembers = [];
-
-  final List<String> courses = [
-    'Computer Science & Engineering/Artificial Intelligence',
-    'Computer Science & Engineering/C Language Theory',
-    'Computer Science & Engineering/Compilers (CSE 303)',
-    'Computer Science & Engineering/Data Structures',
-    'Chemical Engineering/Chemistry Fundamentals (CHEM - 101)',
-    'Chemical Engineering/Organic Chemistry',
-    'Architecture/Linear Algebra',
-    'Architecture/Calculus',
-  ];
+  String searchQuery = '';
+  String selectedDepartment = 'All';
+  String selectedBatch = 'All';
+  String selectedLevel = 'All';
 
   final List<Map<String, dynamic>> allUsers = [
-    {'name': 'Rakib Ahmed', 'avatar': '👨‍🎓'},
-    {'name': 'Sarah Khan', 'avatar': '👩‍💻'},
-    {'name': 'Ahmed Hassan', 'avatar': '👨‍🔬'},
-    {'name': 'Nadia Rahman', 'avatar': '👩‍🎓'},
-    {'name': 'Karim Uddin', 'avatar': '👨‍💼'},
+    {
+      'name': 'Rakib Ahmed', 
+      'avatar': '👨‍🎓',
+      'studentId': '190204001',
+      'department': 'Computer Science & Engineering',
+      'batch': '2020',
+      'phone': '+8801712345678',
+      'level': 'Level 4'
+    },
+    {
+      'name': 'Sarah Khan', 
+      'avatar': '👩‍💻',
+      'studentId': '190204002',
+      'department': 'Computer Science & Engineering',
+      'batch': '2020',
+      'phone': '+8801798765432',
+      'level': 'Level 4'
+    },
+    {
+      'name': 'Ahmed Hassan', 
+      'avatar': '👨‍🔬',
+      'studentId': '210204003',
+      'department': 'Chemical Engineering',
+      'batch': '2021',
+      'phone': '+8801612345678',
+      'level': 'Level 3'
+    },
+    {
+      'name': 'Nadia Rahman', 
+      'avatar': '👩‍🎓',
+      'studentId': '190404004',
+      'department': 'Architecture',
+      'batch': '2019',
+      'phone': '+8801534567890',
+      'level': 'Level 4'
+    },
+    {
+      'name': 'Karim Uddin', 
+      'avatar': '👨‍💼',
+      'studentId': '220204005',
+      'department': 'Computer Science',
+      'batch': '2022',
+      'phone': '+8801687654321',
+      'level': 'Level 2'
+    },
   ];
+
+  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet().toList()];
+  List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
+  List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
+
+  List<Map<String, dynamic>> get filteredUsers {
+    return allUsers.where((user) {
+      final matchesSearch = user['name'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+                           user['studentId'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+                           user['phone'].toLowerCase().contains(searchQuery.toLowerCase());
+      final matchesDepartment = selectedDepartment == 'All' || user['department'] == selectedDepartment;
+      final matchesBatch = selectedBatch == 'All' || user['batch'] == selectedBatch;
+      final matchesLevel = selectedLevel == 'All' || user['level'] == selectedLevel;
+      
+      return matchesSearch && matchesDepartment && matchesBatch && matchesLevel;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Create Group'),
-      content: SizedBox(
-        width: double.maxFinite,
+      content: Container(
+        width: MediaQuery.of(context).size.width * 0.85,
+        height: 500,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -649,34 +840,95 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
               ),
               onChanged: (value) => groupName = value,
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
+            const SizedBox(height: 12),
+            
+            // Search Field
+            TextField(
               decoration: InputDecoration(
-                labelText: 'Link to Course (Optional)',
+                hintText: 'Search by name, ID, or phone',
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              items: courses.map((course) {
-                return DropdownMenuItem(
-                  value: course,
-                  child: Text(
-                    course.split('/').last,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) => selectedCourse = value ?? '',
+              onChanged: (value) {
+                setState(() => searchQuery = value);
+              },
             ),
-            const SizedBox(height: 16),
-            const Text('Add Members:', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Flexible(
+            
+            // Filter Row
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<String>(
+                    value: selectedDepartment,
+                    decoration: const InputDecoration(
+                      labelText: 'Dept',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    ),
+                    items: departments.map((dept) => DropdownMenuItem(
+                      value: dept,
+                      child: Text(dept == 'All' ? 'All' : dept.split(' ').first, 
+                                  style: const TextStyle(fontSize: 11)),
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedDepartment = value!),
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedBatch,
+                    decoration: const InputDecoration(
+                      labelText: 'Batch',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    ),
+                    items: batches.map((batch) => DropdownMenuItem(
+                      value: batch,
+                      child: Text(batch, style: const TextStyle(fontSize: 11)),
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedBatch = value!),
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedLevel,
+                    decoration: const InputDecoration(
+                      labelText: 'Level',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    ),
+                    items: levels.map((level) => DropdownMenuItem(
+                      value: level,
+                      child: Text(level, style: const TextStyle(fontSize: 11)),
+                    )).toList(),
+                    onChanged: (value) => setState(() => selectedLevel = value!),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Add Members (${selectedMembers.length} selected):', 
+                     style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('${filteredUsers.length} found', 
+                     style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            
+            Expanded(
               child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: allUsers.length,
+                itemCount: filteredUsers.length,
                 itemBuilder: (context, index) {
-                  final user = allUsers[index];
+                  final user = filteredUsers[index];
                   final isSelected = selectedMembers.contains(user['name']);
                   
                   return ListTile(
@@ -692,15 +944,13 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
                         });
                       },
                     ),
-                    title: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.teal[100],
-                          child: Text(user['avatar']),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(user['name']),
-                      ],
+                    title: Text(user['name']),
+                    subtitle: Text('${user['studentId']} • ${user['department'].split(' ').first} • Batch ${user['batch']}',
+                                   style: const TextStyle(fontSize: 12)),
+                    trailing: CircleAvatar(
+                      backgroundColor: Colors.teal[100],
+                      radius: 16,
+                      child: Text(user['avatar'], style: const TextStyle(fontSize: 12)),
                     ),
                     onTap: () {
                       setState(() {
@@ -724,7 +974,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: groupName.isNotEmpty && selectedMembers.isNotEmpty
+          onPressed: groupName.isNotEmpty && selectedMembers.length >= 2
               ? () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -794,47 +1044,57 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
-        title: Row(
-          children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  backgroundColor: Colors.white,
-                  child: Text(widget.avatar),
-                ),
-                if (widget.isOnline)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProfilePage(),
+              ),
+            );
+          },
+          child: Row(
+            children: [
+              Stack(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Text(widget.avatar),
+                  ),
+                  if (widget.isOnline)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.contactName,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    widget.isOnline ? 'Online' : 'Last seen recently',
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.contactName,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      widget.isOnline ? 'Online' : 'Last seen recently',
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -856,8 +1116,8 @@ class _ChatScreenState extends State<ChatScreen> {
           PopupMenuButton(
             itemBuilder: (context) => [
               const PopupMenuItem(
-                value: 'info',
-                child: Text('Contact Info'),
+                value: 'profile',
+                child: Text('View Profile'),
               ),
               const PopupMenuItem(
                 value: 'clear',
@@ -865,7 +1125,14 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ],
             onSelected: (value) {
-              if (value == 'clear') {
+              if (value == 'profile') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfilePage(),
+                  ),
+                );
+              } else if (value == 'clear') {
                 setState(() {
                   messages.clear();
                 });
@@ -1104,7 +1371,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           if (widget.courseFolder.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.folder),
-              onPressed: () => _showResourcesDialog(context),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GroupResourcesPage(
+                      groupName: widget.groupName,
+                    ),
+                  ),
+                );
+              },
               tooltip: 'Group Resources',
             ),
           PopupMenuButton(
@@ -1130,7 +1406,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             onSelected: (value) {
               switch (value) {
                 case 'resources':
-                  _showResourcesDialog(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GroupResourcesPage(
+                        groupName: widget.groupName,
+                      ),
+                    ),
+                  );
                   break;
                 case 'members':
                   _showMembersDialog(context);
@@ -1233,80 +1516,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       });
       _messageController.clear();
     }
-  }
-
-  void _showResourcesDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.folder, color: Colors.teal[700]),
-            const SizedBox(width: 8),
-            const Text('Course Resources'),
-          ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.teal[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info, color: Colors.teal[700], size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'This group is linked to:\n${widget.courseFolder}',
-                        style: TextStyle(
-                          color: Colors.teal[700],
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Quick Actions:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: const Icon(Icons.folder_open, color: Colors.blue),
-                title: const Text('Browse Course Materials'),
-                subtitle: const Text('Open study materials folder'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GroupResourcesPage(
-                        groupName: widget.groupName,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showShareResourceDialog(BuildContext context) {

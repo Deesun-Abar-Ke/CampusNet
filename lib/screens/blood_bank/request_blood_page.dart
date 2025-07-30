@@ -31,7 +31,10 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: const Text('Request Blood'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('Request Blood'),
+        showBackButton: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(

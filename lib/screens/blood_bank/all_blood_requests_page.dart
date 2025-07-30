@@ -42,7 +42,10 @@ class AllBloodRequestsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: const Text('All Blood Requests'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('All Blood Requests'),
+        showBackButton: true,
+      ),
       body: ListView.builder(
         itemCount: bloodRequests.length,
         itemBuilder: (context, index) {

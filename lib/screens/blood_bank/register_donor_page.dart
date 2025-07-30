@@ -62,7 +62,10 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: const Text('Register as Donor'), showBackButton: true),
+      appBar: CommonAppBar(
+        title: const Text('Register as Donor'),
+        showBackButton: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
