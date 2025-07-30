@@ -46,6 +46,7 @@ class _FolderContentsPageState extends State<FolderContentsPage> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -53,6 +54,7 @@ class _FolderContentsPageState extends State<FolderContentsPage> {
             },
             child: const Text('Add Folder'),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);

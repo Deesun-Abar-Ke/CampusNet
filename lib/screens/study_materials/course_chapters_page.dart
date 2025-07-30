@@ -58,6 +58,7 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -65,6 +66,7 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
             },
             child: const Text('Add Folder'),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
