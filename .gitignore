@@ -99,3 +99,10 @@ git add .                         # Add all changed files to the staging area
 git commit -m "Updated UI for the home screen"  # Commit changes
 git pull origin main              # Optional: Pull latest changes from the remote
 git push origin main              # Push changes to GitHub
+
+# Security - API Keys and Secrets
+*.key
+**/api_keys.dart
+**/secrets.dart
+**/config/api_config_production.dart
+api_config_local.dart
