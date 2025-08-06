@@ -90,3 +90,7 @@ cython_debug/
 .flutter-plugins-dependencies
 .melos_tool/
 .idea/
+
+backend/instance/
+backend/__pycache__/
+backend/*.pyc
