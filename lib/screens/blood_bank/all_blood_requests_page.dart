@@ -1,40 +1,96 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import '../../services/auth_service.dart'; // adjust path if necessary
 
-class AllBloodRequestsPage extends StatelessWidget {
+const String baseUrl = 'http://192.168.0.103:5000'; // your Flask backend
+
+class AllBloodRequestsPage extends StatefulWidget {
   const AllBloodRequestsPage({super.key});
 
-  final List<Map<String, String>> bloodRequests = const [
-    {
-      'blood': 'B+',
-      'bags': '1',
-      'name': 'Mukramur Rahman',
-      'location': 'Birdem Hospital',
-      'time': 'Jun 17 at 7:36 AM',
-      'neededTime': 'Jun 18 at 12:00 PM',
-      'reason': 'surgery patient',
-      'phone': '01621900722'
-    },
-    {
-      'blood': 'O-',
-      'bags': '2',
-      'name': 'al sabab',
-      'location': 'Birdem Hospital',
-      'time': 'Jun 15 at 3:54 AM',
-      'neededTime': 'Jun 16 at 12:00 PM',
-      'reason': '',
-      'phone': '01954567008'
-    },
-    {
-      'blood': 'A-',
-      'bags': '1',
-      'name': 'Israk Iram Oyshe',
-      'location': 'Mirpur',
-      'time': 'Apr 18 at 4:55 AM',
-      'neededTime': 'Apr 19 at 10:00 AM',
-      'reason': 'Required for a 2 day old baby',
-      'phone': '01552335202'
-    },
-  ];
+  @override
+  State<AllBloodRequestsPage> createState() => _AllBloodRequestsPageState();
+}
+
+class _AllBloodRequestsPageState extends State<AllBloodRequestsPage> {
+  List<dynamic> bloodRequests = [];
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchRequests();
+  }
+
+  Future<void> fetchRequests() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) {
+        setState(() {
+          errorMessage = "Not authenticated. Please log in.";
+        });
+        // optional: redirect to login after a short delay
+        Future.microtask(() =>
+            Navigator.pushReplacementNamed(context, '/login'));
+        return;
+      }
+
+      final url = Uri.parse('$baseUrl/blood_requests');
+      final res = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (res.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(res.body);
+        setState(() {
+          bloodRequests = data;
+        });
+      } else if (res.statusCode == 401) {
+        setState(() {
+          errorMessage = 'Unauthorized. Please login again.';
+        });
+        await AuthService.logout();
+        Future.microtask(() =>
+            Navigator.pushReplacementNamed(context, '/login'));
+      } else {
+        final body = res.body.isNotEmpty ? jsonDecode(res.body) : {};
+        setState(() {
+          errorMessage =
+          'Failed to load requests: ${res.statusCode} ${body['msg'] ?? res.reasonPhrase}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error: $e';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _callNumber(String contact) async {
+    final uri = Uri.parse('tel:$contact');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot launch dialer')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,13 +99,35 @@ class AllBloodRequestsPage extends StatelessWidget {
         title: const Text('All Blood Requests'),
         backgroundColor: Colors.red.shade400,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: fetchRequests,
+          ),
+        ],
       ),
-      body: ListView.builder(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : errorMessage != null
+          ? Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            errorMessage!,
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      )
+          : bloodRequests.isEmpty
+          ? const Center(child: Text('No requests found'))
+          : ListView.builder(
         itemCount: bloodRequests.length,
         itemBuilder: (context, index) {
           final request = bloodRequests[index];
           return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            margin: const EdgeInsets.symmetric(
+                horizontal: 20, vertical: 8),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -60,69 +138,52 @@ class AllBloodRequestsPage extends StatelessWidget {
                       CircleAvatar(
                         backgroundColor: Colors.red,
                         child: Text(
-                          request['blood']!,
-                          style: const TextStyle(color: Colors.white),
+                          request['blood_group'] ?? '',
+                          style: const TextStyle(
+                              color: Colors.white),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          '${request['bags']} Bag (${request['blood']}) Blood Needed',
+                          '${request['amount']} Bag (${request['blood_group']}) Blood Needed',
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('By ${request['name']}, ${request['time']}'),
+                  Text(
+                      'Location: ${request['location'] ?? ''}'),
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on, size: 16),
-                      const SizedBox(width: 4),
-                      Text(request['location']!),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time, size: 16),
-                      const SizedBox(width: 4),
-                      Text('Needed on ${request['neededTime']}'),
-                    ],
-                  ),
-                  if (request['reason']!.isNotEmpty) ...[
+                  Text('Needed at: ${request['needed_at'] ?? ''}'),
+                  if (request['note'] != null &&
+                      request['note'].toString().isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
-                      request['reason']!,
+                      request['note'],
                       style: const TextStyle(color: Colors.red),
                     ),
                   ],
                   const SizedBox(height: 10),
                   Row(
                     children: [
-
-                      const SizedBox(width: 8),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.chat_bubble_outline),
-                        label: const Text('CHAT'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.shade300,
-                          foregroundColor: Colors.black,
-                        ),
-                        onPressed: () {},
-                      ),
-                      const SizedBox(width: 10),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.call),
-                        label: Text(request['phone']!),
+                        label: Text(request['contact'] ?? ''),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.pink.shade400,
+                          backgroundColor:
+                          Colors.pink.shade400,
                           foregroundColor: Colors.white,
                         ),
                         onPressed: () {
-                          // Implement call function or use url_launcher
+                          final contact =
+                              request['contact'] ?? '';
+                          if (contact.isNotEmpty) {
+                            _callNumber(contact);
+                          }
                         },
                       ),
                     ],

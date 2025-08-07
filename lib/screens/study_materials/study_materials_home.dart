@@ -1,72 +1,21 @@
-// lib/screens/study_materials/study_materials_home.dart
 import 'package:flutter/material.dart';
+import '../../services/study_materials_service.dart';
 import 'course_list_page.dart';
 
-class StudyMaterialsHome extends StatelessWidget {
+class StudyMaterialsHome extends StatefulWidget {
   const StudyMaterialsHome({Key? key}) : super(key: key);
 
-  final List<Map<String, dynamic>> departments = const [
-    {
-      'name': 'Computer Science & Engineering',
-      'icon': Icons.computer,
-      'courses': [
-        'Artificial Intelligence',
-        'C Language Theory',
-        'Compilers (CSE 303)',
-        'Data Structures',
-      ],
-    },
-    {
-      'name': 'Chemical Engineering',
-      'icon': Icons.science,
-      'courses': [
-        'Chemistry Fundamentals (CHEM - 101)',
-        'Organic Chemistry',
-        'Inorganic Chemistry',
-      ],
-    },
-    {
-      'name': 'Architecture',
-      'icon': Icons.calculate,
-      'courses': [
-        'Linear Algebra',
-        'Calculus',
-        'Discrete Mathematics',
-      ],
-    },
-  ];
+  @override
+  State<StudyMaterialsHome> createState() => _StudyMaterialsHomeState();
+}
+
+class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
+  late Future<List<dynamic>> _departmentsFuture;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: departments.map((dept) {
-            return _buildTile(
-              context,
-              icon: dept['icon'],
-              label: dept['name'],
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CourseListPage(
-                      departmentName: dept['name'],
-                      courses: List<String>.from(dept['courses']),
-                    ),
-                  ),
-                );
-              },
-            );
-          }).toList(),
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _departmentsFuture = StudyMaterialsService.fetchDepartments();
   }
 
   Widget _buildTile(
@@ -100,6 +49,71 @@ class StudyMaterialsHome extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  IconData _mapIconStringToIconData(String? iconName) {
+    // Simple mapping, add more icons if needed
+    switch (iconName) {
+      case 'computer':
+        return Icons.computer;
+      case 'science':
+        return Icons.science;
+      case 'calculate':
+        return Icons.calculate;
+      default:
+        return Icons.school;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: FutureBuilder<List<dynamic>>(
+          future: _departmentsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+            final departments = snapshot.data ?? [];
+
+            if (departments.isEmpty) {
+              return const Center(child: Text('No departments found.'));
+            }
+
+            return GridView.count(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              children: departments.map((dept) {
+                final iconData = _mapIconStringToIconData(dept['icon']);
+                return _buildTile(
+                  context,
+                  icon: iconData,
+                  label: dept['name'] ?? 'No Name',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CourseListPage(
+                          departmentId: dept['id'],
+                          departmentName: dept['name'],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }).toList(),
+            );
+          },
         ),
       ),
     );

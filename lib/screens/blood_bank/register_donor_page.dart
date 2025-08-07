@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class RegisterDonorPage extends StatefulWidget {
   const RegisterDonorPage({super.key});
@@ -9,6 +12,8 @@ class RegisterDonorPage extends StatefulWidget {
 
 class _RegisterDonorPageState extends State<RegisterDonorPage> {
   final _formKey = GlobalKey<FormState>();
+
+  final _nameController = TextEditingController();
   String? _bloodGroup;
   DateTime? _lastDonationDate;
   final _addressController = TextEditingController();
@@ -25,6 +30,11 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
     'AB-',
   ];
 
+  static const String baseUrl = 'http://192.168.0.103:5000';
+
+  // Secure storage to get stored JWT token
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -39,23 +49,82 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
     }
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Registration Successful'),
-          content: const Text('Donor information submitted successfully.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+    final token = await _storage.read(key: 'access_token');
+    if (token == null) {
+      _showError('You must be logged in to register as a donor.');
+      return;
     }
+
+    final donorData = {
+      "name": _nameController.text.trim(),
+      "blood_group": _bloodGroup,
+      "last_donation_date": _lastDonationDate != null
+          ? _lastDonationDate!.toIso8601String().split('T')[0]
+          : null,
+      "address": _addressController.text.trim(),
+      "contact": _contactController.text.trim(),
+    };
+
+    try {
+      final url = Uri.parse('$baseUrl/donors');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',  // <-- Add token here
+        },
+        body: jsonEncode(donorData),
+      );
+
+      if (response.statusCode == 201) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Registration Successful'),
+            content: const Text('Donor information submitted successfully.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    _nameController.clear();
+                    _bloodGroup = null;
+                    _lastDonationDate = null;
+                    _addressController.clear();
+                    _contactController.clear();
+                  });
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        final errorMsg = jsonDecode(response.body)['msg'] ?? 'Unknown error';
+        _showError(errorMsg);
+      }
+    } catch (e) {
+      _showError('Failed to submit. Please check your connection.');
+    }
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -72,6 +141,16 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
           key: _formKey,
           child: ListView(
             children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: "Full Name",
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                value == null || value.isEmpty ? "Enter your name" : null,
+              ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
                   labelText: "Blood Group",
@@ -84,11 +163,11 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                 ))
                     .toList(),
                 onChanged: (value) => setState(() => _bloodGroup = value),
+                value: _bloodGroup,
                 validator: (value) =>
                 value == null ? "Please select a blood group" : null,
               ),
               const SizedBox(height: 16),
-
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text("Last Donation Date"),
@@ -103,7 +182,6 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                 ),
               ),
               const SizedBox(height: 16),
-
               TextFormField(
                 controller: _addressController,
                 decoration: const InputDecoration(
@@ -114,7 +192,6 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                 value == null || value.isEmpty ? "Enter address" : null,
               ),
               const SizedBox(height: 16),
-
               TextFormField(
                 controller: _contactController,
                 keyboardType: TextInputType.phone,
@@ -126,7 +203,6 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                 value == null || value.isEmpty ? "Enter contact number" : null,
               ),
               const SizedBox(height: 24),
-
               ElevatedButton.icon(
                 onPressed: _submitForm,
                 icon: const Icon(Icons.person_add),
