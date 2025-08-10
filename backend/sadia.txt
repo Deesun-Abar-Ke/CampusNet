@@ -1,0 +1,627 @@
+import os
+from datetime import datetime
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+from dotenv import load_dotenv
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+
+# load .env if present
+load_dotenv()
+
+app = Flask(__name__)
+CORS(app)
+
+# Config
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///campusnet8.db")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "your_secret_key_here")  # replace in prod
+
+# DB
+db = SQLAlchemy(app)
+
+# JWT Manager
+jwt = JWTManager(app)
+
+# Constants
+VALID_BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
+VALID_REQUEST_STATUSES = ['pending', 'fulfilled', 'cancelled']
+
+# Models
+class Users(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), nullable=False, unique=True)
+    phone = db.Column(db.String(50), nullable=True)
+    designation = db.Column(db.String(100), nullable=True)
+    password = db.Column(db.String(120), nullable=False)
+    donors = db.relationship('Donor', backref='user')
+    blood_requests = db.relationship('BloodRequest', backref='user')
+
+class Donor(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    blood_group = db.Column(db.String(5), nullable=False)
+    last_donation_date = db.Column(db.Date, nullable=True)
+    address = db.Column(db.String(255), nullable=False)
+    contact = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    donation_histories = db.relationship('DonationHistory', backref='donor')
+
+class BloodRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    blood_group = db.Column(db.String(5), nullable=False)
+    amount = db.Column(db.Integer, nullable=False)
+    location = db.Column(db.String(255), nullable=False)
+    contact = db.Column(db.String(100), nullable=False)
+    note = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    needed_at = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(50), default="pending")
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    donation_histories = db.relationship('DonationHistory', backref='request')
+
+class DonationHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    donor_id = db.Column(db.Integer, db.ForeignKey('donor.id'), nullable=False)
+    donation_date = db.Column(db.Date, nullable=False)
+    request_id = db.Column(db.Integer, db.ForeignKey('blood_request.id'), nullable=False)
+
+# -----------------------------
+# Study Materials Models
+# -----------------------------
+
+class Department(db.Model):
+    __tablename__ = "departments"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False, unique=True)
+    icon = db.Column(db.String(50), nullable=True)  # optional: store icon name/code
+    courses = db.relationship("Course", backref="department", lazy=True)
+
+
+class Course(db.Model):
+    __tablename__ = "courses"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    department_id = db.Column(db.Integer, db.ForeignKey("departments.id"), nullable=False)
+    notes = db.relationship("Note", backref="course", lazy=True)
+
+
+class Note(db.Model):
+    __tablename__ = "notes"
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)      # e.g., Chapter 1_Final.pdf
+    file_url = db.Column(db.String(500), nullable=False)      # where the file is stored (local or S3)
+    file_type = db.Column(db.String(10), nullable=False)      # pdf, ppt, pptx
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)  # who uploaded it
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
+
+
+# Initialize
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
+# Health
+@app.route("/")
+def home():
+    return jsonify({"msg": "CampusNet Blood Bank API", "status": "up"}), 200
+
+# Signup endpoint
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.get_json() or {}
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
+    phone = data.get("phone", "").strip()
+    designation = data.get("designation", "").strip()
+    password = data.get("password", "").strip()
+
+    if not name or not email or not password:
+        return jsonify({"msg": "name, email, and password are required"}), 400
+
+    if Users.query.filter_by(email=email).first():
+        return jsonify({"msg": "Email already in use"}), 409
+
+    user = Users(
+        name=name,
+        email=email,
+        phone=phone,
+        designation=designation,
+        password=password  # plain text per request
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "phone": user.phone,
+        "designation": user.designation,
+    }), 201
+
+# Login endpoint
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json() or {}
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "").strip()
+
+    if not email or not password:
+        return jsonify({"msg": "email and password are required"}), 400
+
+    user = Users.query.filter_by(email=email).first()
+    if not user or user.password != password:
+        return jsonify({"msg": "Invalid credentials"}), 401
+
+    access_token = create_access_token(identity=str(user.id))
+    return jsonify({"msg": "Login successful", "access_token": access_token}), 200
+
+# Donor endpoints
+@app.route("/donors", methods=["POST"])
+@jwt_required()
+def register_donor():
+    data = request.get_json() or {}
+    name = data.get("name", "").strip()
+    blood_group = data.get("blood_group", "").upper()
+    last_donation_date = data.get("last_donation_date", "").strip()
+    address = data.get("address", "").strip()
+    contact = data.get("contact", "").strip()
+
+    if not name or not blood_group or not address or not contact:
+        return jsonify({"msg": "name, blood_group, address, contact are required"}), 400
+
+    if blood_group not in VALID_BLOOD_GROUPS:
+        return jsonify({"msg": "invalid blood_group"}), 400
+
+    last_donation = None
+    if last_donation_date:
+        try:
+            last_donation = datetime.strptime(last_donation_date, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"msg": "last_donation_date must be YYYY-MM-DD"}), 400
+
+    try:
+        user_id = int(get_jwt_identity())
+    except (TypeError, ValueError):
+        return jsonify({"msg": "Invalid JWT identity"}), 400
+
+    donor = Donor(
+        name=name,
+        blood_group=blood_group,
+        last_donation_date=last_donation,
+        address=address,
+        contact=contact,
+        user_id=user_id
+    )
+    db.session.add(donor)
+    db.session.commit()
+
+    return jsonify({
+        "id": donor.id,
+        "name": donor.name,
+        "blood_group": donor.blood_group,
+        "last_donation_date": donor.last_donation_date.isoformat() if donor.last_donation_date else None,
+        "address": donor.address,
+        "contact": donor.contact,
+        "user_id": donor.user_id
+    }), 201
+
+@app.route("/donors", methods=["GET"])
+@jwt_required()
+def list_donors():
+    blood_group = request.args.get("blood_group")
+    location = request.args.get("location")
+    query = Donor.query
+    if blood_group:
+        query = query.filter(Donor.blood_group == blood_group.upper())
+    if location:
+        query = query.filter(Donor.address.ilike(f"%{location}%"))
+    donors = query.order_by(Donor.created_at.desc()).all()
+    result = []
+    for d in donors:
+        result.append({
+            "id": d.id,
+            "name": d.name,
+            "blood_group": d.blood_group,
+            "last_donation_date": d.last_donation_date.isoformat() if d.last_donation_date else None,
+            "address": d.address,
+            "contact": d.contact,
+        })
+    return jsonify(result), 200
+
+# BloodRequest endpoints
+@app.route("/blood_requests", methods=["POST"])
+@jwt_required()
+def create_blood_request():
+    data = request.get_json() or {}
+    blood_group = data.get("blood_group", "").strip().upper()
+    amount = data.get("amount")
+    location = data.get("location", "").strip()
+    contact = data.get("contact", "").strip()
+    note = data.get("note", "").strip() if data.get("note") else None
+    needed_at_raw = data.get("needed_at", "").strip() if data.get("needed_at") else ""
+    status = data.get("status", "pending").strip().lower()
+
+    if not blood_group or amount is None or not location or not contact:
+        return jsonify({"msg": "blood_group, amount, location, and contact are required"}), 400
+
+    if blood_group not in VALID_BLOOD_GROUPS:
+        return jsonify({"msg": "invalid blood_group"}), 400
+
+    try:
+        amount = int(amount)
+        if amount <= 0:
+            raise ValueError()
+    except (ValueError, TypeError):
+        return jsonify({"msg": "amount must be a positive integer"}), 400
+
+    if status not in VALID_REQUEST_STATUSES:
+        return jsonify({"msg": "invalid status"}), 400
+
+    needed_at = None
+    if needed_at_raw:
+        try:
+            needed_at = datetime.strptime(needed_at_raw, "%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            return jsonify({"msg": "needed_at must be ISO format YYYY-MM-DDTHH:MM:SS"}), 400
+
+    try:
+        user_id = int(get_jwt_identity())
+    except (TypeError, ValueError):
+        return jsonify({"msg": "Invalid JWT identity"}), 400
+
+    br = BloodRequest(
+        blood_group=blood_group,
+        amount=amount,
+        location=location,
+        contact=contact,
+        note=note,
+        needed_at=needed_at,
+        status=status,
+        user_id=user_id
+    )
+    db.session.add(br)
+    db.session.commit()
+
+    return jsonify({
+        "id": br.id,
+        "blood_group": br.blood_group,
+        "amount": br.amount,
+        "location": br.location,
+        "contact": br.contact,
+        "note": br.note,
+        "created_at": br.created_at.isoformat(),
+        "needed_at": br.needed_at.isoformat() if br.needed_at else None,
+        "status": br.status,
+        "user_id": br.user_id
+    }), 201
+
+@app.route("/blood_requests", methods=["GET"])
+@jwt_required()
+def list_blood_requests():
+    blood_group = request.args.get("blood_group")
+    status = request.args.get("status")
+    location = request.args.get("location")
+    user_id_filter = request.args.get("user_id")
+    query = BloodRequest.query
+
+    if blood_group:
+        query = query.filter(BloodRequest.blood_group == blood_group.upper())
+    if status:
+        query = query.filter(BloodRequest.status == status.lower())
+    if location:
+        query = query.filter(BloodRequest.location.ilike(f"%{location}%"))
+    if user_id_filter:
+        try:
+            uid = int(user_id_filter)
+            query = query.filter(BloodRequest.user_id == uid)
+        except ValueError:
+            return jsonify({"msg": "user_id must be integer"}), 400
+
+    requests_list = query.order_by(BloodRequest.created_at.desc()).all()
+    result = []
+    for br in requests_list:
+        result.append({
+            "id": br.id,
+            "blood_group": br.blood_group,
+            "amount": br.amount,
+            "location": br.location,
+            "contact": br.contact,
+            "note": br.note,
+            "created_at": br.created_at.isoformat(),
+            "needed_at": br.needed_at.isoformat() if br.needed_at else None,
+            "status": br.status,
+            "user_id": br.user_id
+        })
+    return jsonify(result), 200
+
+@app.route("/blood_requests/<int:request_id>", methods=["GET"])
+@jwt_required()
+def get_blood_request(request_id):
+    br = BloodRequest.query.get_or_404(request_id)
+    return jsonify({
+        "id": br.id,
+        "blood_group": br.blood_group,
+        "amount": br.amount,
+        "location": br.location,
+        "contact": br.contact,
+        "note": br.note,
+        "created_at": br.created_at.isoformat(),
+        "needed_at": br.needed_at.isoformat() if br.needed_at else None,
+        "status": br.status,
+        "user_id": br.user_id
+    }), 200
+
+@app.route("/blood_requests/<int:request_id>/status", methods=["PATCH"])
+@jwt_required()
+def update_blood_request_status(request_id):
+    br = BloodRequest.query.get_or_404(request_id)
+    data = request.get_json() or {}
+    new_status = data.get("status", "").strip().lower()
+    if new_status not in VALID_REQUEST_STATUSES:
+        return jsonify({"msg": "invalid status"}), 400
+    br.status = new_status
+    db.session.commit()
+    return jsonify({"id": br.id, "status": br.status}), 200
+
+# DonationHistory endpoints
+@app.route("/donation_history", methods=["POST"])
+@jwt_required()
+def create_donation_history():
+    data = request.get_json() or {}
+    donor_id = data.get("donor_id")
+    request_id = data.get("request_id")
+    donation_date_raw = data.get("donation_date", "").strip()
+
+    if donor_id is None or request_id is None or not donation_date_raw:
+        return jsonify({"msg": "donor_id, request_id, and donation_date are required"}), 400
+
+    try:
+        donor_id = int(donor_id)
+        request_id = int(request_id)
+    except (ValueError, TypeError):
+        return jsonify({"msg": "donor_id and request_id must be integers"}), 400
+
+    try:
+        donation_date = datetime.strptime(donation_date_raw, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"msg": "donation_date must be YYYY-MM-DD"}), 400
+
+    donor = Donor.query.get(donor_id)
+    br = BloodRequest.query.get(request_id)
+    if not donor or not br:
+        return jsonify({"msg": "donor or blood request not found"}), 404
+
+    dh = DonationHistory(
+        donor_id=donor.id,
+        request_id=br.id,
+        donation_date=donation_date
+    )
+    db.session.add(dh)
+    db.session.commit()
+
+    return jsonify({
+        "id": dh.id,
+        "donor_id": dh.donor_id,
+        "request_id": dh.request_id,
+        "donation_date": dh.donation_date.isoformat()
+    }), 201
+
+@app.route("/donation_history", methods=["GET"])
+@jwt_required()
+def list_donation_history():
+    donor_id = request.args.get("donor_id")
+    request_id = request.args.get("request_id")
+    query = DonationHistory.query
+
+    if donor_id:
+        try:
+            query = query.filter(DonationHistory.donor_id == int(donor_id))
+        except ValueError:
+            return jsonify({"msg": "donor_id must be integer"}), 400
+    if request_id:
+        try:
+            query = query.filter(DonationHistory.request_id == int(request_id))
+        except ValueError:
+            return jsonify({"msg": "request_id must be integer"}), 400
+
+    histories = query.order_by(DonationHistory.donation_date.desc()).all()
+    result = []
+    for h in histories:
+        result.append({
+            "id": h.id,
+            "donor_id": h.donor_id,
+            "request_id": h.request_id,
+            "donation_date": h.donation_date.isoformat()
+        })
+    return jsonify(result), 200
+
+# -----------------------------
+# Study Materials Endpoints
+# -----------------------------
+@app.route("/departments", methods=["POST"])
+def create_department():
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()
+    icon = (data.get("icon") or "").strip()
+
+    if not name:
+        return jsonify({"msg": "Department name is required"}), 400
+
+    # enforce uniqueness gracefully
+    existing = Department.query.filter(Department.name.ilike(name)).first()
+    if existing:
+        return jsonify({"msg": "Department with that name already exists"}), 409
+
+    department = Department(name=name, icon=icon or None)
+    db.session.add(department)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return jsonify({"msg": "Failed to create department"}), 500
+
+    return jsonify({
+        "id": department.id,
+        "name": department.name,
+        "icon": department.icon
+    }), 201
+
+
+@app.route("/departments", methods=["GET"])
+def get_departments():
+    departments = Department.query.all()
+    return jsonify([
+        {
+            "id": d.id,
+            "name": d.name,
+            "icon": d.icon
+        }
+        for d in departments
+    ]), 200
+
+@app.route("/courses", methods=["POST"])
+def create_course():
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()
+    department_id = data.get("department_id")
+
+    if not name or department_id is None:
+        return jsonify({"msg": "Course name and department_id are required"}), 400
+
+    try:
+        department_id = int(department_id)
+    except (ValueError, TypeError):
+        return jsonify({"msg": "department_id must be an integer"}), 400
+
+    department = Department.query.get(department_id)
+    if not department:
+        return jsonify({"msg": "Department not found"}), 404
+
+    # (Optional) prevent duplicate course name within same department
+    existing = Course.query.filter(
+        Course.department_id == department_id,
+        Course.name.ilike(name)
+    ).first()
+    if existing:
+        return jsonify({"msg": "Course with that name already exists in this department"}), 409
+
+    course = Course(name=name, department_id=department_id)
+    db.session.add(course)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return jsonify({"msg": "Failed to create course"}), 500
+
+    return jsonify({
+        "id": course.id,
+        "name": course.name,
+        "department_id": course.department_id
+    }), 201
+
+@app.route("/courses", methods=["GET"])
+def get_courses():
+    department_id = request.args.get("department_id")
+    query = Course.query
+    if department_id:
+        try:
+            query = query.filter(Course.department_id == int(department_id))
+        except ValueError:
+            return jsonify({"msg": "department_id must be integer"}), 400
+    courses = query.all()
+    return jsonify([
+        {
+            "id": c.id,
+            "name": c.name,
+            "department_id": c.department_id
+        }
+        for c in courses
+    ]), 200
+
+
+@app.route("/notes", methods=["GET"])
+def get_notes():
+    course_id = request.args.get("course_id")
+    query = Note.query
+    if course_id:
+        try:
+            query = query.filter(Note.course_id == int(course_id))
+        except ValueError:
+            return jsonify({"msg": "course_id must be integer"}), 400
+    notes = query.order_by(Note.uploaded_at.desc()).all()
+    return jsonify([
+        {
+            "id": n.id,
+            "filename": n.filename,
+            "file_url": n.file_url,
+            "file_type": n.file_type,
+            "uploaded_at": n.uploaded_at.isoformat(),
+            "uploaded_by": n.uploaded_by,
+            "course_id": n.course_id
+        }
+        for n in notes
+    ]), 200
+
+
+@app.route("/notes", methods=["POST"])
+@jwt_required()
+def upload_note():
+    data = request.get_json() or {}
+    filename = data.get("filename", "").strip()
+    file_url = data.get("file_url", "").strip()
+    file_type = data.get("file_type", "").strip().lower()
+    course_id = data.get("course_id")
+
+    if not filename or not file_url or not file_type or not course_id:
+        return jsonify({"msg": "filename, file_url, file_type, and course_id are required"}), 400
+
+    if file_type not in ["pdf", "ppt", "pptx"]:
+        return jsonify({"msg": "file_type must be one of pdf, ppt, pptx"}), 400
+
+    try:
+        course_id = int(course_id)
+    except (ValueError, TypeError):
+        return jsonify({"msg": "course_id must be integer"}), 400
+
+    try:
+        user_id = int(get_jwt_identity())
+    except (TypeError, ValueError):
+        return jsonify({"msg": "Invalid JWT identity"}), 400
+
+    note = Note(
+        filename=filename,
+        file_url=file_url,
+        file_type=file_type,
+        course_id=course_id,
+        uploaded_by=user_id
+    )
+    db.session.add(note)
+    db.session.commit()
+
+    return jsonify({
+        "id": note.id,
+        "filename": note.filename,
+        "file_url": note.file_url,
+        "file_type": note.file_type,
+        "uploaded_at": note.uploaded_at.isoformat(),
+        "uploaded_by": note.uploaded_by,
+        "course_id": note.course_id
+    }), 201
+
+
+# Error handlers
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    return jsonify({"error": "Internal server error"}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=True)
