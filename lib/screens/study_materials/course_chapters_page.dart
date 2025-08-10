@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/study_materials_service.dart';
+import '../../widgets/common_app_bar.dart';
 import 'upload_note_dialog.dart';
+import 'folder_contents_page.dart';
 
 class CourseChaptersPage extends StatefulWidget {
   final int courseId;
@@ -36,6 +38,111 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
     return Icons.insert_drive_file;
   }
 
+  void _showAddDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add New Item'),
+        content: const Text('What would you like to add?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _addNewFolder();
+            },
+            child: const Text('Add Folder'),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _uploadFile();
+            },
+            child: const Text('Upload File'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addNewFolder() {
+    final TextEditingController controller = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create New Folder'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter folder name:'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'Folder name',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                setState(() {
+                  items.add({
+                    'name': controller.text.trim(),
+                    'type': 'folder',
+                    'icon': Icons.folder,
+                    'items': <Map<String, dynamic>>[],
+                  });
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Folder "${controller.text.trim()}" created!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _uploadFile() async {
+    final uploadedFilePath = await showDialog<String>(
+      context: context,
+      builder: (_) => const UploadNoteDialog(),
+    );
+
+    if (uploadedFilePath != null) {
+      final filename = uploadedFilePath.split('/').last;
+      setState(() {
+        items.add({
+          'name': filename,
+          'type': 'file',
+          'icon': getFileIcon(filename),
+        });
+      });
+    }
+  }
+
   void _showDeleteDialog(int index) {
     showModalBottomSheet(
       context: context,
@@ -46,7 +153,7 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.delete_forever, color: Colors.red),
-                title: const Text("Delete this file"),
+                title: Text("Delete ${items[index]['type']}"),
                 onTap: () {
                   // TODO: implement delete API if available
                   Navigator.pop(context);

@@ -44,5 +44,4 @@ def internal_error(e):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
-    # Use 0.0.0.0 to accept connections from any IP, port 5000
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", debug=True)

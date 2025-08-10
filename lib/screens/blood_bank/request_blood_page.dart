@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 const String baseUrl = 'http://192.168.0.103:5000';
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
 
 class RequestBloodPage extends StatefulWidget {
   const RequestBloodPage({super.key});
@@ -163,10 +165,9 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: CommonAppBar(
         title: const Text('Request Blood'),
-        backgroundColor: Colors.red.shade400,
-        foregroundColor: Colors.white,
+        showBackButton: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),

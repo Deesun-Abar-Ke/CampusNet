@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
 
 class RegisterDonorPage extends StatefulWidget {
   const RegisterDonorPage({super.key});
@@ -130,10 +132,9 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Register as Donor"),
-        backgroundColor: Colors.red.shade400,
-        foregroundColor: Colors.white,
+      appBar: CommonAppBar(
+        title: const Text('Register as Donor'),
+        showBackButton: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -157,15 +158,12 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                   border: OutlineInputBorder(),
                 ),
                 items: _bloodGroups
-                    .map((bg) => DropdownMenuItem(
-                  value: bg,
-                  child: Text(bg),
-                ))
+                    .map((bg) => DropdownMenuItem(value: bg, child: Text(bg)))
                     .toList(),
                 onChanged: (value) => setState(() => _bloodGroup = value),
                 value: _bloodGroup,
                 validator: (value) =>
-                value == null ? "Please select a blood group" : null,
+                    value == null ? "Please select a blood group" : null,
               ),
               const SizedBox(height: 16),
               ListTile(
@@ -189,7 +187,7 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                value == null || value.isEmpty ? "Enter address" : null,
+                    value == null || value.isEmpty ? "Enter address" : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -199,8 +197,9 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                   labelText: "Contact Number",
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) =>
-                value == null || value.isEmpty ? "Enter contact number" : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? "Enter contact number"
+                    : null,
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(

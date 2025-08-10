@@ -4,8 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth_service.dart'; // adjust path if necessary
 
-const String baseUrl = 'http://192.168.0.103:5000'; // your Flask backend
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
+import '../messages_page.dart';
 
+const String baseUrl = 'http://192.168.0.103:5000'; // your Flask backend
 class AllBloodRequestsPage extends StatefulWidget {
   const AllBloodRequestsPage({super.key});
 
@@ -95,7 +98,7 @@ class _AllBloodRequestsPageState extends State<AllBloodRequestsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: CommonAppBar(
         title: const Text('All Blood Requests'),
         backgroundColor: Colors.red.shade400,
         foregroundColor: Colors.white,
@@ -187,13 +190,41 @@ class _AllBloodRequestsPageState extends State<AllBloodRequestsPage> {
                         },
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
           );
         },
       ),
+    );
+  }
+}
+
+// Wrapper for Messages Page to handle blood request messaging
+class BloodRequestMessagesWrapper extends StatelessWidget {
+  final String contactName;
+
+  const BloodRequestMessagesWrapper({super.key, required this.contactName});
+
+  @override
+  Widget build(BuildContext context) {
+    // Get avatar for the contact (blood request related)
+    String getAvatarForContact(String name) {
+      // Simple mapping for blood requesters
+      if (name.contains('Ahmed')) return '🆘';
+      if (name.contains('Rahman')) return '🩸';
+      if (name.contains('Khan')) return '🏥';
+      if (name.contains('Begum')) return '👩‍⚕️';
+      return '🆘';
+    }
+
+    // Directly open ChatScreen for blood request contact
+    return ChatScreen(
+      contactName: contactName,
+      avatar: getAvatarForContact(contactName),
+      isOnline: true,
+      initialMessage: 'Hi! I saw your blood request and would like to help. Please let me know the details.',
     );
   }
 }

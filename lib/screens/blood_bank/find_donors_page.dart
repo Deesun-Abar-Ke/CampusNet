@@ -4,8 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth_service.dart'; // adjust the path if needed
 
-const String baseUrl = 'http://192.168.0.103:5000'; // your Flask backend
+import '../../widgets/common_app_bar.dart';
+import '../landing_page.dart';
+import '../messages_page.dart';
 
+const String baseUrl = 'http://192.168.0.103:5000'; // your Flask backend
 class FindDonorsPage extends StatefulWidget {
   const FindDonorsPage({super.key});
 
@@ -128,7 +131,7 @@ class _FindDonorsPageState extends State<FindDonorsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: CommonAppBar(
         title: const Text('Find Blood Donors'),
         backgroundColor: Colors.red.shade400,
         foregroundColor: Colors.white,
@@ -226,6 +229,34 @@ class _FindDonorsPageState extends State<FindDonorsPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Wrapper for Messages Page to handle blood donor messaging
+class BloodBankMessagesWrapper extends StatelessWidget {
+  final String contactName;
+
+  const BloodBankMessagesWrapper({super.key, required this.contactName});
+
+  @override
+  Widget build(BuildContext context) {
+    // Get avatar for the contact (blood donor related)
+    String getAvatarForContact(String name) {
+      // Simple mapping for blood donors
+      if (name.contains('Faria')) return '👩‍⚕️';
+      if (name.contains('Ahmed')) return '👨‍⚕️';
+      if (name.contains('Rahman')) return '🩸';
+      if (name.contains('Khan')) return '👨‍🔬';
+      return '🩸';
+    }
+
+    // Directly open ChatScreen for blood bank contact
+    return ChatScreen(
+      contactName: contactName,
+      avatar: getAvatarForContact(contactName),
+      isOnline: true,
+      initialMessage: 'Hi! I saw your blood donor profile and would like to get in touch regarding blood donation.',
     );
   }
 }

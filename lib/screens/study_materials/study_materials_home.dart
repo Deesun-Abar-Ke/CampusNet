@@ -1,9 +1,27 @@
 import 'package:flutter/material.dart';
 import '../../services/study_materials_service.dart';
-import 'course_list_page.dart';
+import '../../widgets/common_app_bar.dart';
+import 'department_courses_page.dart';
 
 class StudyMaterialsHome extends StatefulWidget {
   const StudyMaterialsHome({Key? key}) : super(key: key);
+
+  @override
+  State<StudyMaterialsHome> createState() => _StudyMaterialsHomeState();
+}
+
+class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
+  String searchQuery = '';
+  List<String> allCourses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Populate allCourses from departments
+    for (var dept in departments) {
+      allCourses.addAll(dept['courses'] as List<String>);
+    }
+  }
 
   @override
   State<StudyMaterialsHome> createState() => _StudyMaterialsHomeState();
