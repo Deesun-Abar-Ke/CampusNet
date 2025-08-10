@@ -2,7 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart'; // Make sure this has AuthService.getToken()
 
-const String baseUrl = 'http://192.168.0.103:5000';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+// Replace with your Flask backend URL
+const String baseUrl = 'http://10.103.135.42:5000';
 
 class StudyMaterialsService {
   // ------------------ DEPARTMENTS ------------------
