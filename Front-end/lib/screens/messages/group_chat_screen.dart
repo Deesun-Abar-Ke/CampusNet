@@ -660,12 +660,27 @@ class GroupMessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
-            CircleAvatar(
-              radius: 12,
-              backgroundColor: Colors.teal[100],
-              child: Text(
-                _getAvatarForSender(sender), 
-                style: const TextStyle(fontSize: 10)
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      contactName: sender,
+                      avatar: _getAvatarForSender(sender),
+                      isOnline: true, // Default to online
+                    ),
+                    settings: const RouteSettings(name: '/chat'),
+                  ),
+                );
+              },
+              child: CircleAvatar(
+                radius: 12,
+                backgroundColor: Colors.teal[100],
+                child: Text(
+                  _getAvatarForSender(sender), 
+                  style: const TextStyle(fontSize: 10)
+                ),
               ),
             ),
             const SizedBox(width: 8),

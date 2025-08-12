@@ -1,5 +1,6 @@
 // lib/screens/messages/group_resources/view_members_page.dart
 import 'package:flutter/material.dart';
+import '../chat_screen.dart';
 
 class ViewMembersPage extends StatefulWidget {
   final String groupName;
@@ -420,8 +421,16 @@ class _ViewMembersPageState extends State<ViewMembersPage> {
                 title: const Text('Send Message'),
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Opening chat with ${member.name}')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        contactName: member.name,
+                        avatar: member.name[0].toUpperCase(),
+                        isOnline: member.isOnline,
+                      ),
+                      settings: const RouteSettings(name: '/chat'),
+                    ),
                   );
                 },
               ),

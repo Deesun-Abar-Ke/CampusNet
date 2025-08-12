@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/common_app_bar.dart';
 import 'group_chat_screen.dart';
 
 class GroupUser {
@@ -37,7 +36,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   final List<GroupUser> _selectedUsers = [];
   
   // Filter options
-  String _selectedFilter = 'all'; // 'all', 'online', 'offline'
   String _selectedSortOption = 'name'; // 'name', 'department', 'level', 'session'
   String _selectedDepartment = 'all';
   String _selectedLevel = 'all';
@@ -75,16 +73,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           user.studentId.toLowerCase().contains(_searchController.text.toLowerCase()) ||
                           user.level.toLowerCase().contains(_searchController.text.toLowerCase()) ||
                           user.session.toLowerCase().contains(_searchController.text.toLowerCase());
-      
-      bool matchesStatus = _selectedFilter == 'all' || 
-                          (_selectedFilter == 'online' && user.isOnline) ||
-                          (_selectedFilter == 'offline' && !user.isOnline);
                           
       bool matchesDepartment = _selectedDepartment == 'all' || user.department == _selectedDepartment;
       bool matchesLevel = _selectedLevel == 'all' || user.level == _selectedLevel;
       bool matchesSession = _selectedSession == 'all' || user.session == _selectedSession;
       
-      return matchesSearch && matchesStatus && matchesDepartment && matchesLevel && matchesSession;
+      return matchesSearch && matchesDepartment && matchesLevel && matchesSession;
     }).toList();
 
     // Apply sorting
@@ -101,9 +95,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       case 'session':
         filtered.sort((a, b) => a.session.compareTo(b.session));
         break;
-      case 'status':
-        filtered.sort((a, b) => a.isOnline == b.isOnline ? 0 : (a.isOnline ? -1 : 1));
-        break;
     }
 
     setState(() {
@@ -113,7 +104,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
   void _clearFilters() {
     setState(() {
-      _selectedFilter = 'all';
       _selectedSortOption = 'name';
       _selectedDepartment = 'all';
       _selectedLevel = 'all';
@@ -196,8 +186,13 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(
-        title: const Text('Create Group'),
+      appBar: AppBar(
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Create Group',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       ),
       body: Column(
         children: [
@@ -232,29 +227,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Status and Sort filters
+                // Sort filter only
                 Row(
                   children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedFilter,
-                        decoration: const InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'all', child: Text('All Status')),
-                          DropdownMenuItem(value: 'online', child: Text('Online')),
-                          DropdownMenuItem(value: 'offline', child: Text('Offline')),
-                        ],
-                        onChanged: (value) {
-                          setState(() => _selectedFilter = value!);
-                          _filterUsers();
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedSortOption,
@@ -268,7 +243,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           DropdownMenuItem(value: 'department', child: Text('Department')),
                           DropdownMenuItem(value: 'level', child: Text('Level')),
                           DropdownMenuItem(value: 'session', child: Text('Session')),
-                          DropdownMenuItem(value: 'status', child: Text('Status')),
                         ],
                         onChanged: (value) {
                           setState(() => _selectedSortOption = value!);
@@ -284,16 +258,22 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 Row(
                   children: [
                     Expanded(
+                      flex: 2,
                       child: DropdownButtonFormField<String>(
                         value: _selectedDepartment,
                         decoration: const InputDecoration(
-                          labelText: 'Department',
+                          labelText: 'Dept',
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: TextStyle(fontSize: 11),
                         ),
                         items: uniqueDepartments.map((dept) => DropdownMenuItem(
                           value: dept,
-                          child: Text(dept == 'all' ? 'All Departments' : dept),
+                          child: Text(
+                            dept == 'all' ? 'All' : dept,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         )).toList(),
                         onChanged: (value) {
                           setState(() => _selectedDepartment = value!);
@@ -301,18 +281,24 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 2),
                     Expanded(
+                      flex: 1,
                       child: DropdownButtonFormField<String>(
                         value: _selectedLevel,
                         decoration: const InputDecoration(
-                          labelText: 'Level',
+                          labelText: 'Lvl',
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: TextStyle(fontSize: 11),
                         ),
                         items: uniqueLevels.map((level) => DropdownMenuItem(
                           value: level,
-                          child: Text(level == 'all' ? 'All Levels' : level),
+                          child: Text(
+                            level == 'all' ? 'All' : level,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         )).toList(),
                         onChanged: (value) {
                           setState(() => _selectedLevel = value!);
@@ -328,16 +314,22 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 Row(
                   children: [
                     Expanded(
+                      flex: 2,
                       child: DropdownButtonFormField<String>(
                         value: _selectedSession,
                         decoration: const InputDecoration(
-                          labelText: 'Session',
+                          labelText: 'Sess',
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: TextStyle(fontSize: 11),
                         ),
                         items: uniqueSessions.map((session) => DropdownMenuItem(
                           value: session,
-                          child: Text(session == 'all' ? 'All Sessions' : session),
+                          child: Text(
+                            session == 'all' ? 'All' : session,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         )).toList(),
                         onChanged: (value) {
                           setState(() => _selectedSession = value!);
@@ -345,7 +337,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 2),
                     ElevatedButton(
                       onPressed: _clearFilters,
                       child: const Text('Clear Filters'),

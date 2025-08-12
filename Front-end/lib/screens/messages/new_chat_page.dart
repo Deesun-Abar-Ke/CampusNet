@@ -12,7 +12,6 @@ class _NewChatPageState extends State<NewChatPage> {
   final TextEditingController _searchController = TextEditingController();
   
   // Filter options
-  String _selectedFilter = 'all'; // 'all', 'online', 'offline'
   String _selectedSortOption = 'name'; // 'name', 'department', 'level', 'session'
   String _selectedDepartment = 'all';
   String _selectedLevel = 'all';
@@ -58,13 +57,6 @@ class _NewChatPageState extends State<NewChatPage> {
             .toList();
       }
       
-      // Apply status filter
-      if (_selectedFilter == 'online') {
-        filtered = filtered.where((user) => user.isOnline).toList();
-      } else if (_selectedFilter == 'offline') {
-        filtered = filtered.where((user) => !user.isOnline).toList();
-      }
-      
       // Apply department filter
       if (_selectedDepartment != 'all') {
         filtered = filtered.where((user) => user.department == _selectedDepartment).toList();
@@ -89,8 +81,6 @@ class _NewChatPageState extends State<NewChatPage> {
         filtered.sort((a, b) => a.level.compareTo(b.level));
       } else if (_selectedSortOption == 'session') {
         filtered.sort((a, b) => a.session.compareTo(b.session));
-      } else if (_selectedSortOption == 'status') {
-        filtered.sort((a, b) => b.isOnline.toString().compareTo(a.isOnline.toString()));
       }
       
       filteredUsers = filtered;
@@ -99,7 +89,6 @@ class _NewChatPageState extends State<NewChatPage> {
 
   void _clearFilters() {
     setState(() {
-      _selectedFilter = 'all';
       _selectedSortOption = 'name';
       _selectedDepartment = 'all';
       _selectedLevel = 'all';
@@ -168,32 +157,7 @@ class _NewChatPageState extends State<NewChatPage> {
                 // First Row: Status and Sort
                 Row(
                   children: [
-                    // Status Filter
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedFilter,
-                        decoration: InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'all', child: Text('All')),
-                          DropdownMenuItem(value: 'online', child: Text('Online')),
-                          DropdownMenuItem(value: 'offline', child: Text('Offline')),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedFilter = value!;
-                            _filterUsers();
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Sort Options
+                    // Sort Options only
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedSortOption,
@@ -202,14 +166,13 @@ class _NewChatPageState extends State<NewChatPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         ),
                         items: const [
                           DropdownMenuItem(value: 'name', child: Text('Name')),
                           DropdownMenuItem(value: 'department', child: Text('Department')),
                           DropdownMenuItem(value: 'level', child: Text('Level')),
                           DropdownMenuItem(value: 'session', child: Text('Session')),
-                          DropdownMenuItem(value: 'status', child: Text('Online Status')),
                         ],
                         onChanged: (value) {
                           setState(() {
@@ -227,18 +190,24 @@ class _NewChatPageState extends State<NewChatPage> {
                   children: [
                     // Department Filter
                     Expanded(
+                      flex: 2,
                       child: DropdownButtonFormField<String>(
                         value: _selectedDepartment,
                         decoration: InputDecoration(
-                          labelText: 'Department',
+                          labelText: 'Dept',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: const TextStyle(fontSize: 11),
                         ),
                         items: _departments.map((dept) => DropdownMenuItem(
                           value: dept,
-                          child: Text(dept == 'all' ? 'All Depts' : dept),
+                          child: Text(
+                            dept == 'all' ? 'All' : dept,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         )).toList(),
                         onChanged: (value) {
                           setState(() {
@@ -248,21 +217,27 @@ class _NewChatPageState extends State<NewChatPage> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 2),
                     // Level Filter
                     Expanded(
+                      flex: 1,
                       child: DropdownButtonFormField<String>(
                         value: _selectedLevel,
                         decoration: InputDecoration(
-                          labelText: 'Level',
+                          labelText: 'Lvl',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: const TextStyle(fontSize: 11),
                         ),
                         items: _levels.map((level) => DropdownMenuItem(
                           value: level,
-                          child: Text(level == 'all' ? 'All' : level),
+                          child: Text(
+                            level == 'all' ? 'All' : level,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         )).toList(),
                         onChanged: (value) {
                           setState(() {
@@ -272,21 +247,27 @@ class _NewChatPageState extends State<NewChatPage> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 2),
                     // Session Filter
                     Expanded(
+                      flex: 1,
                       child: DropdownButtonFormField<String>(
                         value: _selectedSession,
                         decoration: InputDecoration(
-                          labelText: 'Session',
+                          labelText: 'Sess',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: const TextStyle(fontSize: 11),
                         ),
                         items: _sessions.map((session) => DropdownMenuItem(
                           value: session,
-                          child: Text(session == 'all' ? 'All' : session),
+                          child: Text(
+                            session == 'all' ? 'All' : session,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         )).toList(),
                         onChanged: (value) {
                           setState(() {
@@ -315,7 +296,7 @@ class _NewChatPageState extends State<NewChatPage> {
                     fontSize: 14,
                   ),
                 ),
-                if (_searchController.text.isNotEmpty || _selectedFilter != 'all' || _selectedDepartment != 'all' || _selectedLevel != 'all' || _selectedSession != 'all')
+                if (_searchController.text.isNotEmpty || _selectedDepartment != 'all' || _selectedLevel != 'all' || _selectedSession != 'all')
                   TextButton(
                     onPressed: _clearFilters,
                     child: const Text('Clear Filters'),

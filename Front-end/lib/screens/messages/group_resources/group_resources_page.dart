@@ -443,7 +443,6 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
                 ...currentFiles.map((file) => ResourceFileTile(
                   file: file,
                   onTap: () => _openResource(file),
-                  onShare: () => _shareResource(file),
                   onDownload: () => _downloadResource(file),
                   onCopyReference: () => _copyReference(context, file),
                 )),
@@ -872,7 +871,6 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
 class ResourceFileTile extends StatelessWidget {
   final ResourceFile file;
   final VoidCallback onTap;
-  final VoidCallback onShare;
   final VoidCallback onDownload;
   final VoidCallback onCopyReference;
 
@@ -880,7 +878,6 @@ class ResourceFileTile extends StatelessWidget {
     Key? key,
     required this.file,
     required this.onTap,
-    required this.onShare,
     required this.onDownload,
     required this.onCopyReference,
   }) : super(key: key);
@@ -942,17 +939,6 @@ class ResourceFileTile extends StatelessWidget {
                 ],
               ),
               onTap: onCopyReference,
-            ),
-            PopupMenuItem(
-              value: 'share',
-              child: const Row(
-                children: [
-                  Icon(Icons.share, color: Colors.orange),
-                  SizedBox(width: 8),
-                  Text('Share'),
-                ],
-              ),
-              onTap: onShare,
             ),
           ],
         ),
@@ -1082,7 +1068,6 @@ class ResourceSearchDelegate extends SearchDelegate {
         return ResourceFileTile(
           file: resource,
           onTap: () => close(context, resource),
-          onShare: () {},
           onDownload: () {},
           onCopyReference: () {},
         );
