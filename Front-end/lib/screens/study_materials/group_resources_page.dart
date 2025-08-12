@@ -1,7 +1,6 @@
 // lib/screens/study_materials/group_resources_page.dart
 import 'package:flutter/material.dart';
 import '../chatbot_page.dart';
-import '../messages/messages_page.dart';
 
 class Folder {
   final String name;
@@ -659,18 +658,8 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
   }
 
   void _copyFolderReference(BuildContext context, Folder folder) {
-    // Navigate to the group chat page where people are texting
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GroupChatScreen(
-          groupName: widget.groupName,
-          memberCount: 25, // Default member count
-          avatar: '📚',
-          courseFolder: widget.groupName,
-        ),
-      ),
-    );
+    // Copy the folder reference and go back to the group chat
+    Navigator.pop(context);
     
     // Show confirmation that folder reference was copied
     ScaffoldMessenger.of(context).showSnackBar(
@@ -679,18 +668,8 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
   }
 
   void _copyReference(BuildContext context, ResourceFile file) {
-    // Navigate to the group chat page where people are texting
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GroupChatScreen(
-          groupName: widget.groupName,
-          memberCount: 25, // Default member count  
-          avatar: '📚',
-          courseFolder: widget.groupName,
-        ),
-      ),
-    );
+    // Copy the reference and go back to the group chat
+    Navigator.pop(context);
     
     // Show confirmation that reference was copied
     ScaffoldMessenger.of(context).showSnackBar(

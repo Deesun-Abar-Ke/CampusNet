@@ -291,7 +291,6 @@ class ReferenceMessageBubble extends StatelessWidget {
   void _navigateToResource(BuildContext context) {
     if (folderPath != null) {
       // Navigate directly to the group resources page with folder path
-      // Use push instead of pushReplacement to maintain proper navigation stack
       Navigator.push(
         context,
         MaterialPageRoute(
