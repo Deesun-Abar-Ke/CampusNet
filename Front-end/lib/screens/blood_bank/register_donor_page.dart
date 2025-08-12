@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../widgets/common_app_bar.dart';
 import '../landing_page.dart';
 
-const String baseUrl = 'http://10.103.135.42:5000';
+import '../../config.dart';
 
 class RegisterDonorPage extends StatefulWidget {
   const RegisterDonorPage({super.key});

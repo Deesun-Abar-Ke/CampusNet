@@ -1,5 +1,7 @@
 // lib/screens/study_materials/group_resources_page.dart
 import 'package:flutter/material.dart';
+import '../chatbot_page.dart';
+import '../messages_page.dart';
 
 class Folder {
   final String name;
@@ -35,10 +37,12 @@ class ResourceFile {
 
 class GroupResourcesPage extends StatefulWidget {
   final String groupName;
+  final List<String>? initialPath;
 
   const GroupResourcesPage({
     Key? key,
     required this.groupName,
+    this.initialPath,
   }) : super(key: key);
 
   @override
@@ -53,6 +57,11 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
   void initState() {
     super.initState();
     _initializeFolders();
+    
+    // Set initial path if provided
+    if (widget.initialPath != null) {
+      currentPath = List<String>.from(widget.initialPath!);
+    }
   }
 
   void _initializeFolders() {
@@ -344,7 +353,27 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                     subtitle: Text('${folder.subFolders.length + folder.files.length} items'),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        PopupMenuButton(
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'copy_folder_ref',
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.link, color: Colors.blue),
+                                  SizedBox(width: 8),
+                                  Text('Copy Folder Ref'),
+                                ],
+                              ),
+                              onTap: () => _copyFolderReference(context, folder),
+                            ),
+                          ],
+                        ),
+                        const Icon(Icons.chevron_right),
+                      ],
+                    ),
                     onTap: () {
                       setState(() {
                         currentPath.add(folder.name);
@@ -359,6 +388,7 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
                   onTap: () => _openResource(file),
                   onShare: () => _shareResource(file),
                   onDownload: () => _downloadResource(file),
+                  onCopyReference: () => _copyReference(context, file),
                 )),
               ],
             ),
@@ -433,77 +463,72 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
   }
 
   void _showUploadDialog(BuildContext context) {
-    String fileName = '';
-    
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Upload Resource'),
-        content: Column(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'File Name',
-                hintText: 'e.g., Lecture 5 Notes',
-              ),
-              onChanged: (value) => fileName = value,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Description (Optional)',
-                hintText: 'Brief description of the file',
-              ),
-              maxLines: 3,
-              onChanged: (value) {
-                // Description can be used for additional file metadata
-              },
-            ),
-            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.upload_file, color: Colors.teal[700]),
-                  const SizedBox(width: 8),
-                  const Text('Choose file to upload'),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: () {
-                      // File picker would go here
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('File picker would open here')),
-                      );
-                    },
-                    child: const Text('Browse'),
-                  ),
-                ],
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
+            const SizedBox(height: 24),
+            const Text(
+              'Upload File',
+              style: TextStyle(
+                fontSize: 20, 
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Choose what you want to upload',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildUploadOption(
+                  icon: Icons.camera_alt,
+                  label: 'Camera',
+                  color: const Color(0xFF25D366),
+                  onTap: () => _handleCameraUpload(context),
+                ),
+                _buildUploadOption(
+                  icon: Icons.photo_library,
+                  label: 'Gallery',
+                  color: const Color(0xFF128C7E),
+                  onTap: () => _handleGalleryUpload(context),
+                ),
+                _buildUploadOption(
+                  icon: Icons.description,
+                  label: 'Document',
+                  color: const Color(0xFF075E54),
+                  onTap: () => _handleDocumentUpload(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: fileName.isNotEmpty
-                ? () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('$fileName uploaded successfully!')),
-                    );
-                  }
-                : null,
-            child: const Text('Upload'),
-          ),
-        ],
       ),
     );
   }
@@ -543,6 +568,78 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
     );
   }
 
+  Widget _buildUploadOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon, 
+                color: Colors.white, 
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label, 
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleCameraUpload(BuildContext context) async {
+    Navigator.pop(context);
+    // Implement actual camera upload logic here
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Camera upload feature coming soon!')),
+    );
+  }
+
+  void _handleGalleryUpload(BuildContext context) async {
+    Navigator.pop(context);
+    // Implement actual gallery upload logic here
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Gallery upload feature coming soon!')),
+    );
+  }
+
+  void _handleDocumentUpload(BuildContext context) async {
+    Navigator.pop(context);
+    // Implement actual document upload logic here
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Document upload feature coming soon!')),
+    );
+  }
+
   void _openResource(ResourceFile resource) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Opening ${resource.name}')),
@@ -560,6 +657,46 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
       SnackBar(content: Text('Downloading ${resource.name}')),
     );
   }
+
+  void _copyFolderReference(BuildContext context, Folder folder) {
+    // Navigate to the group chat page where people are texting
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupChatScreen(
+          groupName: widget.groupName,
+          memberCount: 25, // Default member count
+          avatar: '📚',
+          courseFolder: widget.groupName,
+        ),
+      ),
+    );
+    
+    // Show confirmation that folder reference was copied
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Folder reference copied: ${folder.name}')),
+    );
+  }
+
+  void _copyReference(BuildContext context, ResourceFile file) {
+    // Navigate to the group chat page where people are texting
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupChatScreen(
+          groupName: widget.groupName,
+          memberCount: 25, // Default member count  
+          avatar: '📚',
+          courseFolder: widget.groupName,
+        ),
+      ),
+    );
+    
+    // Show confirmation that reference was copied
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Reference copied: ${file.name}')),
+    );
+  }
 }
 
 class ResourceFileTile extends StatelessWidget {
@@ -567,6 +704,7 @@ class ResourceFileTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onShare;
   final VoidCallback onDownload;
+  final VoidCallback onCopyReference;
 
   const ResourceFileTile({
     Key? key,
@@ -574,6 +712,7 @@ class ResourceFileTile extends StatelessWidget {
     required this.onTap,
     required this.onShare,
     required this.onDownload,
+    required this.onCopyReference,
   }) : super(key: key);
 
   @override
@@ -602,21 +741,21 @@ class ResourceFileTile extends StatelessWidget {
         trailing: PopupMenuButton(
           itemBuilder: (context) => [
             PopupMenuItem(
-              value: 'open',
+              value: 'ask_ai',
               child: const Row(
                 children: [
-                  Icon(Icons.open_in_new),
+                  Icon(Icons.psychology, color: Colors.purple),
                   SizedBox(width: 8),
-                  Text('Open'),
+                  Text('Ask AI'),
                 ],
               ),
-              onTap: onTap,
+              onTap: () => _askAI(context, file),
             ),
             PopupMenuItem(
               value: 'download',
               child: const Row(
                 children: [
-                  Icon(Icons.download),
+                  Icon(Icons.download, color: Colors.green),
                   SizedBox(width: 8),
                   Text('Download'),
                 ],
@@ -624,10 +763,21 @@ class ResourceFileTile extends StatelessWidget {
               onTap: onDownload,
             ),
             PopupMenuItem(
+              value: 'copy_reference',
+              child: const Row(
+                children: [
+                  Icon(Icons.link, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text('Copy Ref'),
+                ],
+              ),
+              onTap: onCopyReference,
+            ),
+            PopupMenuItem(
               value: 'share',
               child: const Row(
                 children: [
-                  Icon(Icons.share),
+                  Icon(Icons.share, color: Colors.orange),
                   SizedBox(width: 8),
                   Text('Share'),
                 ],
@@ -637,6 +787,86 @@ class ResourceFileTile extends StatelessWidget {
           ],
         ),
         onTap: onTap,
+      ),
+    );
+  }
+
+  void _askAI(BuildContext context, ResourceFile file) {
+    // Direct navigation to chatbot page using proper navigation
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ChatbotPage(),
+      ),
+    );
+  }
+
+  void _navigateToAIChatbot(BuildContext context, ResourceFile file) {
+    // Try to navigate directly to chatbot page
+    try {
+      Navigator.pushNamed(context, '../chatbot_page.dart');
+    } catch (e) {
+      // If direct navigation fails, show feedback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Opening AI Chat about ${file.name}...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      // You can add proper navigation here when chatbot route is configured
+    }
+  }
+
+  void _shareInChat(BuildContext context, String referenceText, String fullReference, ResourceFile file) {
+    // This would add the reference to the chat
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Share in Chat'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('This will share the following reference in the group chat:'),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    referenceText,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    fullReference,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Reference shared in group chat!')),
+              );
+            },
+            child: const Text('Share'),
+          ),
+        ],
       ),
     );
   }
@@ -684,6 +914,7 @@ class ResourceSearchDelegate extends SearchDelegate {
           onTap: () => close(context, resource),
           onShare: () {},
           onDownload: () {},
+          onCopyReference: () {},
         );
       },
     );

@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../widgets/common_app_bar.dart';
 import '../landing_page.dart';
-
-const String baseUrl = 'http://10.103.135.42:5000';
+import '../../config.dart';
 
 class RequestBloodPage extends StatefulWidget {
   const RequestBloodPage({super.key});

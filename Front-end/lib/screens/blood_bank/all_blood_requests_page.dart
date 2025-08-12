@@ -7,8 +7,7 @@ import '../../services/auth_service.dart'; // adjust path if necessary
 import '../../widgets/common_app_bar.dart';
 import '../landing_page.dart';
 import '../messages_page.dart';
-
-const String baseUrl = 'http://10.103.135.42:5000'; // your Flask backend
+import '../../config.dart';
 class AllBloodRequestsPage extends StatefulWidget {
   const AllBloodRequestsPage({super.key});
 

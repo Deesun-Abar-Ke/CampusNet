@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-const String baseUrl = 'http://10.103.135.42:5000'; // your Flask backend
+import '../config.dart';
 
 class AuthService {
   static final _storage = FlutterSecureStorage();

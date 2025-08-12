@@ -41,6 +41,7 @@ dependencies:
   shared_preferences: ^2.5.3 # For local storage
   uuid: ^4.5.1 # For generating unique IDs
   intl: ^0.20.2 # For date formatting
+  file_picker: ^8.1.2 # For file selection
   
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
