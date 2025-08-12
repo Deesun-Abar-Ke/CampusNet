@@ -441,7 +441,7 @@ class _LandingPageState extends State<LandingPage> {
 }
 
 class _LandingBanner extends StatelessWidget {
-  const _LandingBanner({super.key});
+  const _LandingBanner();
 
   @override
   Widget build(BuildContext context) {
