@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/common_app_bar.dart';
+import '../../widgets/common_app_bar.dart';
 import 'tuition_page.dart';
 
 class CreateTuitionPostPage extends StatefulWidget {

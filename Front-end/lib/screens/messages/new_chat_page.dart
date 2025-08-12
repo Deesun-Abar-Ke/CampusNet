@@ -1,44 +1,45 @@
 import 'package:flutter/material.dart';
-import '../widgets/common_app_bar.dart';
+import '../../widgets/common_app_bar.dart';
 import 'messages_page.dart';
 
-class CreateGroupPage extends StatefulWidget {
-  const CreateGroupPage({super.key});
+class NewChatPage extends StatefulWidget {
+  const NewChatPage({super.key});
 
   @override
-  State<CreateGroupPage> createState() => _CreateGroupPageState();
+  State<NewChatPage> createState() => _NewChatPageState();
 }
 
-class _CreateGroupPageState extends State<CreateGroupPage> {
-  String groupName = '';
-  final List<String> selectedMembers = [];
+class _NewChatPageState extends State<NewChatPage> {
   String searchQuery = '';
   String selectedDepartment = 'All';
   String selectedBatch = 'All';
   String selectedLevel = 'All';
-
+  
   final List<Map<String, dynamic>> allUsers = [
     {
       'name': 'Rakib Ahmed', 
-      'avatar': '👨‍🎓',
+      'avatar': '👨‍🎓', 
+      'isOnline': true,
       'studentId': '190204001',
-      'department': 'Computer Science & Engineering',
+      'department': 'Computer Science',
       'batch': '2020',
       'phone': '+8801712345678',
       'level': 'Level 4'
     },
     {
       'name': 'Sarah Khan', 
-      'avatar': '👩‍💻',
+      'avatar': '👩‍💻', 
+      'isOnline': false,
       'studentId': '190204002',
-      'department': 'Computer Science & Engineering',
+      'department': 'Computer Science',
       'batch': '2020',
       'phone': '+8801798765432',
       'level': 'Level 4'
     },
     {
       'name': 'Ahmed Hassan', 
-      'avatar': '👨‍🔬',
+      'avatar': '👨‍🔬', 
+      'isOnline': true,
       'studentId': '210204003',
       'department': 'Chemical Engineering',
       'batch': '2021',
@@ -47,7 +48,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     },
     {
       'name': 'Nadia Rahman', 
-      'avatar': '👩‍🎓',
+      'avatar': '👩‍🎓', 
+      'isOnline': true,
       'studentId': '190404004',
       'department': 'Architecture',
       'batch': '2019',
@@ -56,12 +58,23 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     },
     {
       'name': 'Karim Uddin', 
-      'avatar': '👨‍💼',
+      'avatar': '👨‍💼', 
+      'isOnline': false,
       'studentId': '220204005',
       'department': 'Computer Science',
       'batch': '2022',
       'phone': '+8801687654321',
       'level': 'Level 2'
+    },
+    {
+      'name': 'Fatima Islam', 
+      'avatar': '👩‍🔬', 
+      'isOnline': true,
+      'studentId': '230204006',
+      'department': 'Electrical Engineering',
+      'batch': '2023',
+      'phone': '+8801543210987',
+      'level': 'Level 1'
     },
   ];
 
@@ -85,104 +98,22 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(
-        title: const Text('Create Group'),
+      appBar: const CommonAppBar(
+        title: Text('Start New Chat'),
         backgroundColor: Colors.teal,
-        actions: [
-          TextButton(
-            onPressed: selectedMembers.isNotEmpty && groupName.isNotEmpty
-                ? () {
-                    // Create group and navigate to it
-                    _createGroup();
-                  }
-                : null,
-            child: Text(
-              'CREATE',
-              style: TextStyle(
-                color: selectedMembers.isNotEmpty && groupName.isNotEmpty
-                    ? Colors.white
-                    : Colors.white54,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Group Name Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.teal[50],
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Group Name',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter group name...',
-                    prefixIcon: const Icon(Icons.group),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      groupName = value;
-                    });
-                  },
-                ),
-                
-                if (selectedMembers.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    'Selected Members (${selectedMembers.length})',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: selectedMembers.map((member) {
-                      final user = allUsers.firstWhere((u) => u['name'] == member);
-                      return Chip(
-                        avatar: Text(user['avatar']),
-                        label: Text(
-                          member,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        deleteIcon: const Icon(Icons.close, size: 16),
-                        onDeleted: () {
-                          setState(() {
-                            selectedMembers.remove(member);
-                          });
-                        },
-                        backgroundColor: Colors.teal[100],
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          
           // Search and Filter Section
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
+            color: Colors.teal[50],
             child: Column(
               children: [
                 // Search Bar
                 TextField(
                   decoration: InputDecoration(
-                    hintText: 'Search members to add...',
+                    hintText: 'Search by name, student ID, or phone...',
                     prefixIcon: const Icon(Icons.search),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -197,7 +128,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                     });
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 
                 // Filter Row
                 Row(
@@ -234,7 +165,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             ),
           ),
           
-          // Members List
+          // Results
           Expanded(
             child: filteredUsers.isEmpty
                 ? const Center(
@@ -247,50 +178,66 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                     itemCount: filteredUsers.length,
                     itemBuilder: (context, index) {
                       final user = filteredUsers[index];
-                      final isSelected = selectedMembers.contains(user['name']);
-                      
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            child: Text(user['avatar']),
-                            backgroundColor: isSelected ? Colors.teal[100] : null,
+                          leading: Stack(
+                            children: [
+                              CircleAvatar(
+                                child: Text(user['avatar']),
+                              ),
+                              if (user['isOnline'])
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                           title: Text(
                             user['name'],
-                            style: TextStyle(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('ID: ${user['studentId']}'),
                               Text('${user['department']} - ${user['level']}'),
+                              Text('Batch: ${user['batch']}'),
                             ],
                           ),
-                          trailing: Checkbox(
-                            value: isSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                if (value == true) {
-                                  selectedMembers.add(user['name']);
-                                } else {
-                                  selectedMembers.remove(user['name']);
-                                }
-                              });
+                          trailing: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.teal,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            onPressed: () {
+                              // Navigate to chat screen
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatScreen(
+                                    contactName: user['name'],
+                                    avatar: user['avatar'],
+                                    isOnline: user['isOnline'],
+                                    initialMessage: 'Hi! I found you through the campus network.',
+                                  ),
+                                ),
+                              );
                             },
-                            activeColor: Colors.teal,
+                            child: const Text('Chat'),
                           ),
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                selectedMembers.remove(user['name']);
-                              } else {
-                                selectedMembers.add(user['name']);
-                              }
-                            });
-                          },
                           isThreeLine: true,
                         ),
                       );
@@ -343,31 +290,5 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         ),
       ],
     );
-  }
-
-  void _createGroup() {
-    if (groupName.isNotEmpty && selectedMembers.isNotEmpty) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Group "$groupName" created successfully!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      
-      // Navigate to the newly created group chat
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => GroupChatScreen(
-            groupName: groupName,
-            memberCount: selectedMembers.length + 1, // +1 for current user
-            avatar: '👥',
-            courseFolder: 'General Discussion',
-          ),
-        ),
-      );
-    }
   }
 }

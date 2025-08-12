@@ -6,7 +6,7 @@ import '../../services/auth_service.dart'; // adjust the path if needed
 
 import '../../widgets/common_app_bar.dart';
 import '../landing_page.dart';
-import '../messages_page.dart';
+import '../messages/messages_page.dart';
 import '../../config.dart';
 class FindDonorsPage extends StatefulWidget {
   const FindDonorsPage({super.key});

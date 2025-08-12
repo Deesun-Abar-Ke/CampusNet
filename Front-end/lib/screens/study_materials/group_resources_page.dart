@@ -1,7 +1,7 @@
 // lib/screens/study_materials/group_resources_page.dart
 import 'package:flutter/material.dart';
 import '../chatbot_page.dart';
-import '../messages_page.dart';
+import '../messages/messages_page.dart';
 
 class Folder {
   final String name;
