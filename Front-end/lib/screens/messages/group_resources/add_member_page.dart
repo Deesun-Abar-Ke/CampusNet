@@ -1,15 +1,21 @@
+// lib/screens/messages/group_resources/add_member_page.dart
 import 'package:flutter/material.dart';
-import 'chat_screen.dart';
 
-class NewChatPage extends StatefulWidget {
-  const NewChatPage({super.key});
+class AddMemberPage extends StatefulWidget {
+  final String groupName;
+
+  const AddMemberPage({
+    Key? key,
+    required this.groupName,
+  }) : super(key: key);
 
   @override
-  State<NewChatPage> createState() => _NewChatPageState();
+  State<AddMemberPage> createState() => _AddMemberPageState();
 }
 
-class _NewChatPageState extends State<NewChatPage> {
+class _AddMemberPageState extends State<AddMemberPage> {
   final TextEditingController _searchController = TextEditingController();
+  final List<User> _selectedUsers = [];
   
   // Filter options
   String _selectedFilter = 'all'; // 'all', 'online', 'offline'
@@ -18,21 +24,24 @@ class _NewChatPageState extends State<NewChatPage> {
   String _selectedLevel = 'all';
   String _selectedSession = 'all';
   
-  final List<ChatUser> allUsers = [
-    ChatUser(id: '1', name: 'Rakib Ahmed', avatar: '👨‍🎓', isOnline: true, department: 'Computer Science', studentId: '190204001', level: 'Level 4', session: '2020-21'),
-    ChatUser(id: '2', name: 'Sarah Khan', avatar: '👩‍💻', isOnline: false, department: 'Computer Science', studentId: '190204002', level: 'Level 4', session: '2020-21'),
-    ChatUser(id: '3', name: 'Ahmed Hassan', avatar: '👨‍🔬', isOnline: true, department: 'Chemical Engineering', studentId: '210204003', level: 'Level 3', session: '2021-22'),
-    ChatUser(id: '4', name: 'Nadia Rahman', avatar: '👩‍🎓', isOnline: true, department: 'Architecture', studentId: '190404004', level: 'Level 4', session: '2020-21'),
-    ChatUser(id: '5', name: 'Karim Uddin', avatar: '👨‍💼', isOnline: false, department: 'Computer Science', studentId: '220204005', level: 'Level 2', session: '2022-23'),
-    ChatUser(id: '6', name: 'Fatima Islam', avatar: '👩‍🔬', isOnline: true, department: 'Electrical Engineering', studentId: '230204006', level: 'Level 3', session: '2021-22'),
+  // Sample user data
+  final List<User> _allUsers = [
+    User(id: '1', name: 'Alice Johnson', email: 'alice@example.com', phone: '+1234567890', isOnline: true, department: 'Computer Science', level: 'Level 4', session: '2020-21'),
+    User(id: '2', name: 'Bob Smith', email: 'bob@example.com', phone: '+1234567891', isOnline: false, department: 'Electrical Engineering', level: 'Level 3', session: '2021-22'),
+    User(id: '3', name: 'Charlie Brown', email: 'charlie@example.com', phone: '+1234567892', isOnline: true, department: 'Computer Science', level: 'Level 4', session: '2020-21'),
+    User(id: '4', name: 'Diana Prince', email: 'diana@example.com', phone: '+1234567893', isOnline: false, department: 'Architecture', level: 'Level 2', session: '2022-23'),
+    User(id: '5', name: 'Edward Norton', email: 'edward@example.com', phone: '+1234567894', isOnline: true, department: 'Civil Engineering', level: 'Level 4', session: '2020-21'),
+    User(id: '6', name: 'Fiona Apple', email: 'fiona@example.com', phone: '+1234567895', isOnline: false, department: 'Computer Science', level: 'Level 3', session: '2021-22'),
+    User(id: '7', name: 'George Lucas', email: 'george@example.com', phone: '+1234567896', isOnline: true, department: 'Mechanical Engineering', level: 'Level 2', session: '2022-23'),
+    User(id: '8', name: 'Hannah Montana', email: 'hannah@example.com', phone: '+1234567897', isOnline: false, department: 'Electrical Engineering', level: 'Level 4', session: '2020-21'),
   ];
 
-  List<ChatUser> filteredUsers = [];
+  List<User> _filteredUsers = [];
 
   @override
   void initState() {
     super.initState();
-    filteredUsers = allUsers;
+    _filteredUsers = _allUsers;
     _searchController.addListener(_filterUsers);
   }
 
@@ -44,15 +53,15 @@ class _NewChatPageState extends State<NewChatPage> {
 
   void _filterUsers() {
     setState(() {
-      List<ChatUser> filtered = allUsers;
+      List<User> filtered = _allUsers;
       
       // Apply text search filter
       if (_searchController.text.isNotEmpty) {
         filtered = filtered
             .where((user) =>
                 user.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
+                user.email.toLowerCase().contains(_searchController.text.toLowerCase()) ||
                 user.department.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                user.studentId.toLowerCase().contains(_searchController.text.toLowerCase()) ||
                 user.level.toLowerCase().contains(_searchController.text.toLowerCase()) ||
                 user.session.toLowerCase().contains(_searchController.text.toLowerCase()))
             .toList();
@@ -93,7 +102,7 @@ class _NewChatPageState extends State<NewChatPage> {
         filtered.sort((a, b) => b.isOnline.toString().compareTo(a.isOnline.toString()));
       }
       
-      filteredUsers = filtered;
+      _filteredUsers = filtered;
     });
   }
 
@@ -110,15 +119,46 @@ class _NewChatPageState extends State<NewChatPage> {
   }
 
   List<String> get _departments {
-    return ['all', ...allUsers.map((user) => user.department).toSet().toList()..sort()];
+    return ['all', ..._allUsers.map((user) => user.department).toSet().toList()..sort()];
   }
 
   List<String> get _levels {
-    return ['all', ...allUsers.map((user) => user.level).toSet().toList()..sort()];
+    return ['all', ..._allUsers.map((user) => user.level).toSet().toList()..sort()];
   }
 
   List<String> get _sessions {
-    return ['all', ...allUsers.map((user) => user.session).toSet().toList()..sort()];
+    return ['all', ..._allUsers.map((user) => user.session).toSet().toList()..sort()];
+  }
+
+  void _toggleUserSelection(User user) {
+    setState(() {
+      if (_selectedUsers.contains(user)) {
+        _selectedUsers.remove(user);
+      } else {
+        _selectedUsers.add(user);
+      }
+    });
+  }
+
+  void _addSelectedMembers() {
+    if (_selectedUsers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one member to add'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Directly add members without popup
+    Navigator.pop(context); // Go back to previous page
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${_selectedUsers.length} member(s) added to ${widget.groupName}'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override
@@ -127,10 +167,32 @@ class _NewChatPageState extends State<NewChatPage> {
       appBar: AppBar(
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
-        title: const Text(
-          'New Chat',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Add Members',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.groupName,
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
+            ),
+          ],
         ),
+        actions: [
+          if (_selectedUsers.isNotEmpty)
+            TextButton(
+              onPressed: _addSelectedMembers,
+              child: Text(
+                'ADD (${_selectedUsers.length})',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -140,7 +202,7 @@ class _NewChatPageState extends State<NewChatPage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search by name, department, or ID...',
+                hintText: 'Search by name or email...',
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
@@ -238,7 +300,7 @@ class _NewChatPageState extends State<NewChatPage> {
                         ),
                         items: _departments.map((dept) => DropdownMenuItem(
                           value: dept,
-                          child: Text(dept == 'all' ? 'All Depts' : dept),
+                          child: Text(dept == 'all' ? 'All Departments' : dept),
                         )).toList(),
                         onChanged: (value) {
                           setState(() {
@@ -262,7 +324,7 @@ class _NewChatPageState extends State<NewChatPage> {
                         ),
                         items: _levels.map((level) => DropdownMenuItem(
                           value: level,
-                          child: Text(level == 'all' ? 'All' : level),
+                          child: Text(level == 'all' ? 'All Levels' : level),
                         )).toList(),
                         onChanged: (value) {
                           setState(() {
@@ -286,7 +348,7 @@ class _NewChatPageState extends State<NewChatPage> {
                         ),
                         items: _sessions.map((session) => DropdownMenuItem(
                           value: session,
-                          child: Text(session == 'all' ? 'All' : session),
+                          child: Text(session == 'all' ? 'All Sessions' : session),
                         )).toList(),
                         onChanged: (value) {
                           setState(() {
@@ -309,7 +371,7 @@ class _NewChatPageState extends State<NewChatPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${filteredUsers.length} user(s) found',
+                  '${_filteredUsers.length} user(s) found',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -324,9 +386,24 @@ class _NewChatPageState extends State<NewChatPage> {
             ),
           ),
 
+          // Selected Members Summary
+          if (_selectedUsers.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.teal[50],
+              child: Text(
+                '${_selectedUsers.length} member(s) selected',
+                style: TextStyle(
+                  color: Colors.teal[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+
           // Users List
           Expanded(
-            child: filteredUsers.isEmpty
+            child: _filteredUsers.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -353,21 +430,26 @@ class _NewChatPageState extends State<NewChatPage> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filteredUsers.length,
+                    itemCount: _filteredUsers.length,
                     itemBuilder: (context, index) {
-                      final user = filteredUsers[index];
+                      final user = _filteredUsers[index];
+                      final isSelected = _selectedUsers.contains(user);
                       
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
-                        elevation: 1,
+                        elevation: isSelected ? 4 : 1,
+                        color: isSelected ? Colors.teal[50] : null,
                         child: ListTile(
                           leading: Stack(
                             children: [
                               CircleAvatar(
                                 backgroundColor: Colors.teal[100],
                                 child: Text(
-                                  user.avatar,
-                                  style: const TextStyle(fontSize: 20),
+                                  user.name[0].toUpperCase(),
+                                  style: TextStyle(
+                                    color: Colors.teal[700],
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                               if (user.isOnline)
@@ -402,7 +484,7 @@ class _NewChatPageState extends State<NewChatPage> {
                                 ),
                               ),
                               Text(
-                                'ID: ${user.studentId}',
+                                user.email,
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey[500],
@@ -410,28 +492,18 @@ class _NewChatPageState extends State<NewChatPage> {
                               ),
                             ],
                           ),
-                          trailing: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatScreen(
-                                    contactName: user.name,
-                                    avatar: user.avatar,
-                                    isOnline: user.isOnline,
-                                  ),
-                                  settings: const RouteSettings(name: '/chat'),
+                          trailing: isSelected
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.teal,
+                                  size: 28,
+                                )
+                              : const Icon(
+                                  Icons.add_circle_outline,
+                                  color: Colors.grey,
+                                  size: 28,
                                 ),
-                              );
-                            },
-                            icon: const Icon(Icons.chat, size: 16),
-                            label: const Text('Chat'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            ),
-                          ),
+                          onTap: () => _toggleUserSelection(user),
                         ),
                       );
                     },
@@ -439,28 +511,48 @@ class _NewChatPageState extends State<NewChatPage> {
           ),
         ],
       ),
+      floatingActionButton: _selectedUsers.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: _addSelectedMembers,
+              backgroundColor: Colors.teal,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text(
+                'Add ${_selectedUsers.length}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            )
+          : null,
     );
   }
 }
 
-class ChatUser {
+class User {
   final String id;
   final String name;
-  final String avatar;
+  final String email;
+  final String phone;
   final bool isOnline;
   final String department;
-  final String studentId;
   final String level;
   final String session;
 
-  ChatUser({
+  User({
     required this.id,
     required this.name,
-    required this.avatar,
-    required this.isOnline,
+    required this.email,
+    required this.phone,
     required this.department,
-    required this.studentId,
     required this.level,
     required this.session,
+    this.isOnline = false,
   });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is User && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

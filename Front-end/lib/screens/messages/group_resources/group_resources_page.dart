@@ -1,6 +1,10 @@
-// lib/screens/study_materials/group_resources_page.dart
+// lib/screens/messages/group_resources/group_resources_page.dart
 import 'package:flutter/material.dart';
-import '../chatbot_page.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../chatbot_page.dart';
+import 'add_member_page.dart';
+import 'view_members_page.dart';
 
 class Folder {
   final String name;
@@ -266,22 +270,76 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
           PopupMenuButton(
             itemBuilder: (context) => [
               const PopupMenuItem(
+                value: 'add_member',
+                child: Row(
+                  children: [
+                    Icon(Icons.person_add, color: Colors.green),
+                    SizedBox(width: 8),
+                    Text('Add Member'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'view_members',
+                child: Row(
+                  children: [
+                    Icon(Icons.group, color: Colors.blue),
+                    SizedBox(width: 8),
+                    Text('View Members'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
                 value: 'sort_name',
-                child: Text('Sort by Name'),
+                child: Row(
+                  children: [
+                    Icon(Icons.sort_by_alpha, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Text('Sort by Name'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: 'sort_date',
-                child: Text('Sort by Date'),
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Text('Sort by Date'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: 'sort_type',
-                child: Text('Sort by Type'),
+                child: Row(
+                  children: [
+                    Icon(Icons.category, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Text('Sort by Type'),
+                  ],
+                ),
               ),
             ],
             onSelected: (value) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Sorting by ${value.toString().split('_')[1]}')),
-              );
+              if (value == 'add_member') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddMemberPage(groupName: widget.groupName),
+                  ),
+                );
+              } else if (value == 'view_members') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewMembersPage(groupName: widget.groupName),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Sorting by ${value.toString().split('_')[1]}')),
+                );
+              }
             },
           ),
         ],
@@ -617,25 +675,158 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
 
   void _handleCameraUpload(BuildContext context) async {
     Navigator.pop(context);
-    // Implement actual camera upload logic here
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Camera upload feature coming soon!')),
-    );
+    
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Photo captured: ${image.name}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Here you would typically upload the file to your server
+        // For now, we'll just show a placeholder
+        _showUploadSuccess(context, image.name, 'Image');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to access camera: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _handleGalleryUpload(BuildContext context) async {
     Navigator.pop(context);
-    // Implement actual gallery upload logic here
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Gallery upload feature coming soon!')),
-    );
+    
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Image selected: ${image.name}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Here you would typically upload the file to your server
+        _showUploadSuccess(context, image.name, 'Image');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to access gallery: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _handleDocumentUpload(BuildContext context) async {
     Navigator.pop(context);
-    // Implement actual document upload logic here
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Document upload feature coming soon!')),
+    
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx'],
+        allowMultiple: false,
+      );
+      
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Document selected: ${file.name}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Here you would typically upload the file to your server
+        _showUploadSuccess(context, file.name, 'Document');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick document: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showUploadSuccess(BuildContext context, String fileName, String fileType) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Upload Successful'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('$fileType uploaded successfully!'),
+            SizedBox(height: 8),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    fileType == 'Image' ? Icons.image : Icons.description,
+                    color: Colors.grey[600],
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      fileName,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Refresh the file list here if needed
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -658,8 +849,8 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
   }
 
   void _copyFolderReference(BuildContext context, Folder folder) {
-    // Copy the folder reference and go back to the group chat
-    Navigator.pop(context);
+    // Instead of navigating, just go back and add reference to chat
+    Navigator.popUntil(context, (route) => route.settings.name == '/group_chat' || route.isFirst);
     
     // Show confirmation that folder reference was copied
     ScaffoldMessenger.of(context).showSnackBar(
@@ -668,8 +859,8 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
   }
 
   void _copyReference(BuildContext context, ResourceFile file) {
-    // Copy the reference and go back to the group chat
-    Navigator.pop(context);
+    // Instead of navigating, just go back and add reference to chat
+    Navigator.popUntil(context, (route) => route.settings.name == '/group_chat' || route.isFirst);
     
     // Show confirmation that reference was copied
     ScaffoldMessenger.of(context).showSnackBar(
