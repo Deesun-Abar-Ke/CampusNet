@@ -14,7 +14,7 @@ class BloodBankHomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CommonAppBar(
-        title: const Text('Blood Bank'),
+        title: const Text('Emergency'),
         showBackButton: true,
       ),
       body: Padding(

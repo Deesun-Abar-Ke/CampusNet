@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common_app_bar.dart';
-import '../landing_page.dart';
 import '../messages_page.dart';
 
 class FindDonorsPage extends StatelessWidget {

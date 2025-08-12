@@ -7,10 +7,10 @@ class FolderContentsPage extends StatefulWidget {
   final List<Map<String, dynamic>> folderItems;
 
   const FolderContentsPage({
-    Key? key,
+    super.key,
     required this.folderName,
     required this.folderItems,
-  }) : super(key: key);
+  });
 
   @override
   State<FolderContentsPage> createState() => _FolderContentsPageState();
@@ -26,12 +26,15 @@ class _FolderContentsPageState extends State<FolderContentsPage> {
   }
 
   IconData getFileIcon(String filename) {
-    if (filename.endsWith('.ppt') || filename.endsWith('.pptx'))
+    if (filename.endsWith('.ppt') || filename.endsWith('.pptx')) {
       return Icons.slideshow;
-    if (filename.endsWith('.mp4') || filename.endsWith('.avi') || filename.endsWith('.mov'))
+    }
+    if (filename.endsWith('.mp4') || filename.endsWith('.avi') || filename.endsWith('.mov')) {
       return Icons.video_file;
-    if (filename.endsWith('.doc') || filename.endsWith('.docx'))
+    }
+    if (filename.endsWith('.doc') || filename.endsWith('.docx')) {
       return Icons.description;
+    }
     return Icons.picture_as_pdf;
   }
 

@@ -8,10 +8,10 @@ class MessagesPage extends StatefulWidget {
   final String? initialMessage;
 
   const MessagesPage({
-    Key? key,
+    super.key,
     this.initialContact,
     this.initialMessage,
-  }) : super(key: key);
+  });
 
   @override
   State<MessagesPage> createState() => _MessagesPageState();
@@ -568,7 +568,7 @@ class _NewChatDialogState extends State<NewChatDialog> {
     },
   ];
 
-  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet().toList()];
+  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet()];
   List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
   List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
 
@@ -803,7 +803,7 @@ class _CreateGroupDialogState extends State<CreateGroupDialog> {
     },
   ];
 
-  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet().toList()];
+  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet()];
   List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
   List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
 

@@ -183,11 +183,11 @@ class _LandingPageState extends State<LandingPage> {
               // TODO: Implement post creation
               Navigator.pop(context);
             },
-            child: const Text('Post'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.white,
             ),
+            child: const Text('Post'),
           ),
         ],
       ),

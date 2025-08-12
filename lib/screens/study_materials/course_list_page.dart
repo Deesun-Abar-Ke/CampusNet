@@ -7,10 +7,10 @@ class CourseListPage extends StatefulWidget {
   final List<String> courses;
 
   const CourseListPage({
-    Key? key,
+    super.key,
     required this.departmentName,
     required this.courses,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseListPage> createState() => _CourseListPageState();
@@ -106,8 +106,8 @@ class _CourseListPageState extends State<CourseListPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _addNewCourse,
         tooltip: 'Add New Course',
-        child: const Icon(Icons.add),
         backgroundColor: Colors.green,
+        child: const Icon(Icons.add),
       ),
     );
   }

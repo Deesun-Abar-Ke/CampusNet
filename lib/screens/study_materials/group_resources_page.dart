@@ -37,9 +37,9 @@ class GroupResourcesPage extends StatefulWidget {
   final String groupName;
 
   const GroupResourcesPage({
-    Key? key,
+    super.key,
     required this.groupName,
-  }) : super(key: key);
+  });
 
   @override
   State<GroupResourcesPage> createState() => _GroupResourcesPageState();
@@ -569,12 +569,12 @@ class ResourceFileTile extends StatelessWidget {
   final VoidCallback onDownload;
 
   const ResourceFileTile({
-    Key? key,
+    super.key,
     required this.file,
     required this.onTap,
     required this.onShare,
     required this.onDownload,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -603,6 +603,7 @@ class ResourceFileTile extends StatelessWidget {
           itemBuilder: (context) => [
             PopupMenuItem(
               value: 'open',
+              onTap: onTap,
               child: const Row(
                 children: [
                   Icon(Icons.open_in_new),
@@ -610,10 +611,10 @@ class ResourceFileTile extends StatelessWidget {
                   Text('Open'),
                 ],
               ),
-              onTap: onTap,
             ),
             PopupMenuItem(
               value: 'download',
+              onTap: onDownload,
               child: const Row(
                 children: [
                   Icon(Icons.download),
@@ -621,10 +622,10 @@ class ResourceFileTile extends StatelessWidget {
                   Text('Download'),
                 ],
               ),
-              onTap: onDownload,
             ),
             PopupMenuItem(
               value: 'share',
+              onTap: onShare,
               child: const Row(
                 children: [
                   Icon(Icons.share),
@@ -632,7 +633,6 @@ class ResourceFileTile extends StatelessWidget {
                   Text('Share'),
                 ],
               ),
-              onTap: onShare,
             ),
           ],
         ),

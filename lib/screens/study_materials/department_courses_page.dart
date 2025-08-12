@@ -8,10 +8,10 @@ class DepartmentCoursesPage extends StatefulWidget {
   final List<String> courses;
 
   const DepartmentCoursesPage({
-    Key? key,
+    super.key,
     required this.departmentName,
     required this.courses,
-  }) : super(key: key);
+  });
 
   @override
   State<DepartmentCoursesPage> createState() => _DepartmentCoursesPageState();
