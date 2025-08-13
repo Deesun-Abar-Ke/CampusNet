@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../messages/chat_screen.dart';
-import '../landing_page.dart';
+import '../home/landing_page.dart';
 import 'create_tuition_post_page.dart';
 
 class TuitionPage extends StatelessWidget {
