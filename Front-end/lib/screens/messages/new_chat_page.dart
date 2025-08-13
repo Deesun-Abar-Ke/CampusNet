@@ -26,13 +26,10 @@ class _NewChatPageState extends State<NewChatPage> {
     ChatUser(id: '6', name: 'Fatima Islam', avatar: '👩‍🔬', isOnline: true, department: 'Electrical Engineering', studentId: '230204006', level: 'Level 3', session: '2021-22'),
   ];
 
-<<<<<<< HEAD
-  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet()];
-  List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
+  List<String> get departments => ['All', ...allUsers.map((user) => user.department).toSet()];
+  List<String> get batches => ['All', ...allUsers.map((user) => user.session).toSet().toList()..sort()];
   List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
-=======
   List<ChatUser> filteredUsers = [];
->>>>>>> fb6ef7a3506d68d62b13e9d68a98d03b1277af89
 
   @override
   void initState() {

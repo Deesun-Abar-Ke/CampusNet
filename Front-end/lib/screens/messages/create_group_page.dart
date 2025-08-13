@@ -50,13 +50,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     GroupUser(id: '6', name: 'Fatima Islam', avatar: '👩‍🔬', isOnline: true, department: 'Electrical Engineering', studentId: '230204006', level: 'Level 3', session: '2021-22'),
   ];
 
-<<<<<<< HEAD
-  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet()];
-  List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
+  List<String> get departments => ['All', ...allUsers.map((user) => user.department).toSet()];
+  List<String> get batches => ['All', ...allUsers.map((user) => user.session).toSet().toList()..sort()];
   List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
-=======
   List<GroupUser> filteredUsers = [];
->>>>>>> fb6ef7a3506d68d62b13e9d68a98d03b1277af89
 
   @override
   void initState() {
@@ -354,112 +351,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             ),
           ),
           
-<<<<<<< HEAD
-          // Members List
-          Expanded(
-            child: filteredUsers.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No users found matching your criteria',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: filteredUsers.length,
-                    itemBuilder: (context, index) {
-                      final user = filteredUsers[index];
-                      final isSelected = selectedMembers.contains(user['name']);
-                      
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: isSelected ? Colors.teal[100] : null,
-                            child: Text(user['avatar']),
-                          ),
-                          title: Text(
-                            user['name'],
-                            style: TextStyle(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('ID: ${user['studentId']}'),
-                              Text('${user['department']} - ${user['level']}'),
-                            ],
-                          ),
-                          trailing: Checkbox(
-                            value: isSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                if (value == true) {
-                                  selectedMembers.add(user['name']);
-                                } else {
-                                  selectedMembers.remove(user['name']);
-                                }
-                              });
-                            },
-                            activeColor: Colors.teal,
-                          ),
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                selectedMembers.remove(user['name']);
-                              } else {
-                                selectedMembers.add(user['name']);
-                              }
-                            });
-                          },
-                          isThreeLine: true,
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String?> onChanged,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              items: items.map((item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(
-                    item,
-                    style: const TextStyle(fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                );
-              }).toList(),
-              onChanged: onChanged,
-=======
           // Results summary
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -468,7 +359,16 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[600],
               ),
->>>>>>> fb6ef7a3506d68d62b13e9d68a98d03b1277af89
+            ),
+          ),
+          
+          // User list
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredUsers.length,
+              itemBuilder: (context, index) {
+                return _buildUserCard(filteredUsers[index]);
+              },
             ),
           ),
           

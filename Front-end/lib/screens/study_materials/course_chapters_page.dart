@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../services/study_materials_service.dart';
 import '../../widgets/common_app_bar.dart';
 import 'upload_note_dialog.dart';
-import 'folder_contents_page.dart';
 
 class CourseChaptersPage extends StatefulWidget {
   final int courseId;

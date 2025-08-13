@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/blood_bank/AmbulancePage.dart';
+import '../screens/blood_bank/ambulance_page.dart';
 import '../screens/blood_bank/find_donors_page.dart';
 import '../screens/blood_bank/request_blood_page.dart';
 import '../screens/blood_bank/register_donor_page.dart';

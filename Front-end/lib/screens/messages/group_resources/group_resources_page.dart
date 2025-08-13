@@ -1,15 +1,12 @@
 // lib/screens/messages/group_resources/group_resources_page.dart
 import 'package:flutter/material.dart';
-<<<<<<< HEAD:Front-end/lib/screens/study_materials/group_resources_page.dart
-import '../../widgets/common_app_bar.dart';
-import '../chatbot_page.dart';
-=======
+import '../../../widgets/common_app_bar.dart';
+import '../../chatbot_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../chatbot_page.dart';
 import 'add_member_page.dart';
 import 'view_members_page.dart';
->>>>>>> fb6ef7a3506d68d62b13e9d68a98d03b1277af89:Front-end/lib/screens/messages/group_resources/group_resources_page.dart
 
 class Folder {
   final String name;
@@ -946,20 +943,6 @@ class ResourceFileTile extends StatelessWidget {
                 ],
               ),
             ),
-<<<<<<< HEAD:Front-end/lib/screens/study_materials/group_resources_page.dart
-            PopupMenuItem(
-              value: 'share',
-              onTap: onShare,
-              child: const Row(
-                children: [
-                  Icon(Icons.share, color: Colors.orange),
-                  SizedBox(width: 8),
-                  Text('Share'),
-                ],
-              ),
-            ),
-=======
->>>>>>> fb6ef7a3506d68d62b13e9d68a98d03b1277af89:Front-end/lib/screens/messages/group_resources/group_resources_page.dart
           ],
         ),
         onTap: onTap,
