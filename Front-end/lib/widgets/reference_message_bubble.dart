@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../screens/study_materials/group_resources_page.dart';
+import '../screens/messages/group_resources/group_resources_page.dart';
 
 class ReferenceMessageBubble extends StatelessWidget {
   final String text;
@@ -60,7 +60,7 @@ class ReferenceMessageBubble extends StatelessWidget {
           ],
           GestureDetector(
             onLongPress: () => _showMessageOptions(context),
-            onTap: () => _showReferenceDetails(context),
+            onTap: () => _navigateToResource(context),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
@@ -109,7 +109,7 @@ class ReferenceMessageBubble extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Tap to view details',
+                    'Tap to open',
                     style: TextStyle(
                       color: isMe ? Colors.white70 : Colors.blue[600],
                       fontSize: 11,
@@ -298,6 +298,7 @@ class ReferenceMessageBubble extends StatelessWidget {
             groupName: 'CSE 303 - Compilers', // This should be dynamic
             initialPath: folderPath,
           ),
+          settings: const RouteSettings(name: '/group_resources'),
         ),
       );
     } else {

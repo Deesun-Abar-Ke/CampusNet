@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
-import '../study_materials/group_resources_page.dart';
 import '../../widgets/common_app_bar.dart';
-import '../../widgets/reference_message_bubble.dart';
-import '../profile_page.dart';
+import 'chat_screen.dart';
+import 'group_chat_screen.dart';
 import 'new_chat_page.dart';
 import 'create_group_page.dart';
 
@@ -108,44 +104,47 @@ class _MessagesPageState extends State<MessagesPage> with TickerProviderStateMix
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
             ListTile(
               leading: const Icon(Icons.person_add, color: Colors.teal),
-              title: const Text('Start New Chat'),
-              subtitle: const Text('Chat with someone new'),
+              title: const Text('New Chat'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const NewChatPage()),
-                );
+                _showNewChatDialog(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.group_add, color: Colors.teal),
-              title: const Text('Create Group'),
-              subtitle: const Text('Start a group conversation'),
+              title: const Text('New Group'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CreateGroupPage()),
-                );
+                _showCreateGroupDialog(context);
               },
             ),
           ],
         ),
       ),
     );
-}
+  }
+
+  void _showNewChatDialog(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NewChatPage(),
+        settings: const RouteSettings(name: '/new_chat'),
+      ),
+    );
+  }
+
+  void _showCreateGroupDialog(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreateGroupPage(),
+        settings: const RouteSettings(name: '/create_group'),
+      ),
+    );
+  }
 }
 
 class IndividualChatsTab extends StatelessWidget {
@@ -283,6 +282,7 @@ class GroupChatsTab extends StatelessWidget {
                   avatar: group['avatar'],
                   courseFolder: group['courseFolder'],
                 ),
+                settings: const RouteSettings(name: '/group_chat'),
               ),
             );
           },
@@ -351,7 +351,7 @@ class ChatTile extends StatelessWidget {
       subtitle: Text(
         lastMessage,
         style: TextStyle(
-          color: Colors.grey[600],
+          color: unreadCount > 0 ? Colors.black87 : Colors.grey[600],
           fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
         ),
         maxLines: 1,
@@ -364,7 +364,7 @@ class ChatTile extends StatelessWidget {
           Text(
             time,
             style: TextStyle(
-              color: unreadCount > 0 ? Colors.teal : Colors.grey[500],
+              color: unreadCount > 0 ? Colors.teal : Colors.grey[600],
               fontSize: 12,
               fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
             ),
@@ -373,9 +373,9 @@ class ChatTile extends StatelessWidget {
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.teal,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 unreadCount.toString(),
@@ -440,7 +440,7 @@ class GroupTile extends StatelessWidget {
           Text(
             lastMessage,
             style: TextStyle(
-              color: Colors.grey[600],
+              color: unreadCount > 0 ? Colors.black87 : Colors.grey[600],
               fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
             ),
             maxLines: 1,
@@ -462,7 +462,7 @@ class GroupTile extends StatelessWidget {
           Text(
             time,
             style: TextStyle(
-              color: unreadCount > 0 ? Colors.teal : Colors.grey[500],
+              color: unreadCount > 0 ? Colors.teal : Colors.grey[600],
               fontSize: 12,
               fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
             ),
@@ -471,9 +471,9 @@ class GroupTile extends StatelessWidget {
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.teal,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 unreadCount.toString(),
@@ -491,6 +491,7 @@ class GroupTile extends StatelessWidget {
     );
   }
 }
+<<<<<<< HEAD
 
 class NewChatDialog extends StatefulWidget {
   const NewChatDialog({super.key});
@@ -2866,3 +2867,5 @@ class GroupMessageBubble extends StatelessWidget {
     );
   }
 }
+=======
+>>>>>>> fb6ef7a3506d68d62b13e9d68a98d03b1277af89

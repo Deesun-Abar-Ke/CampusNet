@@ -1,6 +1,27 @@
 import 'package:flutter/material.dart';
-import '../../widgets/common_app_bar.dart';
-import 'messages_page.dart';
+import 'group_chat_screen.dart';
+
+class GroupUser {
+  final String id;
+  final String name;
+  final String avatar;
+  final bool isOnline;
+  final String department;
+  final String studentId;
+  final String level;
+  final String session;
+
+  GroupUser({
+    required this.id,
+    required this.name,
+    required this.avatar,
+    required this.isOnline,
+    required this.department,
+    required this.studentId,
+    required this.level,
+    required this.session,
+  });
+}
 
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
@@ -10,223 +31,322 @@ class CreateGroupPage extends StatefulWidget {
 }
 
 class _CreateGroupPageState extends State<CreateGroupPage> {
-  String groupName = '';
-  final List<String> selectedMembers = [];
-  String searchQuery = '';
-  String selectedDepartment = 'All';
-  String selectedBatch = 'All';
-  String selectedLevel = 'All';
-
-  final List<Map<String, dynamic>> allUsers = [
-    {
-      'name': 'Rakib Ahmed', 
-      'avatar': '👨‍🎓',
-      'studentId': '190204001',
-      'department': 'Computer Science & Engineering',
-      'batch': '2020',
-      'phone': '+8801712345678',
-      'level': 'Level 4'
-    },
-    {
-      'name': 'Sarah Khan', 
-      'avatar': '👩‍💻',
-      'studentId': '190204002',
-      'department': 'Computer Science & Engineering',
-      'batch': '2020',
-      'phone': '+8801798765432',
-      'level': 'Level 4'
-    },
-    {
-      'name': 'Ahmed Hassan', 
-      'avatar': '👨‍🔬',
-      'studentId': '210204003',
-      'department': 'Chemical Engineering',
-      'batch': '2021',
-      'phone': '+8801612345678',
-      'level': 'Level 3'
-    },
-    {
-      'name': 'Nadia Rahman', 
-      'avatar': '👩‍🎓',
-      'studentId': '190404004',
-      'department': 'Architecture',
-      'batch': '2019',
-      'phone': '+8801534567890',
-      'level': 'Level 4'
-    },
-    {
-      'name': 'Karim Uddin', 
-      'avatar': '👨‍💼',
-      'studentId': '220204005',
-      'department': 'Computer Science',
-      'batch': '2022',
-      'phone': '+8801687654321',
-      'level': 'Level 2'
-    },
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _groupNameController = TextEditingController();
+  final List<GroupUser> _selectedUsers = [];
+  
+  // Filter options
+  String _selectedSortOption = 'name'; // 'name', 'department', 'level', 'session'
+  String _selectedDepartment = 'all';
+  String _selectedLevel = 'all';
+  String _selectedSession = 'all';
+  
+  final List<GroupUser> allUsers = [
+    GroupUser(id: '1', name: 'Rakib Ahmed', avatar: '👨‍🎓', isOnline: true, department: 'Computer Science', studentId: '190204001', level: 'Level 4', session: '2020-21'),
+    GroupUser(id: '2', name: 'Sarah Khan', avatar: '👩‍💻', isOnline: false, department: 'Computer Science', studentId: '190204002', level: 'Level 4', session: '2020-21'),
+    GroupUser(id: '3', name: 'Ahmed Hassan', avatar: '👨‍🔬', isOnline: true, department: 'Chemical Engineering', studentId: '210204003', level: 'Level 3', session: '2021-22'),
+    GroupUser(id: '4', name: 'Nadia Rahman', avatar: '👩‍🎓', isOnline: true, department: 'Architecture', studentId: '190404004', level: 'Level 4', session: '2020-21'),
+    GroupUser(id: '5', name: 'Karim Uddin', avatar: '👨‍💼', isOnline: false, department: 'Computer Science', studentId: '220204005', level: 'Level 2', session: '2022-23'),
+    GroupUser(id: '6', name: 'Fatima Islam', avatar: '👩‍🔬', isOnline: true, department: 'Electrical Engineering', studentId: '230204006', level: 'Level 3', session: '2021-22'),
   ];
 
+<<<<<<< HEAD
   List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet()];
   List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
   List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
+=======
+  List<GroupUser> filteredUsers = [];
+>>>>>>> fb6ef7a3506d68d62b13e9d68a98d03b1277af89
 
-  List<Map<String, dynamic>> get filteredUsers {
-    return allUsers.where((user) {
-      final matchesSearch = user['name'].toLowerCase().contains(searchQuery.toLowerCase()) ||
-                           user['studentId'].toLowerCase().contains(searchQuery.toLowerCase()) ||
-                           user['phone'].toLowerCase().contains(searchQuery.toLowerCase());
-      final matchesDepartment = selectedDepartment == 'All' || user['department'] == selectedDepartment;
-      final matchesBatch = selectedBatch == 'All' || user['batch'] == selectedBatch;
-      final matchesLevel = selectedLevel == 'All' || user['level'] == selectedLevel;
+  @override
+  void initState() {
+    super.initState();
+    filteredUsers = allUsers;
+    _searchController.addListener(_filterUsers);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _groupNameController.dispose();
+    super.dispose();
+  }
+
+  void _filterUsers() {
+    List<GroupUser> filtered = allUsers.where((user) {
+      bool matchesSearch = user.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
+                          user.department.toLowerCase().contains(_searchController.text.toLowerCase()) ||
+                          user.studentId.toLowerCase().contains(_searchController.text.toLowerCase()) ||
+                          user.level.toLowerCase().contains(_searchController.text.toLowerCase()) ||
+                          user.session.toLowerCase().contains(_searchController.text.toLowerCase());
+                          
+      bool matchesDepartment = _selectedDepartment == 'all' || user.department == _selectedDepartment;
+      bool matchesLevel = _selectedLevel == 'all' || user.level == _selectedLevel;
+      bool matchesSession = _selectedSession == 'all' || user.session == _selectedSession;
       
-      return matchesSearch && matchesDepartment && matchesBatch && matchesLevel;
+      return matchesSearch && matchesDepartment && matchesLevel && matchesSession;
     }).toList();
+
+    // Apply sorting
+    switch (_selectedSortOption) {
+      case 'name':
+        filtered.sort((a, b) => a.name.compareTo(b.name));
+        break;
+      case 'department':
+        filtered.sort((a, b) => a.department.compareTo(b.department));
+        break;
+      case 'level':
+        filtered.sort((a, b) => a.level.compareTo(b.level));
+        break;
+      case 'session':
+        filtered.sort((a, b) => a.session.compareTo(b.session));
+        break;
+    }
+
+    setState(() {
+      filteredUsers = filtered;
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedSortOption = 'name';
+      _selectedDepartment = 'all';
+      _selectedLevel = 'all';
+      _selectedSession = 'all';
+      _searchController.clear();
+    });
+  }
+
+  List<String> get uniqueDepartments {
+    return ['all', ...allUsers.map((user) => user.department).toSet().toList()..sort()];
+  }
+
+  List<String> get uniqueLevels {
+    return ['all', ...allUsers.map((user) => user.level).toSet().toList()..sort()];
+  }
+
+  List<String> get uniqueSessions {
+    return ['all', ...allUsers.map((user) => user.session).toSet().toList()..sort()];
+  }
+
+  Widget _buildUserCard(GroupUser user) {
+    final isSelected = _selectedUsers.any((u) => u.id == user.id);
+    
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: ListTile(
+        leading: Stack(
+          children: [
+            CircleAvatar(
+              backgroundColor: Colors.grey[300],
+              child: Text(
+                user.avatar,
+                style: const TextStyle(fontSize: 20),
+              ),
+            ),
+            if (user.isOnline)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        title: Text(
+          user.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('ID: ${user.studentId}'),
+            Text(user.department),
+            Text('${user.level} • ${user.session}'),
+          ],
+        ),
+        trailing: isSelected
+            ? const Icon(Icons.check_circle, color: Colors.blue)
+            : const Icon(Icons.add_circle_outline),
+        onTap: () {
+          setState(() {
+            if (isSelected) {
+              _selectedUsers.removeWhere((u) => u.id == user.id);
+            } else {
+              _selectedUsers.add(user);
+            }
+          });
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(
-        title: const Text('Create Group'),
+      appBar: AppBar(
         backgroundColor: Colors.teal,
-        actions: [
-          TextButton(
-            onPressed: selectedMembers.isNotEmpty && groupName.isNotEmpty
-                ? () {
-                    // Create group and navigate to it
-                    _createGroup();
-                  }
-                : null,
-            child: Text(
-              'CREATE',
-              style: TextStyle(
-                color: selectedMembers.isNotEmpty && groupName.isNotEmpty
-                    ? Colors.white
-                    : Colors.white54,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Create Group',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       ),
       body: Column(
         children: [
-          // Group Name Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.teal[50],
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Group Name',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter group name...',
-                    prefixIcon: const Icon(Icons.group),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      groupName = value;
-                    });
-                  },
-                ),
-                
-                if (selectedMembers.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    'Selected Members (${selectedMembers.length})',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: selectedMembers.map((member) {
-                      final user = allUsers.firstWhere((u) => u['name'] == member);
-                      return Chip(
-                        avatar: Text(user['avatar']),
-                        label: Text(
-                          member,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        deleteIcon: const Icon(Icons.close, size: 16),
-                        onDeleted: () {
-                          setState(() {
-                            selectedMembers.remove(member);
-                          });
-                        },
-                        backgroundColor: Colors.teal[100],
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ],
+          // Group name input
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _groupNameController,
+              decoration: const InputDecoration(
+                labelText: 'Group Name',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.group),
+              ),
             ),
           ),
           
-          // Search and Filter Section
+          // Search field
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                labelText: 'Search users...',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
+          
+          // Filter controls
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
             child: Column(
               children: [
-                // Search Bar
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search members to add...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      searchQuery = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                
-                // Filter Row
+                // Sort filter only
                 Row(
                   children: [
                     Expanded(
-                      child: _buildDropdown(
-                        'Department',
-                        selectedDepartment,
-                        departments,
-                        (value) => setState(() => selectedDepartment = value!),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedSortOption,
+                        decoration: const InputDecoration(
+                          labelText: 'Sort by',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'name', child: Text('Name')),
+                          DropdownMenuItem(value: 'department', child: Text('Department')),
+                          DropdownMenuItem(value: 'level', child: Text('Level')),
+                          DropdownMenuItem(value: 'session', child: Text('Session')),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedSortOption = value!);
+                          _filterUsers();
+                        },
                       ),
                     ),
-                    const SizedBox(width: 8),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                
+                // Department and Level filters
+                Row(
+                  children: [
                     Expanded(
-                      child: _buildDropdown(
-                        'Batch',
-                        selectedBatch,
-                        batches,
-                        (value) => setState(() => selectedBatch = value!),
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedDepartment,
+                        decoration: const InputDecoration(
+                          labelText: 'Dept',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: TextStyle(fontSize: 11),
+                        ),
+                        items: uniqueDepartments.map((dept) => DropdownMenuItem(
+                          value: dept,
+                          child: Text(
+                            dept == 'all' ? 'All' : dept,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )).toList(),
+                        onChanged: (value) {
+                          setState(() => _selectedDepartment = value!);
+                          _filterUsers();
+                        },
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 2),
                     Expanded(
-                      child: _buildDropdown(
-                        'Level',
-                        selectedLevel,
-                        levels,
-                        (value) => setState(() => selectedLevel = value!),
+                      flex: 1,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedLevel,
+                        decoration: const InputDecoration(
+                          labelText: 'Lvl',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: TextStyle(fontSize: 11),
+                        ),
+                        items: uniqueLevels.map((level) => DropdownMenuItem(
+                          value: level,
+                          child: Text(
+                            level == 'all' ? 'All' : level,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )).toList(),
+                        onChanged: (value) {
+                          setState(() => _selectedLevel = value!);
+                          _filterUsers();
+                        },
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                
+                // Session filter and Clear button
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedSession,
+                        decoration: const InputDecoration(
+                          labelText: 'Sess',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                          labelStyle: TextStyle(fontSize: 11),
+                        ),
+                        items: uniqueSessions.map((session) => DropdownMenuItem(
+                          value: session,
+                          child: Text(
+                            session == 'all' ? 'All' : session,
+                            style: const TextStyle(fontSize: 10),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )).toList(),
+                        onChanged: (value) {
+                          setState(() => _selectedSession = value!);
+                          _filterUsers();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    ElevatedButton(
+                      onPressed: _clearFilters,
+                      child: const Text('Clear Filters'),
                     ),
                   ],
                 ),
@@ -234,6 +354,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             ),
           ),
           
+<<<<<<< HEAD
           // Members List
           Expanded(
             child: filteredUsers.isEmpty
@@ -338,36 +459,83 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 );
               }).toList(),
               onChanged: onChanged,
+=======
+          // Results summary
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              '${filteredUsers.length} users found • ${_selectedUsers.length} selected',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
+>>>>>>> fb6ef7a3506d68d62b13e9d68a98d03b1277af89
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  void _createGroup() {
-    if (groupName.isNotEmpty && selectedMembers.isNotEmpty) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Group "$groupName" created successfully!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      
-      // Navigate to the newly created group chat
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => GroupChatScreen(
-            groupName: groupName,
-            memberCount: selectedMembers.length + 1, // +1 for current user
-            avatar: '👥',
-            courseFolder: 'General Discussion',
+          
+          // User list
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredUsers.length,
+              itemBuilder: (context, index) {
+                return _buildUserCard(filteredUsers[index]);
+              },
+            ),
           ),
-        ),
-      );
-    }
+          
+          // Selected users summary
+          if (_selectedUsers.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                border: Border(top: BorderSide(color: Colors.grey[300]!)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Selected Users (${_selectedUsers.length}):',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: _selectedUsers.map((user) => Chip(
+                      label: Text(user.name),
+                      onDeleted: () {
+                        setState(() {
+                          _selectedUsers.removeWhere((u) => u.id == user.id);
+                        });
+                      },
+                    )).toList(),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      floatingActionButton: _selectedUsers.isNotEmpty && _groupNameController.text.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                // Navigate to group chat with selected users
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GroupChatScreen(
+                      groupName: _groupNameController.text,
+                      memberCount: _selectedUsers.length + 1, // +1 for current user
+                      avatar: '👥', // Default group avatar
+                      courseFolder: 'General', // Default folder
+                    ),
+                    settings: const RouteSettings(name: '/group_chat'),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.check),
+              label: const Text('Create Group'),
+            )
+          : null,
+    );
   }
 }
