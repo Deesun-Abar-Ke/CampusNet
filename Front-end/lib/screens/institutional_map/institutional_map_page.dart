@@ -240,7 +240,7 @@ class _InstitutionalMapPageState extends State<InstitutionalMapPage> {
       case 'Faculty Tower 4':
         towerColor = Colors.purple;
         towerIcon = Icons.looks_4;
-        imagePath = 'assets/images/towers/tower.webp';
+        imagePath = 'assets/images/towers/tower4.webp';
         break;
       default:
         towerColor = Colors.grey;

@@ -94,3 +94,5 @@ cython_debug/
 backend/instance/
 backend/__pycache__/
 backend/*.pyc
+
+.vscode
