@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/study_materials_service.dart';
+import '../../widgets/common_app_bar.dart';
 import 'course_chapters_page.dart';
 
 class CourseListPage extends StatefulWidget {
@@ -7,10 +8,10 @@ class CourseListPage extends StatefulWidget {
   final String departmentName;
 
   const CourseListPage({
-    Key? key,
+    super.key,
     required this.departmentId,
     required this.departmentName,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseListPage> createState() => _CourseListPageState();
@@ -83,10 +84,17 @@ class _CourseListPageState extends State<CourseListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.departmentName),
+      appBar: CommonAppBar(
+        title: Text(
+          widget.departmentName,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        showBackButton: true,
+        centerTitle: true,
         backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
@@ -157,8 +165,8 @@ class _CourseListPageState extends State<CourseListPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddCourseDialog,
         tooltip: 'Add New Course',
-        child: const Icon(Icons.add),
         backgroundColor: Colors.green,
+        child: const Icon(Icons.add),
       ),
     );
   }

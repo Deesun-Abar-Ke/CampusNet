@@ -4,7 +4,7 @@ import '../../widgets/common_app_bar.dart';
 import 'course_list_page.dart';
 
 class StudyMaterialsHome extends StatefulWidget {
-  const StudyMaterialsHome({Key? key}) : super(key: key);
+  const StudyMaterialsHome({super.key});
 
   @override
   State<StudyMaterialsHome> createState() => _StudyMaterialsHomeState();
@@ -73,6 +73,17 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: const CommonAppBar(
+        title: Text(
+          'Study Materials',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        showBackButton: true,
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: FutureBuilder<List<dynamic>>(

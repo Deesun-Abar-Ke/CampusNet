@@ -1,5 +1,6 @@
 // lib/screens/study_materials/group_resources_page.dart
 import 'package:flutter/material.dart';
+import '../../widgets/common_app_bar.dart';
 import '../chatbot_page.dart';
 
 class Folder {
@@ -39,10 +40,10 @@ class GroupResourcesPage extends StatefulWidget {
   final List<String>? initialPath;
 
   const GroupResourcesPage({
-    Key? key,
+    super.key,
     required this.groupName,
     this.initialPath,
-  }) : super(key: key);
+  });
 
   @override
   State<GroupResourcesPage> createState() => _GroupResourcesPageState();
@@ -237,15 +238,13 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
         }
       },
       child: Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
+      appBar: CommonAppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               widget.groupName,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             Text(
               'Group Resources',
@@ -253,6 +252,9 @@ class _GroupResourcesPageState extends State<GroupResourcesPage> {
             ),
           ],
         ),
+        showBackButton: true,
+        centerTitle: false,
+        backgroundColor: Colors.teal,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -686,13 +688,13 @@ class ResourceFileTile extends StatelessWidget {
   final VoidCallback onCopyReference;
 
   const ResourceFileTile({
-    Key? key,
+    super.key,
     required this.file,
     required this.onTap,
     required this.onShare,
     required this.onDownload,
     required this.onCopyReference,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -732,6 +734,7 @@ class ResourceFileTile extends StatelessWidget {
             ),
             PopupMenuItem(
               value: 'download',
+              onTap: onDownload,
               child: const Row(
                 children: [
                   Icon(Icons.download, color: Colors.green),
@@ -739,10 +742,10 @@ class ResourceFileTile extends StatelessWidget {
                   Text('Download'),
                 ],
               ),
-              onTap: onDownload,
             ),
             PopupMenuItem(
               value: 'copy_reference',
+              onTap: onCopyReference,
               child: const Row(
                 children: [
                   Icon(Icons.link, color: Colors.blue),
@@ -750,10 +753,10 @@ class ResourceFileTile extends StatelessWidget {
                   Text('Copy Ref'),
                 ],
               ),
-              onTap: onCopyReference,
             ),
             PopupMenuItem(
               value: 'share',
+              onTap: onShare,
               child: const Row(
                 children: [
                   Icon(Icons.share, color: Colors.orange),
@@ -761,7 +764,6 @@ class ResourceFileTile extends StatelessWidget {
                   Text('Share'),
                 ],
               ),
-              onTap: onShare,
             ),
           ],
         ),

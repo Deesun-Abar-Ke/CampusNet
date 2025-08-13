@@ -78,7 +78,7 @@ class _NewChatPageState extends State<NewChatPage> {
     },
   ];
 
-  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet().toList()];
+  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet()];
   List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
   List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
 
