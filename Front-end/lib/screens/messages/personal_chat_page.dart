@@ -6,11 +6,11 @@ class PersonalChatPage extends StatefulWidget {
   final String friendId;
 
   const PersonalChatPage({
-    Key? key,
+    super.key,
     required this.friendName,
     required this.currentUserId,
     required this.friendId,
-  }) : super(key: key);
+  });
 
   @override
   State<PersonalChatPage> createState() => _PersonalChatPageState();

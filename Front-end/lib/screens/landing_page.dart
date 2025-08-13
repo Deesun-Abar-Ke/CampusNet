@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'blood_bank/blood_bank_home_page.dart';
-import 'blood_bank/request_blood_page.dart';
-import 'blood_bank/find_donors_page.dart';
-import 'blood_bank/register_donor_page.dart';
-import 'blood_bank/all_blood_requests_page.dart';
-import 'blood_bank/AmbulancePage.dart';
 import 'tuition/tuition_page.dart';
 import 'chatbot_page.dart';
 import 'messages/messages_page.dart';
 import 'profile_page.dart';
 import 'study_materials/study_materials_home.dart';
+import 'institutional_map/institutional_map_page.dart';
 import 'notifications.dart';
 import '_feature_icon.dart';
 import '_club_post_card.dart';
@@ -187,11 +183,11 @@ class _LandingPageState extends State<LandingPage> {
               // TODO: Implement post creation
               Navigator.pop(context);
             },
-            child: const Text('Post'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.white,
             ),
+            child: const Text('Post'),
           ),
         ],
       ),
@@ -268,6 +264,13 @@ class _LandingPageState extends State<LandingPage> {
                       icon: Icons.library_books,
                       color: Colors.blue.shade600,
                       onTap: () => _navigateToPage(const StudyMaterialsHome()),
+                    ),
+                    const SizedBox(width: 20),
+                    FeatureIcon(
+                      label: 'Map',
+                      icon: Icons.map,
+                      color: Colors.teal.shade600,
+                      onTap: () => _navigateToPage(const InstitutionalMapPage()),
                     ),
                     const SizedBox(width: 20),
                     FeatureIcon(

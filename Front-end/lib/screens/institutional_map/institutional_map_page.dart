@@ -225,22 +225,22 @@ class _InstitutionalMapPageState extends State<InstitutionalMapPage> {
       case 'Tower 1':
         towerColor = Colors.blue;
         towerIcon = Icons.looks_one;
-        imagePath = 'assets/images/towers/tower1.jpg';
+        imagePath = 'assets/images/towers/tower.webp';
         break;
       case 'Tower 2':
         towerColor = Colors.green;
         towerIcon = Icons.looks_two;
-        imagePath = 'assets/images/towers/tower2.jpg';
+        imagePath = 'assets/images/towers/tower.webp';
         break;
       case 'Tower 3':
         towerColor = Colors.orange;
         towerIcon = Icons.looks_3;
-        imagePath = 'assets/images/towers/tower3.jpg';
+        imagePath = 'assets/images/towers/tower.webp';
         break;
       case 'Faculty Tower 4':
         towerColor = Colors.purple;
         towerIcon = Icons.looks_4;
-        imagePath = 'assets/images/towers/faculty_tower4.jpg';
+        imagePath = 'assets/images/towers/tower.webp';
         break;
       default:
         towerColor = Colors.grey;

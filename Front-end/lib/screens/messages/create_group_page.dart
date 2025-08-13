@@ -65,7 +65,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     },
   ];
 
-  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet().toList()];
+  List<String> get departments => ['All', ...allUsers.map((user) => user['department']).toSet()];
   List<String> get batches => ['All', ...allUsers.map((user) => user['batch']).toSet().toList()..sort()];
   List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
 
@@ -253,8 +253,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                         child: ListTile(
                           leading: CircleAvatar(
-                            child: Text(user['avatar']),
                             backgroundColor: isSelected ? Colors.teal[100] : null,
+                            child: Text(user['avatar']),
                           ),
                           title: Text(
                             user['name'],

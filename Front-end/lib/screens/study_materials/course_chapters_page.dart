@@ -9,10 +9,10 @@ class CourseChaptersPage extends StatefulWidget {
   final String courseName;
 
   const CourseChaptersPage({
-    Key? key,
+    super.key,
     required this.courseId,
     required this.courseName,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseChaptersPage> createState() => _CourseChaptersPageState();
@@ -181,13 +181,17 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: CommonAppBar(
         title: Text(
           widget.courseName,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
+        showBackButton: true,
+        centerTitle: true,
         backgroundColor: Colors.teal,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _notesFuture,
