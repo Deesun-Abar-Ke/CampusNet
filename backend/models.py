@@ -71,3 +71,18 @@ class Note(db.Model):
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     uploaded_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
+
+
+class Tution(db.Model):
+    __tablename__ = "tutions"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    post_id = db.Column(db.String(120), nullable=False, unique=True)
+    subject = db.Column(db.String(255), nullable=False)
+    class_level = db.Column(db.String(100), nullable=True)
+    location = db.Column(db.String(255), nullable=True)
+    remuneration = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), default="open")
+    description = db.Column(db.Text, nullable=True)
+    req_type = db.Column(db.String(100), nullable=True)
