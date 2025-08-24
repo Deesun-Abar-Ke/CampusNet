@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common_app_bar.dart';
 import 'tuition_page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../services/auth_service.dart';
+import '../../config.dart';
 
 class CreateTuitionPostPage extends StatefulWidget {
   const CreateTuitionPostPage({super.key});
@@ -446,23 +450,63 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
 
   void _submitPost() {
     if (_validateForm()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isTutor
-                ? 'Tutoring offer posted successfully!'
-                : 'Tutor request posted successfully!',
-          ),
+      _postToBackend();
+    }
+  }
+
+  Future<void> _postToBackend() async {
+    final token = await AuthService.getToken();
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('You must be logged in to post'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    final postId = DateTime.now().millisecondsSinceEpoch.toString();
+    final body = {
+      'post_id': postId,
+      'subject': subject,
+      'class': classLevel,
+      'location': location,
+      'renumeration': salary,
+      'description': description,
+      'req_type': isTutor ? 'offer' : 'request',
+    };
+    print(body);
+    final url = Uri.parse('$baseUrl/tutions');
+    try {
+      final res = await http.post(url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token'
+          },
+          body: jsonEncode(body));
+
+      if (res.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isTutor ? 'Tutoring offer posted successfully!' : 'Tutor request posted successfully!'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
-        ),
-      );
-      
-      // Navigate back to tuition page
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const TuitionPage()),
-      );
+        ));
+        // Navigate back to tuition page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const TuitionPage()),
+        );
+      } else {
+        final err = res.body.isNotEmpty ? jsonDecode(res.body) : {};
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(err['msg'] ?? 'Failed to post (${res.statusCode})'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error: $e'),
+        backgroundColor: Colors.red,
+      ));
     }
   }
 }

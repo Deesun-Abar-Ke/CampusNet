@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../../config.dart';
 import '../messages/messages_page.dart';
 import '../messages/chat_screen.dart';
 import '../landing_page.dart';
@@ -62,73 +66,124 @@ class TuitionPage extends StatelessWidget {
   }
 }
 
-class TutorsList extends StatelessWidget {
+class TutorsList extends StatefulWidget {
   const TutorsList({super.key});
 
   @override
+  State<TutorsList> createState() => _TutorsListState();
+}
+
+class _TutorsListState extends State<TutorsList> {
+  late Future<List<dynamic>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = fetchTutions();
+  }
+
+  Future<List<dynamic>> fetchTutions() async {
+    final url = Uri.parse('$baseUrl/tutions');
+    final res = await http.get(url);
+    if (res.statusCode == 200) return jsonDecode(res.body) as List<dynamic>;
+    throw Exception('Failed to load tutions');
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: const [
-        TutorCard(
-          name: 'MD. Nahian Kabir Pranto',
-          subject: 'Business Mathematics',
-          classLevel: 'University Level',
-          location: 'Online (Zoom)',
-          remuneration: '৳8000/month',
-          description:
-              'Experienced math tutor with 5+ years of teaching. Specialized in business mathematics and statistics. Can help with assignments and exam preparation.',
-        ),
-        TutorCard(
-          name: 'Fatima Rahman',
-          subject: 'Physics & Chemistry',
-          classLevel: 'A-Level',
-          location: 'Dhanmondi, Dhaka',
-          remuneration: '৳6000/month',
-          description:
-              'MSc in Physics from DU. Expert in A-level science subjects. Proven track record of excellent results. Patient and friendly teaching approach.',
-        ),
-      ],
+    return FutureBuilder<List<dynamic>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        final items = snapshot.data ?? [];
+        // Tutors list: show posts where req_type != 'request' (providers/offers)
+        final tutors = items.where((e) => (e['req_type'] ?? '').toString().toLowerCase() != 'request').toList();
+
+        if (tutors.isEmpty) {
+          return const Center(child: Text('No tutors found'));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: tutors.length,
+          itemBuilder: (context, i) {
+            final t = tutors[i];
+            return TutionCard(
+              title: (t['subject'] ?? t['post_id'] ?? 'Tuition').toString(),
+              classLevel: (t['class'] ?? t['class_level'] ?? '').toString(),
+              location: (t['location'] ?? '').toString(),
+              remuneration: (t['remuneration'] ?? t['renumeration'] ?? '').toString(),
+              description: (t['description'] ?? '').toString(),
+            );
+          },
+        );
+      },
     );
   }
 }
 
-class RequestsList extends StatelessWidget {
+class RequestsList extends StatefulWidget {
   const RequestsList({super.key});
 
   @override
+  State<RequestsList> createState() => _RequestsListState();
+}
+
+class _RequestsListState extends State<RequestsList> {
+  late Future<List<dynamic>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = fetchTutions();
+  }
+
+  Future<List<dynamic>> fetchTutions() async {
+    final url = Uri.parse('$baseUrl/tutions');
+    final res = await http.get(url);
+    if (res.statusCode == 200) return jsonDecode(res.body) as List<dynamic>;
+    throw Exception('Failed to load tutions');
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: const [
-        TutorCard(
-          name: 'Samiya Hasan Anka',
-          subject: 'Accounting & Business Studies',
-          classLevel: 'AS Level',
-          location: 'Uttara, Dhaka',
-          remuneration: '৳5000/month',
-          description:
-              'Looking for an experienced tutor for AS level preparation. Need help with practical accounting problems and business case studies. Exam in January 2024.',
-        ),
-        TutorCard(
-          name: 'Jannatul Ferdous',
-          subject: 'English Grammar & ENG 312 (Syntax)',
-          classLevel: 'University (3rd Year)',
-          location: 'Bonosree, Dhaka',
-          remuneration: '৳4000/month',
-          description:
-              'University student seeking help with advanced English grammar and syntax course. Prefer online sessions. Need assistance with assignments and exam preparation.',
-        ),
-        TutorCard(
-          name: 'Rakib Ahmed',
-          subject: 'Mathematics & Physics',
-          classLevel: 'SSC',
-          location: 'Mirpur, Dhaka',
-          remuneration: '৳3500/month',
-          description:
-              'SSC candidate needs tutor for math and physics. Weak in calculus and mechanics. Looking for patient teacher who can explain concepts clearly.',
-        ),
-      ],
+    return FutureBuilder<List<dynamic>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        final items = snapshot.data ?? [];
+        // Requests list: show posts where req_type == 'request'
+        final requests = items.where((e) => (e['req_type'] ?? '').toString().toLowerCase() == 'request').toList();
+
+        if (requests.isEmpty) {
+          return const Center(child: Text('No requests found'));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: requests.length,
+          itemBuilder: (context, i) {
+            final t = requests[i];
+            return TutionCard(
+              title: (t['subject'] ?? t['post_id'] ?? 'Tuition Request').toString(),
+              classLevel: (t['class'] ?? t['class_level'] ?? '').toString(),
+              location: (t['location'] ?? '').toString(),
+              remuneration: (t['remuneration'] ?? t['renumeration'] ?? '').toString(),
+              description: (t['description'] ?? '').toString(),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -251,6 +306,169 @@ class TutorCard extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Description
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.description,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Description',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: 14,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required MaterialColor color,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: color[50],
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(icon, size: 16, color: color[700]),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[600],
+            fontSize: 13,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+class TutionCard extends StatelessWidget {
+  final String title;
+  final String classLevel;
+  final String location;
+  final String remuneration;
+  final String description;
+
+  const TutionCard({
+    super.key,
+    required this.title,
+    required this.classLevel,
+    required this.location,
+    required this.remuneration,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: const Color(0xFFFDECEC),
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.person, color: Colors.blue[800], size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildInfoRow(
+              icon: Icons.book,
+              label: 'Subject',
+              value: title,
+              color: Colors.purple,
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              icon: Icons.grade,
+              label: 'Class',
+              value: classLevel,
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              icon: Icons.location_on,
+              label: 'Location',
+              value: location,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              icon: Icons.attach_money,
+              label: 'Remuneration',
+              value: remuneration,
+              color: Colors.green,
+            ),
+            const SizedBox(height: 12),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
