@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import '../../services/study_materials_service.dart';
 import '../../widgets/common_app_bar.dart';
 import 'upload_note_dialog.dart';
-import 'folder_contents_page.dart';
 
 class CourseChaptersPage extends StatefulWidget {
   final int courseId;
   final String courseName;
 
   const CourseChaptersPage({
-    Key? key,
+    super.key,
     required this.courseId,
     required this.courseName,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseChaptersPage> createState() => _CourseChaptersPageState();
@@ -181,13 +180,17 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: CommonAppBar(
         title: Text(
           widget.courseName,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
+        showBackButton: true,
+        centerTitle: true,
         backgroundColor: Colors.teal,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _notesFuture,

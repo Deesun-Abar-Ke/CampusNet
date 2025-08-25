@@ -10,10 +10,10 @@ class MessagesPage extends StatefulWidget {
   final String? initialMessage;
 
   const MessagesPage({
-    Key? key,
+    super.key,
     this.initialContact,
     this.initialMessage,
-  }) : super(key: key);
+  });
 
   @override
   State<MessagesPage> createState() => _MessagesPageState();

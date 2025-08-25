@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../../config.dart';
 import '../messages/messages_page.dart';
 import '../messages/chat_screen.dart';
-import '../landing_page.dart';
+import '../home/landing_page.dart';
 import 'create_tuition_post_page.dart';
 
 class TuitionPage extends StatelessWidget {

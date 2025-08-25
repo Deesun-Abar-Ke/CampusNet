@@ -77,6 +77,11 @@ flutter:
     - assets/photography_club.png
     - assets/exhibition.jpeg
     - assets/debate_club.png
+    - assets/images/towers/tower.webp
+    - assets/images/towers/tower4.webp
+    - assets/images/towers/tower1.jpg
+    - assets/Message/
+    - assets/Tution/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

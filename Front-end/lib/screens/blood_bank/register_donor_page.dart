@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../widgets/common_app_bar.dart';
-import '../landing_page.dart';
 
 import '../../config.dart';
 
