@@ -7,8 +7,8 @@ import 'profile/profile_page.dart';
 import '../study_materials/study_materials_home.dart';
 import '../institutional_map/institutional_map_page.dart';
 import 'notifications.dart';
-import '../widget/feature_icon.dart';
-import '../widget/_club_post_card.dart';
+import '../../widgets/feature_icon.dart';
+import '../../widgets/club_post_card.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
