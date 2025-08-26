@@ -8,6 +8,7 @@ from routes.auth import auth_bp
 from routes.blood import blood_bp
 from routes.study_materials import study_bp
 from routes.tution import tution_bp
+from routes.ai import ai_bp
 
 # Load env
 load_dotenv()
@@ -45,6 +46,8 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(blood_bp)
 app.register_blueprint(study_bp)
 app.register_blueprint(tution_bp)
+app.register_blueprint(ai_bp)
+
 
 # Error handlers
 @app.errorhandler(404)

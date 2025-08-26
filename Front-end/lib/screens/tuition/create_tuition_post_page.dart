@@ -21,6 +21,25 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
   String salary = '';
   String description = '';
   bool isTutor = true;
+  bool isRefining = false;
+  final TextEditingController _descriptionController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController.text = description;
+    _descriptionController.addListener(() {
+      setState(() {
+        description = _descriptionController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   final List<String> genderOptions = ['Any', 'Male', 'Female'];
 
@@ -155,10 +174,19 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: _refineWithAI,
-                icon: Icon(Icons.auto_fix_high, color: Colors.purple[600]),
+                onPressed: isRefining ? null : _refineWithAI,
+                icon: isRefining
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                          valueColor: AlwaysStoppedAnimation(Colors.purple),
+                        ),
+                      )
+                    : Icon(Icons.auto_fix_high, color: Colors.purple[600]),
                 label: Text(
-                  'Refine with AI',
+                  isRefining ? 'Refining...' : 'Refine with AI',
                   style: TextStyle(color: Colors.purple[600]),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -336,7 +364,7 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+  TextField(
           decoration: InputDecoration(
             hintText: isTutor
                 ? 'Describe your teaching experience, qualifications, and approach...'
@@ -352,13 +380,9 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
             prefixIcon: Icon(Icons.description, color: Colors.blue[600]),
             counterText: '${description.length}/200',
           ),
+          controller: _descriptionController,
           maxLines: 4,
           maxLength: 200,
-          onChanged: (value) {
-            setState(() {
-              description = value;
-            });
-          },
         ),
       ],
     );
@@ -438,14 +462,67 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
   }
 
   void _refineWithAI() {
-    // TODO: Implement AI refinement logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('AI refinement feature coming soon!'),
-        backgroundColor: Colors.purple,
+    if (description.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please enter a description first'),
+        backgroundColor: Colors.orange,
         behavior: SnackBarBehavior.floating,
-      ),
-    );
+      ));
+      return;
+    }
+
+    setState(() {
+      isRefining = true;
+    });
+
+    final uri = Uri.parse('$baseUrl/ai/refine');
+    http
+        .post(uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'text': description}))
+        .then((res) {
+      if (res.statusCode == 200) {
+        try {
+          final j = jsonDecode(res.body);
+          final refined = (j['refined'] ?? '').toString();
+          if (refined.isNotEmpty) {
+            _descriptionController.text = refined;
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Description refined'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('AI returned empty result'),
+              backgroundColor: Colors.orange,
+            ));
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Failed to parse AI response: $e'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      } else {
+        final err = res.body.isNotEmpty ? jsonDecode(res.body) : {};
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(err['msg'] ?? 'AI refine failed (${res.statusCode})'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }).catchError((e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error calling AI: $e'),
+        backgroundColor: Colors.red,
+      ));
+    }).whenComplete(() {
+      if (mounted) {
+        setState(() {
+          isRefining = false;
+        });
+      }
+    });
   }
 
   void _submitPost() {

@@ -5,4 +5,5 @@ python-dotenv==1.0.0
 
 flask-jwt-extended==4.4.4
 werkzeug==2.2.3
+requests==2.31.0
 
