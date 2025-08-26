@@ -7,13 +7,24 @@ from models import db
 from routes.auth import auth_bp
 from routes.blood import blood_bp
 from routes.study_materials import study_bp
+from routes.tution import tution_bp
 
 # Load env
 load_dotenv()
 
+#database config
+USER = os.getenv("user")
+PASSWORD = os.getenv("password")
+HOST = os.getenv("host")
+PORT = os.getenv("port")
+DBNAME = os.getenv("dbname")
+
+DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+
+
 app = Flask(__name__)
 CORS(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///campusnet8.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "your_secret_key_here")
 
@@ -33,6 +44,7 @@ def home():
 app.register_blueprint(auth_bp)
 app.register_blueprint(blood_bp)
 app.register_blueprint(study_bp)
+app.register_blueprint(tution_bp)
 
 # Error handlers
 @app.errorhandler(404)
