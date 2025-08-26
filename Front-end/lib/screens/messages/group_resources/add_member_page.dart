@@ -5,9 +5,9 @@ class AddMemberPage extends StatefulWidget {
   final String groupName;
 
   const AddMemberPage({
-    Key? key,
+    super.key,
     required this.groupName,
-  }) : super(key: key);
+  });
 
   @override
   State<AddMemberPage> createState() => _AddMemberPageState();

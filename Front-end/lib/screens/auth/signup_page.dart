@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart'; // adjust path if needed
+import '../../services/auth_service.dart'; // adjust path if needed
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});

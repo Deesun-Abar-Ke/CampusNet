@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import '../profile_page.dart';
+import '../home/profile/profile_page.dart';
 
 class ChatScreen extends StatefulWidget {
   final String contactName;
