@@ -57,6 +57,7 @@ def create_tution():
     return jsonify({
         "id": t.id,
         "user_id": t.user_id,
+    "user_name": user.name if user else None,
         "post_id": t.post_id,
         "subject": t.subject,
         "class": t.class_level,
@@ -77,6 +78,7 @@ def list_tutions():
         {
             "id": t.id,
             "user_id": t.user_id,
+            "user_name": (Users.query.get(t.user_id).name if Users.query.get(t.user_id) else None),
             "post_id": t.post_id,
             "subject": t.subject,
             "class": t.class_level,
