@@ -3,23 +3,31 @@ import 'package:file_picker/file_picker.dart';
 import '../../services/study_materials_service.dart';
 import '../../config.dart'; // baseUrl if needed
 
-class UploadNoteDialog extends StatelessWidget {
+class UploadNoteDialog extends StatefulWidget {
   final int courseId;
 
   const UploadNoteDialog({super.key, required this.courseId});
 
+  @override
+  State<UploadNoteDialog> createState() => _UploadNoteDialogState();
+}
+
+class _UploadNoteDialogState extends State<UploadNoteDialog> {
+  bool _isUploading = false;
+
   Future<void> _uploadNote(BuildContext context) async {
     try {
-      // Pick file from device
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'ppt', 'pptx'],
       );
 
-      if (result == null) return; // User canceled
+      if (result == null) return; // user canceled
 
       final filePath = result.files.single.path!;
       final fileName = result.files.single.name;
+
+      setState(() => _isUploading = true);
 
       // Upload file to backend and get accessible file URL
       final uploadedFileUrl = await uploadFileToBackend(filePath, fileName);
@@ -29,28 +37,30 @@ class UploadNoteDialog extends StatelessWidget {
         filename: fileName,
         fileUrl: uploadedFileUrl,
         fileType: fileName.split('.').last,
-        courseId: courseId,
+        courseId: widget.courseId,
       );
 
-      // Close dialog and notify parent that upload succeeded
-      Navigator.pop(context, true);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Note uploaded successfully!')),
-      );
+      if (mounted) {
+        Navigator.pop(context, true); // success
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Note uploaded successfully!')),
+        );
+      }
     } catch (e) {
-      Navigator.pop(context, false); // upload failed
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload failed: $e')),
-      );
+      if (mounted) {
+        Navigator.pop(context, false); // failure
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
-  /// Replace this with your actual file upload logic
+  /// Replace with actual file upload logic
   Future<String> uploadFileToBackend(String path, String filename) async {
-    // TODO: implement actual upload
-    // For now, just return a mock URL
-    await Future.delayed(const Duration(seconds: 1)); // simulate upload delay
+    await Future.delayed(const Duration(seconds: 2)); // simulate delay
     return '/static/uploads/$filename';
   }
 
@@ -58,7 +68,19 @@ class UploadNoteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Upload Note'),
-      content: Column(
+      content: _isUploading
+          ? SizedBox(
+        height: 80,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            CircularProgressIndicator(),
+            SizedBox(height: 12),
+            Text('Uploading... Please wait'),
+          ],
+        ),
+      )
+          : Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text('Pick a file from your device to upload.'),
@@ -70,12 +92,14 @@ class UploadNoteDialog extends StatelessWidget {
           ),
         ],
       ),
-      actions: [
+      actions: !_isUploading
+          ? [
         TextButton(
           child: const Text('Cancel'),
           onPressed: () => Navigator.pop(context, false),
         ),
-      ],
+      ]
+          : null,
     );
   }
 }

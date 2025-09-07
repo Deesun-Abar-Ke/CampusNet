@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/services.dart'; // <-- added
+
 import '../../widgets/common_app_bar.dart';
 import '../../config.dart';
 
@@ -23,7 +25,7 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
   bool isSubmitting = false;
   String? errorMessage;
 
-  final List<String> bloodGroups = [
+  final List<String> bloodGroups = const [
     'A+',
     'A-',
     'B+',
@@ -72,6 +74,7 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
     // Format as YYYY-MM-DDTHH:MM:SS (no fractional seconds)
     final iso = _neededAt!.toIso8601String();
     return iso.split('.').first; // drop fraction and timezone
+    // If you prefer local naive time, this is okay because backend expects no timezone.
   }
 
   Future<void> submitRequest() async {
@@ -141,10 +144,9 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
         setState(() {
           errorMessage = 'Unauthorized. Please log in again.';
         });
-        // optionally clear token / redirect to login
       } else {
         final body = res.body.isNotEmpty ? jsonDecode(res.body) : {};
-        final msg = body['msg'] ?? res.reasonPhrase ?? 'Unknown error';
+        final msg = body is Map && body['msg'] != null ? body['msg'] : (res.reasonPhrase ?? 'Unknown error');
         setState(() {
           errorMessage = 'Error: $msg';
         });
@@ -197,8 +199,16 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
                 onChanged: (value) => amount = value,
-                validator: (value) => value == null || value.isEmpty ? 'Enter amount needed' : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Enter amount needed';
+                  final n = int.tryParse(value);
+                  if (n == null || n <= 0) return 'Amount must be a positive integer';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -210,14 +220,32 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
                 validator: (value) => value == null || value.isEmpty ? 'Enter location' : null,
               ),
               const SizedBox(height: 16),
+              // CONTACT with 11-digit validation
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: 'Contact Info',
                   border: OutlineInputBorder(),
+                  hintText: 'e.g., 017XXXXXXXX',
                 ),
                 keyboardType: TextInputType.phone,
+                autofillHints: const [AutofillHints.telephoneNumber],
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly, // digits only
+                  LengthLimitingTextInputFormatter(11),   // cap at 11
+                ],
                 onChanged: (value) => contact = value,
-                validator: (value) => value == null || value.isEmpty ? 'Enter contact info' : null,
+                validator: (value) {
+                  final v = (value ?? '').trim();
+                  if (v.isEmpty) return 'Enter contact info';
+                  if (!RegExp(r'^\d{11}$').hasMatch(v)) {
+                    return 'Phone number must be exactly 11 digits';
+                  }
+                  // Optional Bangladesh rule:
+                  // if (!RegExp(r'^01\d{9}$').hasMatch(v)) {
+                  //   return 'BD numbers must start with 01';
+                  // }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               ListTile(

@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../widgets/common_app_bar.dart';
+import 'package:flutter/services.dart';
 
+import '../../widgets/common_app_bar.dart';
 import '../../config.dart';
 
 class RegisterDonorPage extends StatefulWidget {
@@ -22,20 +23,20 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
   final _addressController = TextEditingController();
   final _contactController = TextEditingController();
 
-  final List<String> _bloodGroups = [
-    'A+',
-    'A-',
-    'B+',
-    'B-',
-    'O+',
-    'O-',
-    'AB+',
-    'AB-',
+  final List<String> _bloodGroups = const [
+    'A+','A-','B+','B-','O+','O-','AB+','AB-',
   ];
-
 
   // Secure storage to get stored JWT token
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    _contactController.dispose();
+    super.dispose();
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -45,9 +46,7 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
       lastDate: DateTime.now(),
     );
     if (picked != null) {
-      setState(() {
-        _lastDonationDate = picked;
-      });
+      setState(() => _lastDonationDate = picked);
     }
   }
 
@@ -76,12 +75,13 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',  // <-- Add token here
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode(donorData),
       );
 
       if (response.statusCode == 201) {
+        if (!mounted) return;
         showDialog(
           context: context,
           builder: (_) => AlertDialog(
@@ -105,10 +105,13 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
           ),
         );
       } else {
-        final errorMsg = jsonDecode(response.body)['msg'] ?? 'Unknown error';
+        final dynamic body = jsonDecode(response.body);
+        final errorMsg = (body is Map && body['msg'] != null)
+            ? body['msg'].toString()
+            : 'Unknown error';
         _showError(errorMsg);
       }
-    } catch (e) {
+    } catch (_) {
       _showError('Failed to submit. Please check your connection.');
     }
   }
@@ -163,7 +166,7 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                 onChanged: (value) => setState(() => _bloodGroup = value),
                 value: _bloodGroup,
                 validator: (value) =>
-                    value == null ? "Please select a blood group" : null,
+                value == null ? "Please select a blood group" : null,
               ),
               const SizedBox(height: 16),
               ListTile(
@@ -187,19 +190,35 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                    value == null || value.isEmpty ? "Enter address" : null,
+                value == null || value.isEmpty ? "Enter address" : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _contactController,
                 keyboardType: TextInputType.phone,
+                autofillHints: const [AutofillHints.telephoneNumber],
+                // NOTE: no 'const' here
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly, // digits only
+                  LengthLimitingTextInputFormatter(11),   // max 11
+                ],
                 decoration: const InputDecoration(
                   labelText: "Contact Number",
                   border: OutlineInputBorder(),
+                  hintText: "e.g., 017XXXXXXXX",
                 ),
-                validator: (value) => value == null || value.isEmpty
-                    ? "Enter contact number"
-                    : null,
+                validator: (value) {
+                  final v = (value ?? '').trim();
+                  if (v.isEmpty) return "Enter contact number";
+                  if (!RegExp(r'^\d{11}$').hasMatch(v)) {
+                    return "Phone number must be exactly 11 digits";
+                  }
+                  // Optional (Bangladesh): enforce starting with 01
+                  // if (!RegExp(r'^01\d{9}$').hasMatch(v)) {
+                  //   return "BD numbers must start with 01";
+                  // }
+                  return null;
+                },
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
@@ -207,7 +226,7 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
                 icon: const Icon(Icons.person_add),
                 label: const Text("Register"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade400,
+                  backgroundColor: Colors.redAccent,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 50),
                 ),

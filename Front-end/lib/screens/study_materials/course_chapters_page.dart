@@ -73,9 +73,13 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
     );
   }
 
-  Future<void> _openFile(String fileUrl) async {
-    final fullUrl = '$baseUrl$fileUrl';
-    final uri = Uri.parse(fullUrl);
+  Future<void> _openFile(String? fileUrl) async {
+    // Use default PDF if fileUrl is null or empty
+    final urlToOpen = (fileUrl == null || fileUrl.isEmpty)
+        ? '$baseUrl/study/notes/default'
+        : '$baseUrl$fileUrl';
+
+    final uri = Uri.parse(urlToOpen);
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -122,21 +126,13 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
             itemBuilder: (context, index) {
               final note = notes[index];
               final filename = note['filename'] ?? '';
-              final fileUrl = note['file_url'] ?? '';
+              final fileUrl = note['file_url'];
               return GestureDetector(
                 onLongPress: () => _showDeleteDialog(index, notes),
                 child: ListTile(
                   leading: Icon(getFileIcon(filename)),
                   title: Text(filename),
-                  onTap: () {
-                    if (fileUrl.isNotEmpty) {
-                      _openFile(fileUrl);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('File URL not available')),
-                      );
-                    }
-                  },
+                  onTap: () => _openFile(fileUrl),
                 ),
               );
             },
