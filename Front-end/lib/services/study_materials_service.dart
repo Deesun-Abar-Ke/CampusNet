@@ -24,8 +24,9 @@ class StudyMaterialsService {
     final body = jsonEncode({'name': name, 'icon': icon});
 
     final res = await http.post(url, headers: headers, body: body);
-    if (res.statusCode != 201) {
-      final msg = jsonDecode(res.body)['msg'] ?? 'Unknown error';
+
+    if (res.statusCode != 201 && res.statusCode != 200) {
+      final msg = _extractErrorMessage(res.body);
       throw Exception('Failed to add department: $msg');
     }
   }
@@ -50,11 +51,15 @@ class StudyMaterialsService {
   }) async {
     final url = Uri.parse('$baseUrl/courses');
     final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode({'name': name, 'department_id': departmentId});
+    final body = jsonEncode({
+      'name': name,
+      'department_id': departmentId, // 👈 keep consistent with backend
+    });
 
     final res = await http.post(url, headers: headers, body: body);
-    if (res.statusCode != 201) {
-      final msg = jsonDecode(res.body)['msg'] ?? 'Unknown error';
+
+    if (res.statusCode != 201 && res.statusCode != 200) {
+      final msg = _extractErrorMessage(res.body);
       throw Exception('Failed to add course: $msg');
     }
   }
@@ -97,9 +102,21 @@ class StudyMaterialsService {
     });
 
     final res = await http.post(url, headers: headers, body: body);
-    if (res.statusCode != 201) {
-      final msg = jsonDecode(res.body)['msg'] ?? res.body;
+
+    if (res.statusCode != 201 && res.statusCode != 200) {
+      final msg = _extractErrorMessage(res.body);
       throw Exception('Failed to upload note: $msg');
+    }
+  }
+
+  // ------------------ Helper ------------------
+
+  static String _extractErrorMessage(String responseBody) {
+    try {
+      final decoded = jsonDecode(responseBody);
+      return decoded['msg']?.toString() ?? responseBody;
+    } catch (_) {
+      return responseBody;
     }
   }
 }
