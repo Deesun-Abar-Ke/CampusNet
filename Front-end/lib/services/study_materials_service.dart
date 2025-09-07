@@ -5,7 +5,6 @@ import '../config.dart';
 
 class StudyMaterialsService {
   // ------------------ DEPARTMENTS ------------------
-
   static Future<List<dynamic>> fetchDepartments() async {
     final url = Uri.parse('$baseUrl/departments');
     final res = await http.get(url);
@@ -30,7 +29,6 @@ class StudyMaterialsService {
   }
 
   // ------------------ COURSES ------------------
-
   static Future<List<dynamic>> fetchCourses(int departmentId) async {
     final url = Uri.parse('$baseUrl/courses?department_id=$departmentId');
     final res = await http.get(url);
@@ -58,20 +56,16 @@ class StudyMaterialsService {
   }
 
   // ------------------ NOTES ------------------
-
   static Future<List<dynamic>> fetchNotes(int courseId) async {
     final url = Uri.parse('$baseUrl/notes?course_id=$courseId');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       final notes = jsonDecode(res.body) as List<dynamic>;
-
-      // Ensure each note has a file_url, default if missing
       for (var note in notes) {
         if (note['file_url'] == null || note['file_url'].toString().isEmpty) {
           note['file_url'] = '/study/notes/default';
         }
       }
-
       return notes;
     } else {
       throw Exception('Failed to load notes');
@@ -108,8 +102,32 @@ class StudyMaterialsService {
     }
   }
 
-  // ------------------ HELPER ------------------
+  // ------------------ DELETE NOTE ------------------
+  static Future<void> deleteNote(int noteId) async {
+    final token = await AuthService.getToken();
+    if (token == null) throw Exception('Not authenticated');
 
+    final url = Uri.parse('$baseUrl/notes/$noteId');
+
+    final res = await http.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (res.statusCode == 403) {
+      throw Exception('You are not authorized to delete this note');
+    }
+
+    if (res.statusCode != 200 && res.statusCode != 204) {
+      final msg = _extractErrorMessage(res.body);
+      throw Exception('Failed to delete note: $msg');
+    }
+  }
+
+  // ------------------ HELPER ------------------
   static String _extractErrorMessage(String responseBody) {
     try {
       final decoded = jsonDecode(responseBody);

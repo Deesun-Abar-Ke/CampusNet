@@ -86,3 +86,7 @@ class Tution(db.Model):
     status = db.Column(db.String(50), default="open")
     description = db.Column(db.Text, nullable=True)
     req_type = db.Column(db.String(100), nullable=True)
+
+
+
+

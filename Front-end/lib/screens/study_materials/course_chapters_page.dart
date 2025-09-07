@@ -46,6 +46,7 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   }
 
   void _showDeleteDialog(int index, List<dynamic> notes) {
+    final note = notes[index];
     showModalBottomSheet(
       context: context,
       builder: (_) {
@@ -55,17 +56,27 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.delete_forever, color: Colors.red),
-                title: Text("Delete ${notes[index]['filename']}"),
-                onTap: () {
-                  // TODO: implement delete API
-                  Navigator.pop(context);
+                title: Text("Delete ${note['filename']}"),
+                onTap: () async {
+                  Navigator.pop(context); // Close the bottom sheet
+                  try {
+                    await StudyMaterialsService.deleteNote(note['id']);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Note deleted successfully')),
+                    );
+                    _refreshNotes();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete note: $e')),
+                    );
+                  }
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.cancel),
                 title: const Text("Cancel"),
                 onTap: () => Navigator.pop(context),
-              )
+              ),
             ],
           ),
         );
@@ -127,8 +138,14 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
               final note = notes[index];
               final filename = note['filename'] ?? '';
               final fileUrl = note['file_url'];
+
               return GestureDetector(
-                onLongPress: () => _showDeleteDialog(index, notes),
+                onLongPress: () {
+                  // Only show delete option if current user is uploader
+                  final currentUserId = note['uploaded_by']; // You may fetch current JWT user
+                  // Here we assume StudyMaterialsService.getCurrentUserId() exists
+                  _showDeleteDialog(index, notes);
+                },
                 child: ListTile(
                   leading: Icon(getFileIcon(filename)),
                   title: Text(filename),

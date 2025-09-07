@@ -23,8 +23,7 @@ def serve_default_note():
     default_pdf_path = os.path.join(STATIC_FOLDER, DEFAULT_PDF)
     if os.path.exists(default_pdf_path):
         return send_file(default_pdf_path, as_attachment=False)
-    else:
-        return jsonify({"msg": "Default PDF not found"}), 404
+    return jsonify({"msg": "Default PDF not found"}), 404
 
 # -------------------- Departments --------------------
 @study_bp.route("/departments", methods=["POST"])
@@ -107,7 +106,6 @@ def get_notes():
             return jsonify({"msg": "course_id must be integer"}), 400
     notes = query.order_by(Note.uploaded_at.desc()).all()
 
-    # Ensure each note has a file_url, default if missing
     result = []
     for n in notes:
         result.append({
@@ -145,7 +143,7 @@ def upload_note():
 
     note = Note(
         filename=filename,
-        file_url=file_url if file_url else "/study/notes/default",  # default PDF if missing
+        file_url=file_url if file_url else "/study/notes/default",
         file_type=file_type,
         course_id=course_id,
         uploaded_by=user_id
@@ -178,4 +176,30 @@ def upload_note_file():
 
     return jsonify({"file_url": f"/study/notes/files/{filename}"}), 200
 
+# -------------------- Delete Note --------------------
+@study_bp.route("/notes/<int:note_id>", methods=["DELETE"])
+@jwt_required()
+def delete_note(note_id):
+    user_id = int(get_jwt_identity())
+    note = Note.query.get(note_id)
+    
+    if not note:
+        return jsonify({"msg": "Note not found"}), 404
 
+    # Only uploader can delete
+    if note.uploaded_by != user_id:
+        return jsonify({"msg": "You are not authorized to delete this note"}), 403
+
+    # Remove file from disk if not default
+    if note.file_url != "/study/notes/default":
+        file_path = os.path.join(UPLOAD_FOLDER, os.path.basename(note.file_url))
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                return jsonify({"msg": f"Failed to delete file: {str(e)}"}), 500
+
+    db.session.delete(note)
+    db.session.commit()
+
+    return jsonify({"msg": "Note deleted successfully"}), 200

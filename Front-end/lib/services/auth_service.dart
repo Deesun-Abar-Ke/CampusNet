@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import '../config.dart';
 
 class AuthService {
   static final _storage = FlutterSecureStorage();
   static const _tokenKey = 'access_token';
 
-  // Signup (returns user info)
+  // -------------------- SIGNUP --------------------
+  // Returns nothing; auto-login after signup
   static Future<void> signup({
     required String name,
     required String email,
@@ -32,7 +32,7 @@ class AuthService {
     );
 
     if (res.statusCode == 201) {
-      // auto-login after signup
+      // Auto-login after successful signup
       await login(email, password);
     } else {
       final err = res.body.isNotEmpty ? jsonDecode(res.body) : {};
@@ -40,7 +40,8 @@ class AuthService {
     }
   }
 
-  // Login and store token
+  // -------------------- LOGIN --------------------
+  // Stores JWT token in secure storage
   static Future<void> login(String email, String password) async {
     final url = Uri.parse('$baseUrl/login');
     final res = await http.post(
@@ -63,8 +64,12 @@ class AuthService {
     }
   }
 
-  static Future<String?> getToken() => _storage.read(key: _tokenKey);
+  // -------------------- GET TOKEN --------------------
+  static Future<String?> getToken() async {
+    return await _storage.read(key: _tokenKey);
+  }
 
+  // -------------------- LOGOUT --------------------
   static Future<void> logout() async {
     await _storage.delete(key: _tokenKey);
   }
