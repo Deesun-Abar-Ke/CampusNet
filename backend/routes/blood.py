@@ -1,8 +1,8 @@
-# routes/blood.py
-
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
+import re
+
 from models import db, Donor, BloodRequest, DonationHistory, VALID_BLOOD_GROUPS, VALID_REQUEST_STATUSES
 
 blood_bp = Blueprint("blood", __name__)
@@ -12,8 +12,8 @@ blood_bp = Blueprint("blood", __name__)
 def register_donor():
     data = request.get_json() or {}
     name = data.get("name", "").strip()
-    blood_group = data.get("blood_group", "").upper()
-    last_donation_date = data.get("last_donation_date", "").strip()
+    blood_group = data.get("blood_group", "").upper().strip()
+    last_donation_date = (data.get("last_donation_date") or "").strip()
     address = data.get("address", "").strip()
     contact = data.get("contact", "").strip()
 
@@ -22,6 +22,13 @@ def register_donor():
 
     if blood_group not in VALID_BLOOD_GROUPS:
         return jsonify({"msg": "invalid blood_group"}), 400
+
+    # Enforce exactly 11 digits for phone number
+    if not re.fullmatch(r"\d{11}", contact):
+        return jsonify({"msg": "contact must be exactly 11 digits"}), 400
+    # Optional (Bangladesh format): enforce starting with 01
+    # if not re.fullmatch(r"01\d{9}", contact):
+    #     return jsonify({"msg": "contact must start with 01"}), 400
 
     last_donation = None
     if last_donation_date:
@@ -106,6 +113,13 @@ def create_blood_request():
 
     if status not in VALID_REQUEST_STATUSES:
         return jsonify({"msg": "invalid status"}), 400
+
+    # (Optional) also validate requester contact as 11 digits
+    if not re.fullmatch(r"\d{11}", contact):
+        return jsonify({"msg": "contact must be exactly 11 digits"}), 400
+    # Optional: enforce '01' prefix for BD numbers
+    # if not re.fullmatch(r"01\d{9}", contact):
+    #     return jsonify({"msg": "contact must start with 01"}), 400
 
     needed_at = None
     if needed_at_raw:

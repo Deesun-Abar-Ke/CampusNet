@@ -13,20 +13,34 @@ class StudyMaterialsHome extends StatefulWidget {
 class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
   late Future<List<dynamic>> _departmentsFuture;
 
+  final List<Color> _tileColors = [
+    Colors.blue.shade100,
+    Colors.green.shade100,
+    Colors.orange.shade100,
+    Colors.pink.shade100,
+    Colors.purple.shade100,
+    Colors.teal.shade100,
+    Colors.yellow.shade100,
+    Colors.cyan.shade100,
+    Colors.indigo.shade100,
+    Colors.lime.shade100,
+  ];
+
   @override
   void initState() {
     super.initState();
     _departmentsFuture = StudyMaterialsService.fetchDepartments();
   }
 
-  Widget _buildTile(
-      BuildContext context, {
-        required IconData icon,
-        required String label,
-        required VoidCallback onTap,
-      }) {
+  Widget _buildTile({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color tileColor,
+  }) {
     return Material(
-      color: const Color(0xFFECEBFD),
+      color: tileColor,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -56,7 +70,6 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
   }
 
   IconData _mapIconStringToIconData(String? iconName) {
-    // Simple mapping, add more icons if needed
     switch (iconName) {
       case 'computer':
         return Icons.computer;
@@ -75,7 +88,7 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
       backgroundColor: Colors.white,
       appBar: const CommonAppBar(
         title: Text(
-          'Study Materials',
+          'Resource Bank',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -86,46 +99,76 @@ class _StudyMaterialsHomeState extends State<StudyMaterialsHome> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: FutureBuilder<List<dynamic>>(
-          future: _departmentsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
-            final departments = snapshot.data ?? [];
+        child: Column(
+          children: [
+            // Banner
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.yellow.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'Get all your study materials in one place!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
 
-            if (departments.isEmpty) {
-              return const Center(child: Text('No departments found.'));
-            }
+            // Departments Grid
+            Expanded(
+              child: FutureBuilder<List<dynamic>>(
+                future: _departmentsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+                  final departments = snapshot.data ?? [];
 
-            return GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: departments.map((dept) {
-                final iconData = _mapIconStringToIconData(dept['icon']);
-                return _buildTile(
-                  context,
-                  icon: iconData,
-                  label: dept['name'] ?? 'No Name',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CourseListPage(
-                          departmentId: dept['id'],
-                          departmentName: dept['name'],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }).toList(),
-            );
-          },
+                  if (departments.isEmpty) {
+                    return const Center(child: Text('No departments found.'));
+                  }
+
+                  return GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    children: List.generate(departments.length, (index) {
+                      final dept = departments[index];
+                      final iconData = _mapIconStringToIconData(dept['icon']);
+                      final color = _tileColors[index % _tileColors.length];
+                      return _buildTile(
+                        context: context,
+                        icon: iconData,
+                        label: dept['name'] ?? 'No Name',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CourseListPage(
+                                departmentId: dept['id'],
+                                departmentName: dept['name'],
+                              ),
+                            ),
+                          );
+                        },
+                        tileColor: color,
+                      );
+                    }),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

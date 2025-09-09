@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
@@ -8,6 +8,7 @@ from routes.auth import auth_bp
 from routes.blood import blood_bp
 from routes.study_materials import study_bp
 from routes.tution import tution_bp
+from routes.ai import ai_bp
 from routes.knowledge_base import kb_bp
 from routes.chat_routes import chat_bp
 from config import Config
@@ -33,18 +34,16 @@ except:
 app = Flask(__name__)
 CORS(app)
 
-# Apply configuration
-try:
-    Config.init_app(app)
-    print("✅ Using new configuration system")
-except Exception as e:
-    print(f"⚠️ Fallback to old configuration: {e}")
-    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Upload folder for study materials
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "static", "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+# DB + JWT setup
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "your_secret_key_here")
 
-# Init
 db.init_app(app)
 jwt = JWTManager(app)
 
@@ -54,6 +53,12 @@ with app.app_context():
 
 @app.route("/")
 def home():
+    return jsonify({"msg": "CampusNet API", "status": "up"}), 200
+
+# Route to serve uploaded files
+@app.route("/static/uploads/<path:filename>")
+def uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
     return jsonify({"msg": "CampusNet AI-Powered API", "status": "up", "features": ["Blood Bank", "Study Materials", "Tuition", "AI Chatbot"]}), 200
 
 # Register blueprints
@@ -61,6 +66,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(blood_bp)
 app.register_blueprint(study_bp)
 app.register_blueprint(tution_bp)
+app.register_blueprint(ai_bp)
 app.register_blueprint(kb_bp)  # Knowledge Base Management
 app.register_blueprint(chat_bp)  # AI Chat routes
 
@@ -74,4 +80,4 @@ def internal_error(e):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
