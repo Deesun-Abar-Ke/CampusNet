@@ -7,7 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart'; // For local storag
 import 'package:uuid/uuid.dart'; // For generating unique IDs
 import 'package:intl/intl.dart'; // For date formatting
 import 'dart:convert'; // For JSON encoding/decoding
+import 'package:http/http.dart' as http; // For API calls
 import '../widgets/common_app_bar.dart';
+import '../services/auth_service.dart';
+import '../config.dart';
 
 // A simple enum to distinguish between the user and the AI.
 enum ChatUser { user, ai }
@@ -79,6 +82,130 @@ class ChatSession {
   }
 }
 
+// API service for backend communication
+class ChatAPI {
+  static const String baseUrl = Config.baseUrl;
+  
+  static Future<String?> _getToken() async {
+    try {
+      return await AuthService.getToken();
+    } catch (e) {
+      print('Error getting auth token: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> createSession({String? sessionName}) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {'success': false, 'error': 'Not authenticated'};
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/chat/sessions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': sessionName ?? 'New Chat ${DateTime.now().toString().substring(0, 16)}',
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {'success': false, 'error': 'Failed to create session'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendMessage({
+    required String message,
+    required int sessionId,
+  }) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {'success': false, 'error': 'Not authenticated'};
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/chat/send'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'message': message,
+          'session_id': sessionId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {'success': false, 'error': 'Failed to send message'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getSessions() async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {'success': false, 'error': 'Not authenticated'};
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/chat/sessions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {'success': false, 'error': 'Failed to get sessions'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getSessionMessages(int sessionId) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {'success': false, 'error': 'Not authenticated'};
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/chat/sessions/$sessionId/messages'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {'success': false, 'error': 'Failed to get messages'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Network error: $e'};
+    }
+  }
+}
+
 class ChatbotPage extends StatefulWidget {
   const ChatbotPage({super.key});
 
@@ -95,16 +222,19 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
   final Uuid _uuid = const Uuid(); // For generating unique session IDs
   late String _currentSessionId;
+  int? _currentBackendSessionId; // Backend session ID
   List<ChatSession> _sessions = []; // List of all chat sessions
   List<ChatMessage> _messages = []; // Messages for the current session
+  bool _isLoadingResponse = false; // Loading state for AI responses
+  bool _useOnlineMode = true; // Toggle between online/offline mode
 
   final List<String> _predefinedSuggestions = [
-    "Summarize this document for me.",
-    "Explain quantum physics in simple terms.",
-    "Write a short story about a talking cat.",
-    "Give me some ideas for a healthy dinner.",
-    "What's the weather like in Dhaka?",
-    "Help me brainstorm ideas for a new app.",
+    "Tell me about MIST CSE department",
+    "What are the admission requirements for MIST?",
+    "Explain the campus facilities at MIST",
+    "How is student life at MIST?",
+    "What research opportunities are available?",
+    "Tell me about MIST engineering programs",
   ];
 
   @override
@@ -122,71 +252,127 @@ class _ChatbotPageState extends State<ChatbotPage> {
     super.dispose();
   }
 
-  void _startNewSession() {
+  void _startNewSession() async {
+    // Generate local session ID
+    final newSessionId = _uuid.v4();
+    
     setState(() {
-      _currentSessionId = _uuid
-          .v4(); // Generate a new unique ID for the session
+      _currentSessionId = newSessionId;
+      _isLoadingResponse = false;
       _messages = [
         ChatMessage(
-          text: "Hello, Boss!\nI'm NetBOT, ready to help you!",
+          text: "Hello! I'm NetBOT powered by Groq AI.\nI'm here to help you with MIST-related questions and more!",
           user: ChatUser.ai,
           sessionId: _currentSessionId,
           timestamp: DateTime.now(),
         ),
         ChatMessage(
-          text: "Ask me anything that's on your mind. I'm here to assist you!",
+          text: "Ask me anything about MIST academics, campus life, or general topics. I can also analyze images and process voice input!",
           user: ChatUser.ai,
           sessionId: _currentSessionId,
           timestamp: DateTime.now(),
         ),
       ];
-      // Add or update the current session in the list
-      _updateSessionList(
-        ChatSession(
-          id: _currentSessionId,
-          title:
-              "New Chat ${DateFormat('MMM d, hh:mm a').format(DateTime.now())}",
-          lastMessageTime: DateTime.now(),
-        ),
-      );
-      _saveMessages(); // Save initial messages
-      _saveSessions(); // Save updated session list
     });
+
+    // Create backend session if online mode is enabled
+    if (_useOnlineMode) {
+      try {
+        final result = await ChatAPI.createSession(
+          sessionName: "New Chat ${DateFormat('MMM d, hh:mm a').format(DateTime.now())}",
+        );
+        
+        if (result['success']) {
+          final sessionData = result['data']['session'];
+          _currentBackendSessionId = sessionData['id'];
+          print('Backend session created: $_currentBackendSessionId');
+        } else {
+          print('Failed to create backend session: ${result['error']}');
+          // Continue with local-only mode
+          _useOnlineMode = false;
+        }
+      } catch (e) {
+        print('Error creating backend session: $e');
+        _useOnlineMode = false;
+      }
+    }
+
+    // Save initial messages but don't create session entry yet
+    // Session will be created when user sends their first message
+    _saveMessages(); // Save initial messages
     _scrollToBottom();
   }
 
   Future<void> _loadSessions() async {
+    print('📂 Loading chat sessions...');
     final prefs = await SharedPreferences.getInstance();
     final String? sessionsJson = prefs.getString('chat_sessions');
+    
+    print('📄 Sessions JSON found: ${sessionsJson != null}');
     if (sessionsJson != null) {
-      Iterable decoded = jsonDecode(sessionsJson);
+      print('📊 JSON content: $sessionsJson');
+      try {
+        Iterable decoded = jsonDecode(sessionsJson);
+        setState(() {
+          _sessions = decoded.map((s) => ChatSession.fromJson(s)).toList();
+          // Sort sessions by last message time, newest first
+          _sessions.sort(
+            (a, b) => b.lastMessageTime.compareTo(a.lastMessageTime),
+          );
+        });
+        print('✅ Loaded ${_sessions.length} sessions');
+      } catch (e) {
+        print('❌ Error loading sessions: $e');
+        setState(() {
+          _sessions = [];
+        });
+      }
+    } else {
+      print('📭 No sessions found');
       setState(() {
-        _sessions = decoded.map((s) => ChatSession.fromJson(s)).toList();
-        // Sort sessions by last message time, newest first
-        _sessions.sort(
-          (a, b) => b.lastMessageTime.compareTo(a.lastMessageTime),
-        );
+        _sessions = [];
       });
     }
   }
 
   Future<void> _saveSessions() async {
+    print('💾 Saving ${_sessions.length} sessions...');
     final prefs = await SharedPreferences.getInstance();
     final String sessionsJson = jsonEncode(
       _sessions.map((s) => s.toJson()).toList(),
     );
     await prefs.setString('chat_sessions', sessionsJson);
+    print('✅ Sessions saved successfully');
+    
+    // Debug: Print session titles
+    for (int i = 0; i < _sessions.length; i++) {
+      print('   Session $i: ${_sessions[i].title} (${_sessions[i].id})');
+    }
   }
 
   Future<void> _loadMessages(String sessionId) async {
+    print('🔍 Loading messages for session: $sessionId');
     final prefs = await SharedPreferences.getInstance();
     final String? messagesJson = prefs.getString('session_$sessionId');
+    
+    print('📄 Messages JSON found: ${messagesJson != null}');
+    if (messagesJson != null) {
+      print('📊 JSON length: ${messagesJson.length}');
+    }
+    
     setState(() {
       if (messagesJson != null) {
-        Iterable decoded = jsonDecode(messagesJson);
-        _messages = decoded.map((m) => ChatMessage.fromJson(m)).toList();
+        try {
+          Iterable decoded = jsonDecode(messagesJson);
+          _messages = decoded.map((m) => ChatMessage.fromJson(m)).toList();
+          print('✅ Loaded ${_messages.length} messages');
+        } catch (e) {
+          print('❌ Error loading messages: $e');
+          _messages = [];
+        }
       } else {
         _messages = []; // No messages for this session yet
+        print('📭 No messages found for this session');
       }
       _currentSessionId = sessionId; // Set current session
     });
@@ -194,27 +380,53 @@ class _ChatbotPageState extends State<ChatbotPage> {
   }
 
   Future<void> _saveMessages() async {
+    print('💾 Saving ${_messages.length} messages for session: $_currentSessionId');
     final prefs = await SharedPreferences.getInstance();
     final String messagesJson = jsonEncode(
       _messages.map((m) => m.toJson()).toList(),
     );
     await prefs.setString('session_$_currentSessionId', messagesJson);
+    print('✅ Messages saved successfully');
+  }
+
+  String _generateSessionTitle() {
+    // Find the first user message (skip AI welcome messages)
+    for (ChatMessage message in _messages) {
+      if (message.user == ChatUser.user && message.text.trim().isNotEmpty) {
+        String title = message.text.split('\n').first.trim();
+        // Limit title length for better display
+        if (title.length > 30) {
+          title = title.substring(0, 30) + '...';
+        }
+        return title;
+      }
+    }
+    // Fallback title if no user message found
+    return 'Chat Session ${DateTime.now().toString().substring(11, 16)}'; // HH:MM format
+  }
+
+  bool _hasUserMessages() {
+    return _messages.any((message) => message.user == ChatUser.user);
   }
 
   void _updateSessionList(ChatSession newSession) {
+    print('🔄 Updating session list with: ${newSession.id} - ${newSession.title}');
     int existingIndex = _sessions.indexWhere((s) => s.id == newSession.id);
     if (existingIndex != -1) {
       // Update existing session
+      print('✏️ Updating existing session at index $existingIndex');
       _sessions[existingIndex] = newSession;
     } else {
       // Add new session
+      print('➕ Adding new session');
       _sessions.add(newSession);
     }
     // Sort sessions again to keep newest at top
     _sessions.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+    print('📋 Total sessions: ${_sessions.length}');
   }
 
-  void _sendMessage({String? text, File? image}) {
+  void _sendMessage({String? text, File? image}) async {
     String messageText = text ?? _textController.text;
 
     if (messageText.trim().isNotEmpty || image != null) {
@@ -228,6 +440,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
       setState(() {
         _messages.add(newMessage);
+        _isLoadingResponse = true; // Show loading indicator
       });
 
       // Clear the text field if the message came from it
@@ -242,38 +455,93 @@ class _ChatbotPageState extends State<ChatbotPage> {
       _updateSessionList(
         ChatSession(
           id: _currentSessionId,
-          title: _messages.first.text
-              .split('\n')
-              .first, // Use first message as title
+          title: _messages.first.text.split('\n').first, // Use first message as title
           lastMessageTime: newMessage.timestamp,
         ),
       );
       _saveSessions();
 
-      // --- AI Response Simulation ---
-      Future.delayed(const Duration(milliseconds: 800), () {
-        final aiResponse = ChatMessage(
-          text:
-              "Understood! I'm processing your request now. How else can I help?",
-          user: ChatUser.ai,
-          sessionId: _currentSessionId,
-          timestamp: DateTime.now(),
-        );
-        setState(() {
-          _messages.add(aiResponse);
-        });
-        _scrollToBottom();
-        _saveMessages(); // Save AI response
+      // --- Get AI Response from Backend ---
+      String aiResponseText = "I'm experiencing technical difficulties. Please try again in a moment.";
+      
+      if (_useOnlineMode && _currentBackendSessionId != null) {
+        try {
+          // Prepare message for API (handle image if present)
+          String apiMessage = messageText;
+          if (image != null) {
+            apiMessage = "$messageText [Image attached: ${image.path.split('/').last}]";
+          }
 
+          final result = await ChatAPI.sendMessage(
+            message: apiMessage,
+            sessionId: _currentBackendSessionId!,
+          );
+
+          if (result['success']) {
+            final messageData = result['data']['message'];
+            aiResponseText = messageData['ai_response'] ?? 'No response received.';
+          } else {
+            aiResponseText = "Sorry, I encountered an error: ${result['error']}";
+            // Fallback to offline mode if API fails
+            if (result['error'].toString().contains('Network')) {
+              _useOnlineMode = false;
+              aiResponseText = "I'm currently offline. Your message has been saved locally.";
+            }
+          }
+        } catch (e) {
+          print('API Error: $e');
+          aiResponseText = "I'm having trouble connecting to my brain right now. Let me think locally...";
+          _useOnlineMode = false;
+        }
+      } else {
+        // Offline mode - provide a simple response
+        aiResponseText = _generateOfflineResponse(messageText);
+      }
+
+      // Add AI response with a small delay for better UX
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      final aiResponse = ChatMessage(
+        text: aiResponseText,
+        user: ChatUser.ai,
+        sessionId: _currentSessionId,
+        timestamp: DateTime.now(),
+      );
+      
+      setState(() {
+        _messages.add(aiResponse);
+        _isLoadingResponse = false; // Hide loading indicator
+      });
+      
+      _scrollToBottom();
+      _saveMessages(); // Save AI response
+
+      // Only create/update session if there are actual user messages
+      if (_hasUserMessages()) {
         _updateSessionList(
           ChatSession(
             id: _currentSessionId,
-            title: _messages.first.text.split('\n').first,
+            title: _generateSessionTitle(),
             lastMessageTime: aiResponse.timestamp,
           ),
         );
         _saveSessions();
-      });
+      }
+    }
+  }
+
+  String _generateOfflineResponse(String message) {
+    // Simple offline responses based on keywords
+    final lowercaseMessage = message.toLowerCase();
+    
+    if (lowercaseMessage.contains('mist') || lowercaseMessage.contains('university')) {
+      return "MIST (Military Institute of Science and Technology) is a prestigious engineering university in Bangladesh. I'm currently offline, but I'd love to tell you more when I'm back online!";
+    } else if (lowercaseMessage.contains('hello') || lowercaseMessage.contains('hi')) {
+      return "Hello! I'm NetBOT. I'm currently running in offline mode, but I can still chat with you. For detailed information about MIST, please try again when I'm online.";
+    } else if (lowercaseMessage.contains('help')) {
+      return "I'm here to help! Currently running offline, so my responses are limited. When online, I can help with MIST academics, campus info, general questions, image analysis, and more.";
+    } else {
+      return "Thanks for your message! I'm currently offline, so I can't provide my usual detailed responses. Please try again later for full AI-powered assistance with MIST and other topics.";
     }
   }
 
@@ -432,20 +700,57 @@ class _ChatbotPageState extends State<ChatbotPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF2C2F33), // Dark theme background
       appBar: CommonAppBar(
-        title: const Text(
-          "NetBOT",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 1.2,
-          ),
+        title: Row(
+          children: [
+            const Text(
+              "NetBOT",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: _useOnlineMode ? Colors.green : Colors.orange,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _useOnlineMode ? 'ONLINE' : 'OFFLINE',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
         showBackButton: true,
-        centerTitle: true,
+        centerTitle: false,
         elevation: 4,
         backgroundColor: const Color(0xFF23272A), // Darker app bar
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: Icon(_useOnlineMode ? Icons.wifi : Icons.wifi_off),
+            tooltip: _useOnlineMode ? 'Online Mode' : 'Offline Mode',
+            onPressed: () {
+              setState(() {
+                _useOnlineMode = !_useOnlineMode;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(_useOnlineMode 
+                    ? 'Switched to Online Mode - Full AI features available' 
+                    : 'Switched to Offline Mode - Limited responses only'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.history),
             tooltip: 'Chat History',
@@ -496,8 +801,12 @@ class _ChatbotPageState extends State<ChatbotPage> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16.0),
-              itemCount: _messages.length,
+              itemCount: _messages.length + (_isLoadingResponse ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == _messages.length && _isLoadingResponse) {
+                  // Show loading indicator at the end
+                  return const ChatLoadingIndicator();
+                }
                 final message = _messages[index];
                 return ChatBubble(message: message);
               },
@@ -868,9 +1177,93 @@ class ChatBubble extends StatelessWidget {
   }
 }
 
-class _Message {
-  final String text;
-  final bool isUser;
+// Loading indicator for AI responses
+class ChatLoadingIndicator extends StatefulWidget {
+  const ChatLoadingIndicator({super.key});
 
-  _Message({required this.text, required this.isUser});
+  @override
+  State<ChatLoadingIndicator> createState() => _ChatLoadingIndicatorState();
+}
+
+class _ChatLoadingIndicatorState extends State<ChatLoadingIndicator> 
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: const BoxDecoration(
+              color: Color(0xFF424549),
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+                topLeft: Radius.circular(20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'NetBOT is thinking',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(width: 8),
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Row(
+                      children: List.generate(3, (index) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          child: Opacity(
+                            opacity: ((_controller.value * 3 - index) % 3) < 1 ? 
+                              ((_controller.value * 3 - index) % 3) : 0.3,
+                            child: const Text(
+                              '●',
+                              style: TextStyle(color: Colors.blueAccent, fontSize: 12),
+                            ),
+                          ),
+                        );
+                      }),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -8,7 +8,7 @@ class StudyMaterialsService {
 
   // Fetch all departments
   static Future<List<dynamic>> fetchDepartments() async {
-    final url = Uri.parse('$baseUrl/departments');
+    final url = Uri.parse('${Config.baseUrl}/departments');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as List<dynamic>;
@@ -19,7 +19,7 @@ class StudyMaterialsService {
 
   // Add a new department
   static Future<void> addDepartment(String name, String icon) async {
-    final url = Uri.parse('$baseUrl/departments');
+    final url = Uri.parse('${Config.baseUrl}/departments');
     final headers = {'Content-Type': 'application/json'};
     final body = jsonEncode({'name': name, 'icon': icon});
 
@@ -34,7 +34,7 @@ class StudyMaterialsService {
 
   // Fetch courses by department ID
   static Future<List<dynamic>> fetchCourses(int departmentId) async {
-    final url = Uri.parse('$baseUrl/courses?department_id=$departmentId');
+    final url = Uri.parse('${Config.baseUrl}/courses?department_id=$departmentId');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as List<dynamic>;
@@ -48,7 +48,7 @@ class StudyMaterialsService {
     required String name,
     required int departmentId,
   }) async {
-    final url = Uri.parse('$baseUrl/courses');
+    final url = Uri.parse('${Config.baseUrl}/courses');
     final headers = {'Content-Type': 'application/json'};
     final body = jsonEncode({'name': name, 'department_id': departmentId});
 
@@ -63,7 +63,7 @@ class StudyMaterialsService {
 
   // Fetch notes by course ID
   static Future<List<dynamic>> fetchNotes(int courseId) async {
-    final url = Uri.parse('$baseUrl/notes?course_id=$courseId');
+    final url = Uri.parse('${Config.baseUrl}/notes?course_id=$courseId');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as List<dynamic>;
@@ -79,7 +79,7 @@ class StudyMaterialsService {
     required String fileType,
     required int courseId,
   }) async {
-    final url = Uri.parse('$baseUrl/notes');
+    final url = Uri.parse('${Config.baseUrl}/notes');
     final token = await AuthService.getToken();
 
     if (token == null) throw Exception('Not authenticated');

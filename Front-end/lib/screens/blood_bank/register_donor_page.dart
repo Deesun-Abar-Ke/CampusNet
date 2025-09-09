@@ -71,7 +71,7 @@ class _RegisterDonorPageState extends State<RegisterDonorPage> {
     };
 
     try {
-      final url = Uri.parse('$baseUrl/donors');
+      final url = Uri.parse('${Config.baseUrl}/donors');
       final response = await http.post(
         url,
         headers: {

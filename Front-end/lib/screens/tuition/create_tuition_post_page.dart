@@ -475,7 +475,7 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
       'req_type': isTutor ? 'offer' : 'request',
     };
     print(body);
-    final url = Uri.parse('$baseUrl/tutions');
+    final url = Uri.parse('${Config.baseUrl}/tutions');
     try {
       final res = await http.post(url,
           headers: {

@@ -2,6 +2,7 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from pgvector.sqlalchemy import Vector
 
 db = SQLAlchemy()
 
@@ -86,3 +87,127 @@ class Tution(db.Model):
     status = db.Column(db.String(50), default="open")
     description = db.Column(db.Text, nullable=True)
     req_type = db.Column(db.String(100), nullable=True)
+
+
+# RAG Chatbot Models
+class ChatSession(db.Model):
+    __tablename__ = "chat_sessions"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    session_name = db.Column(db.String(255), default="New Chat")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    messages = db.relationship("ChatMessage", backref="session", lazy=True, cascade="all, delete-orphan")
+    user = db.relationship("Users", backref="chat_sessions")
+
+
+class ChatMessage(db.Model):
+    __tablename__ = "chat_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey("chat_sessions.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    
+    # Message Content
+    message_type = db.Column(db.String(20), nullable=False)  # 'text', 'image', 'audio', 'file'
+    content = db.Column(db.Text, nullable=True)  # Text content or file description
+    file_path = db.Column(db.String(500), nullable=True)  # Path to uploaded files
+    file_name = db.Column(db.String(255), nullable=True)  # Original filename
+    
+    # AI Response
+    ai_response = db.Column(db.Text, nullable=True)
+    context_used = db.Column(db.Text, nullable=True)  # RAG context sources
+    
+    # Metadata
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    processing_time = db.Column(db.Float, nullable=True)  # Response time in seconds
+    
+    # User Relationship
+    user = db.relationship("Users", backref="chat_messages")
+
+
+class UserDocument(db.Model):
+    """User-specific documents for personalized RAG"""
+    __tablename__ = "user_documents"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    
+    # Document Info
+    filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_type = db.Column(db.String(50), nullable=False)  # 'pdf', 'image', 'text'
+    file_size = db.Column(db.Integer, nullable=False)
+    
+    # Processing Status
+    is_processed = db.Column(db.Boolean, default=False)
+    processing_status = db.Column(db.String(50), default='pending')  # 'pending', 'processing', 'completed', 'failed'
+    
+    # Metadata
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    processed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Content extracted from the document
+    extracted_text = db.Column(db.Text, nullable=True)
+    
+    # Relationships
+    user = db.relationship("Users", backref="documents")
+    embeddings = db.relationship("DocumentEmbedding", backref="document", cascade="all, delete-orphan")
+
+
+class DocumentEmbedding(db.Model):
+    """Vector embeddings for user documents and institutional knowledge"""
+    __tablename__ = "document_embeddings"
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Source Information
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)  # NULL for institutional docs
+    document_id = db.Column(db.Integer, db.ForeignKey("user_documents.id"), nullable=True)  # NULL for institutional docs
+    institutional_knowledge_id = db.Column(db.Integer, db.ForeignKey("institutional_knowledge.id"), nullable=True)  # For institutional docs
+    
+    # Content
+    content_chunk = db.Column(db.Text, nullable=False)
+    chunk_index = db.Column(db.Integer, nullable=False)
+    
+    # Embedding Data (using pgvector)
+    embedding_vector = db.Column(Vector(384))  # 384 dimensions for sentence-transformers all-MiniLM-L6-v2
+    
+    # Source Type
+    source_type = db.Column(db.String(20), nullable=False)  # 'institutional', 'user_document'
+    source_metadata = db.Column(db.Text, nullable=True)  # JSON metadata
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship("Users", backref="embeddings")
+    institutional_knowledge = db.relationship("InstitutionalKnowledge", backref="embeddings")
+
+
+class InstitutionalKnowledge(db.Model):
+    """MIST-specific institutional knowledge base"""
+    __tablename__ = "institutional_knowledge"
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Document Information
+    title = db.Column(db.String(255), nullable=False)
+    content_type = db.Column(db.String(50), nullable=False)  # 'website', 'pdf', 'manual'
+    source_url = db.Column(db.String(500), nullable=True)
+    file_path = db.Column(db.String(500), nullable=True)
+    
+    # Content
+    content = db.Column(db.Text, nullable=False)
+    summary = db.Column(db.Text, nullable=True)
+    content_hash = db.Column(db.String(32), nullable=True)  # MD5 hash for duplicate detection
+    
+    # Categories for MIST
+    category = db.Column(db.String(100), nullable=False)  # 'academic', 'admission', 'campus', 'research'
+    subcategory = db.Column(db.String(100), nullable=True)
+    
+    # Processing
+    is_processed = db.Column(db.Boolean, default=False)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Version Control
+    version = db.Column(db.String(50), default='1.0')

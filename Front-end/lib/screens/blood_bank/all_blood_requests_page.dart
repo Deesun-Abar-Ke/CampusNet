@@ -43,7 +43,7 @@ class _AllBloodRequestsPageState extends State<AllBloodRequestsPage> {
         return;
       }
 
-      final url = Uri.parse('$baseUrl/blood_requests');
+      final url = Uri.parse('${Config.baseUrl}/blood_requests');
       final res = await http.get(
         url,
         headers: {

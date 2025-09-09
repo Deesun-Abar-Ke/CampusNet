@@ -16,7 +16,7 @@ class AuthService {
     String? phone,
     String? designation,
   }) async {
-    final url = Uri.parse('$baseUrl/signup');
+    final url = Uri.parse('${Config.baseUrl}/signup');
     final body = {
       'name': name,
       'email': email,
@@ -42,7 +42,7 @@ class AuthService {
 
   // Login and store token
   static Future<void> login(String email, String password) async {
-    final url = Uri.parse('$baseUrl/login');
+    final url = Uri.parse('${Config.baseUrl}/login');
     final res = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
