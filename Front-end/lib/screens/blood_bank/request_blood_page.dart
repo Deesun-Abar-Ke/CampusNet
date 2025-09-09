@@ -104,7 +104,7 @@ class _RequestBloodPageState extends State<RequestBloodPage> {
     };
 
     try {
-      final url = Uri.parse('$baseUrl/blood_requests');
+      final url = Uri.parse('${Config.baseUrl}/blood_requests');
       final res = await http.post(
         url,
         headers: {

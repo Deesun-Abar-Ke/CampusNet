@@ -104,7 +104,7 @@ class _TutorsListState extends State<TutorsList> {
   }
 
   Future<List<dynamic>> fetchTutions() async {
-    final url = Uri.parse('$baseUrl/tutions');
+    final url = Uri.parse('${Config.baseUrl}/tutions');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       final items = jsonDecode(res.body) as List<dynamic>;
@@ -310,7 +310,7 @@ class _RequestsListState extends State<RequestsList> {
   }
 
   Future<List<dynamic>> fetchTutions() async {
-    final url = Uri.parse('$baseUrl/tutions');
+    final url = Uri.parse('${Config.baseUrl}/tutions');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       final items = jsonDecode(res.body) as List<dynamic>;

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common_app_bar.dart';
+import '../../services/message_service.dart';
+import '../../services/current_user_service.dart';
+import '../../models/user_model.dart';
 import 'chat_screen.dart';
 import 'group_chat_screen.dart';
 import 'new_chat_page.dart';
@@ -19,13 +22,16 @@ class MessagesPage extends StatefulWidget {
   State<MessagesPage> createState() => _MessagesPageState();
 }
 
-class _MessagesPageState extends State<MessagesPage> with TickerProviderStateMixin {
+class _MessagesPageState extends State<MessagesPage> with TickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
+  Key _individualChatsKey = UniqueKey();
+  Key _groupChatsKey = UniqueKey();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addObserver(this);
     
     // If initial contact is provided, navigate to chat
     if (widget.initialContact != null) {
@@ -47,8 +53,28 @@ class _MessagesPageState extends State<MessagesPage> with TickerProviderStateMix
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh conversations when app comes back to foreground
+      _refreshCurrentTab();
+    }
+  }
+
+  void _refreshCurrentTab() {
+    // Force refresh by generating new keys for the tabs
+    // This will cause the tabs to rebuild and reload their data
+    if (mounted) {
+      setState(() {
+        _individualChatsKey = UniqueKey();
+        _groupChatsKey = UniqueKey();
+      });
+    }
   }
 
   @override
@@ -77,9 +103,9 @@ class _MessagesPageState extends State<MessagesPage> with TickerProviderStateMix
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: const [
-                IndividualChatsTab(),
-                GroupChatsTab(),
+              children: [
+                IndividualChatsTab(key: _individualChatsKey),
+                GroupChatsTab(key: _groupChatsKey),
               ],
             ),
           ),
@@ -133,7 +159,10 @@ class _MessagesPageState extends State<MessagesPage> with TickerProviderStateMix
         builder: (context) => const NewChatPage(),
         settings: const RouteSettings(name: '/new_chat'),
       ),
-    );
+    ).then((_) {
+      // Refresh when returning from new chat page
+      _refreshCurrentTab();
+    });
   }
 
   void _showCreateGroupDialog(BuildContext context) {
@@ -143,152 +172,417 @@ class _MessagesPageState extends State<MessagesPage> with TickerProviderStateMix
         builder: (context) => const CreateGroupPage(),
         settings: const RouteSettings(name: '/create_group'),
       ),
-    );
+    ).then((_) {
+      // Refresh when returning from create group page
+      _refreshCurrentTab();
+    });
   }
 }
 
-class IndividualChatsTab extends StatelessWidget {
+class IndividualChatsTab extends StatefulWidget {
   const IndividualChatsTab({super.key});
 
-  final List<Map<String, dynamic>> chats = const [
-    {
-      'name': 'MD. Nahian Kabir Pranto',
-      'lastMessage': 'Thanks for the math help!',
-      'time': '2:30 PM',
-      'unreadCount': 2,
-      'avatar': '👨‍🎓',
-      'isOnline': true,
-    },
-    {
-      'name': 'Fatima Rahman',
-      'lastMessage': 'Can we schedule a physics session?',
-      'time': '1:15 PM',
-      'unreadCount': 0,
-      'avatar': '👩‍🔬',
-      'isOnline': false,
-    },
-    {
-      'name': 'Samiya Hasan Anka',
-      'lastMessage': 'The accounting notes were helpful',
-      'time': 'Yesterday',
-      'unreadCount': 1,
-      'avatar': '👩‍💼',
-      'isOnline': true,
-    },
-    {
-      'name': 'Jannatul Ferdous',
-      'lastMessage': 'See you in the English class',
-      'time': 'Yesterday',
-      'unreadCount': 0,
-      'avatar': '📚',
-      'isOnline': false,
-    },
-  ];
+  @override
+  State<IndividualChatsTab> createState() => _IndividualChatsTabState();
+}
+
+class _IndividualChatsTabState extends State<IndividualChatsTab> {
+  final MessageService _messageService = MessageService();
+  List<ConversationModel> _conversations = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConversations();
+  }
+
+  Future<void> _loadConversations() async {
+    if (!mounted) return; // Check if widget is still mounted
+    
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _messageService.getConversations();
+      
+      if (!mounted) return; // Check again after async operation
+      
+      if (result['success']) {
+        final conversations = (result['conversations'] as List)
+            .map((conv) => ConversationModel.fromJson(conv))
+            .where((conv) => conv.type == 'individual') // Only show individual chats
+            .toList();
+        
+        // Get current user info for filtering
+        final currentUserId = CurrentUserService.getCurrentUserId();
+        final currentUserName = CurrentUserService.getCurrentUserName();
+        
+        print('DEBUG - Current User: ID=$currentUserId, Name=$currentUserName');
+        
+        // Debug: Print conversation data to see what's being returned
+        for (var conv in conversations) {
+          print('DEBUG - Individual Chat: ID=${conv.id}, Name="${conv.name}", Type=${conv.type}');
+          
+          // Find the OTHER participant (not current user)
+          String? otherParticipantName;
+          for (var participant in conv.participants) {
+            print('  Participant: ${participant.name} (ID: ${participant.id})');
+            if (participant.id != currentUserId) {
+              otherParticipantName = participant.name;
+              print('  -> OTHER PARTICIPANT: $otherParticipantName');
+            }
+          }
+          
+          // If conversation name is null or equals current user, use other participant name
+          if (conv.name == null || conv.name == currentUserName || conv.name == 'moon') {
+            conv = ConversationModel(
+              id: conv.id,
+              name: otherParticipantName ?? 'Unknown User',
+              type: conv.type,
+              avatar: conv.avatar,
+              createdAt: conv.createdAt,
+              updatedAt: conv.updatedAt,
+              courseFolder: conv.courseFolder,
+              unreadCount: conv.unreadCount,
+              lastMessage: conv.lastMessage,
+              participants: conv.participants,
+              memberCount: conv.memberCount,
+            );
+            print('  -> FIXED NAME TO: ${conv.name}');
+          }
+        }
+        
+        setState(() {
+          _conversations = conversations;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = result['message'] ?? 'Failed to load conversations';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return; // Check if widget is still mounted
+      setState(() {
+        _errorMessage = 'Error loading conversations: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: chats.length,
-      itemBuilder: (context, index) {
-        final chat = chats[index];
-        return ChatTile(
-          name: chat['name'],
-          lastMessage: chat['lastMessage'],
-          time: chat['time'],
-          unreadCount: chat['unreadCount'],
-          avatar: chat['avatar'],
-          isOnline: chat['isOnline'],
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                  contactName: chat['name'],
-                  avatar: chat['avatar'],
-                  isOnline: chat['isOnline'],
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.teal),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadConversations,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_conversations.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No conversations yet',
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Start a new chat to begin messaging',
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadConversations,
+      color: Colors.teal,
+      child: ListView.builder(
+        itemCount: _conversations.length,
+        itemBuilder: (context, index) {
+          final conversation = _conversations[index];
+          
+          // For individual chats, use the conversation name set by backend
+          // For group chats, use the conversation name as well
+          String displayName;
+          String displayAvatar;
+          bool isOnline = false;
+          
+          if (conversation.type == 'individual') {
+            // For individual chats, backend should have set the name to the other participant
+            displayName = conversation.name ?? 'Unknown User';
+            displayAvatar = conversation.avatar;
+            
+            // Try to get online status from participants
+            for (var participant in conversation.participants) {
+              // Find the participant who is not the current user (will need current user ID)
+              if (participant.name == displayName) {
+                isOnline = participant.isOnline;
+                break;
+              }
+            }
+          } else {
+            // For group chats, use conversation name and avatar
+            displayName = conversation.name ?? 'Group Chat';
+            displayAvatar = conversation.avatar;
+          }
+          
+          return ChatTile(
+            name: displayName,
+            lastMessage: conversation.lastMessage?.content ?? 'No messages yet',
+            time: _formatTime(conversation.lastMessage?.sentAt ?? conversation.updatedAt),
+            unreadCount: conversation.unreadCount,
+            avatar: displayAvatar,
+            isOnline: isOnline,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    conversationId: conversation.id,
+                    contactName: displayName,
+                    avatar: displayAvatar,
+                    isOnline: isOnline,
+                  ),
                 ),
-              ),
-            );
-          },
-        );
-      },
+              ).then((_) {
+                if (mounted) _loadConversations(); // Safe async call
+              }); // Refresh when returning
+            },
+          );
+        },
+      ),
     );
+  }
+
+  String _formatTime(String? dateTimeString) {
+    if (dateTimeString == null || dateTimeString.isEmpty) {
+      return '';
+    }
+    
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+      
+      if (difference.inDays == 0) {
+        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else {
+        return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+      }
+    } catch (e) {
+      return '';
+    }
   }
 }
 
-class GroupChatsTab extends StatelessWidget {
+class GroupChatsTab extends StatefulWidget {
   const GroupChatsTab({super.key});
 
-  final List<Map<String, dynamic>> groups = const [
-    {
-      'name': 'CSE 303 - Compilers',
-      'lastMessage': 'New assignment posted',
-      'time': '3:45 PM',
-      'unreadCount': 5,
-      'memberCount': 45,
-      'avatar': '💻',
-      'courseFolder': 'Computer Science & Engineering/Compilers (CSE 303)',
-    },
-    {
-      'name': 'AI Study Group',
-      'lastMessage': 'Meeting tomorrow at 2 PM',
-      'time': '1:20 PM',
-      'unreadCount': 12,
-      'memberCount': 23,
-      'avatar': '🤖',
-      'courseFolder': 'Computer Science & Engineering/Artificial Intelligence',
-    },
-    {
-      'name': 'Chemistry Lab Partners',
-      'lastMessage': 'Lab report due Friday',
-      'time': 'Yesterday',
-      'unreadCount': 0,
-      'memberCount': 8,
-      'avatar': '🧪',
-      'courseFolder': 'Chemical Engineering/Chemistry Fundamentals (CHEM - 101)',
-    },
-    {
-      'name': 'Math Study Circle',
-      'lastMessage': 'Practice problems shared',
-      'time': 'Yesterday',
-      'unreadCount': 3,
-      'memberCount': 15,
-      'avatar': '📐',
-      'courseFolder': 'Architecture/Linear Algebra',
-    },
-  ];
+  @override
+  State<GroupChatsTab> createState() => _GroupChatsTabState();
+}
+
+class _GroupChatsTabState extends State<GroupChatsTab> {
+  final MessageService _messageService = MessageService();
+  List<ConversationModel> _conversations = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConversations();
+  }
+
+  Future<void> _loadConversations() async {
+    if (!mounted) return; // Check if widget is still mounted
+    
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _messageService.getConversations();
+      
+      if (!mounted) return; // Check again after async operation
+      
+      if (result['success']) {
+        final conversations = (result['conversations'] as List)
+            .map((conv) => ConversationModel.fromJson(conv))
+            .where((conv) => conv.type == 'group')
+            .toList();
+        
+        setState(() {
+          _conversations = conversations;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = result['message'] ?? 'Failed to load conversations';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return; // Check if widget is still mounted
+      setState(() {
+        _errorMessage = 'Error loading conversations: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: groups.length,
-      itemBuilder: (context, index) {
-        final group = groups[index];
-        return GroupTile(
-          name: group['name'],
-          lastMessage: group['lastMessage'],
-          time: group['time'],
-          unreadCount: group['unreadCount'],
-          memberCount: group['memberCount'],
-          avatar: group['avatar'],
-          courseFolder: group['courseFolder'],
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => GroupChatScreen(
-                  groupName: group['name'],
-                  memberCount: group['memberCount'],
-                  avatar: group['avatar'],
-                  courseFolder: group['courseFolder'],
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.teal),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadConversations,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_conversations.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.group_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No group chats yet',
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Create a group to start collaborating',
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadConversations,
+      color: Colors.teal,
+      child: ListView.builder(
+        itemCount: _conversations.length,
+        itemBuilder: (context, index) {
+          final conversation = _conversations[index];
+          
+          return GroupTile(
+            name: conversation.name ?? 'Unnamed Group',
+            lastMessage: conversation.lastMessage?.content ?? 'No messages yet',
+            time: _formatTime(conversation.lastMessage?.sentAt ?? conversation.updatedAt),
+            unreadCount: conversation.unreadCount,
+            memberCount: conversation.memberCount,
+            avatar: conversation.avatar,
+            courseFolder: conversation.courseFolder ?? '',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GroupChatScreen(
+                    conversationId: conversation.id,
+                    groupName: conversation.name ?? 'Unnamed Group',
+                    memberCount: conversation.memberCount,
+                    avatar: conversation.avatar,
+                    courseFolder: conversation.courseFolder ?? '',
+                  ),
+                  settings: const RouteSettings(name: '/group_chat'),
                 ),
-                settings: const RouteSettings(name: '/group_chat'),
-              ),
-            );
-          },
-        );
-      },
+              ).then((_) {
+                if (mounted) _loadConversations(); // Safe async call
+              }); // Refresh when returning
+            },
+          );
+        },
+      ),
     );
+  }
+
+  String _formatTime(String? dateTimeString) {
+    if (dateTimeString == null || dateTimeString.isEmpty) {
+      return '';
+    }
+    
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+      
+      if (difference.inDays == 0) {
+        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else {
+        return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+      }
+    } catch (e) {
+      return '';
+    }
   }
 }
 

@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config.dart';
+import 'current_user_service.dart';
 
 class AuthService {
   static final _storage = FlutterSecureStorage();
@@ -16,7 +19,7 @@ class AuthService {
     String? phone,
     String? designation,
   }) async {
-    final url = Uri.parse('$baseUrl/signup');
+    final url = Uri.parse('${Config.baseUrl}/signup');
     final body = {
       'name': name,
       'email': email,
@@ -43,7 +46,7 @@ class AuthService {
   // -------------------- LOGIN --------------------
   // Stores JWT token in secure storage
   static Future<void> login(String email, String password) async {
-    final url = Uri.parse('$baseUrl/login');
+    final url = Uri.parse('${Config.baseUrl}/login');
     final res = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -55,12 +58,56 @@ class AuthService {
       final token = body['access_token'];
       if (token != null) {
         await _storage.write(key: _tokenKey, value: token);
+        
+        // Store current user info
+        if (body['user'] != null) {
+          final user = body['user'];
+          CurrentUserService.setCurrentUser(
+            userId: user['id'],
+            userName: user['name'],
+            userEmail: user['email'],
+          );
+        } else {
+          // If user info not in login response, fetch it
+          await _fetchAndStoreUserInfo();
+        }
       } else {
         throw Exception('Token missing in login response');
       }
     } else {
       final err = res.body.isNotEmpty ? jsonDecode(res.body) : {};
       throw Exception(err['msg'] ?? 'Login failed (${res.statusCode})');
+    }
+  }
+
+  // Helper method to fetch current user info
+  static Future<void> _fetchAndStoreUserInfo() async {
+    try {
+      final token = await getToken();
+      if (token != null) {
+        final url = Uri.parse('${Config.baseUrl}/api/profile');
+        final res = await http.get(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+        
+        if (res.statusCode == 200) {
+          final body = jsonDecode(res.body);
+          if (body['user'] != null) {
+            final user = body['user'];
+            CurrentUserService.setCurrentUser(
+              userId: user['id'],
+              userName: user['name'],
+              userEmail: user['email'],
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Error fetching user info: $e');
     }
   }
 
@@ -72,5 +119,6 @@ class AuthService {
   // -------------------- LOGOUT --------------------
   static Future<void> logout() async {
     await _storage.delete(key: _tokenKey);
+    CurrentUserService.clearCurrentUser();
   }
 }

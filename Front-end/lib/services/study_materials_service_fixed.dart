@@ -39,13 +39,10 @@ class StudyMaterialsService {
     }
   }
 
-  static Future<void> addCourse({
-    required String name,
-    required int departmentId,
-  }) async {
+  static Future<void> addCourse(String name, String code, int departmentId) async {
     final url = Uri.parse('${Config.baseUrl}/courses');
     final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode({'name': name, 'department_id': departmentId});
+    final body = jsonEncode({'name': name, 'code': code, 'department_id': departmentId});
 
     final res = await http.post(url, headers: headers, body: body);
 
@@ -72,12 +69,8 @@ class StudyMaterialsService {
     }
   }
 
-  static Future<String> uploadNote({
-    required String filename,
-    required String fileUrl,
-    required String fileType,
-    required int courseId,
-  }) async {
+  static Future<String> uploadNote(
+      String title, String description, int courseId, String filePath) async {
     final url = Uri.parse('${Config.baseUrl}/notes');
     final token = await AuthService.getToken();
     if (token == null) throw Exception('Not authenticated');
@@ -88,10 +81,11 @@ class StudyMaterialsService {
     };
 
     final body = jsonEncode({
-      'filename': filename,
-      'file_url': fileUrl.isNotEmpty ? fileUrl : '/study/notes/default',
-      'file_type': fileType,
+      'title': title,
+      'description': description,
       'course_id': courseId,
+      'file_path': filePath,
+      'file_url': filePath.isNotEmpty ? filePath : '/study/notes/default',
     });
 
     final res = await http.post(url, headers: headers, body: body);

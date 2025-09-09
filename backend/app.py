@@ -9,6 +9,7 @@ from routes.blood import blood_bp
 from routes.study_materials import study_bp
 from routes.tution import tution_bp
 from routes.ai import ai_bp
+from routes.messages import messages_bp
 
 # Load env
 load_dotenv()
@@ -25,7 +26,11 @@ Database_connection_string = (
 )
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, 
+     origins=["*"], 
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # Upload folder for study materials
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "static", "uploads")
@@ -59,6 +64,7 @@ app.register_blueprint(blood_bp)
 app.register_blueprint(study_bp)
 app.register_blueprint(tution_bp)
 app.register_blueprint(ai_bp)
+app.register_blueprint(messages_bp)
 
 # Error handlers
 @app.errorhandler(404)
