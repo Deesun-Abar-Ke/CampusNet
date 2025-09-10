@@ -2,6 +2,7 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from pgvector.sqlalchemy import Vector
 
 db = SQLAlchemy()
 
@@ -9,6 +10,7 @@ VALID_BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 VALID_REQUEST_STATUSES = ['pending', 'fulfilled', 'cancelled']
 
 class Users(db.Model):
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
@@ -214,5 +216,225 @@ class GroupFile(db.Model):
     __table_args__ = (db.UniqueConstraint('name', 'folder_id', name='unique_file_name'),)
 
 
+# RAG Chatbot Models
+class ChatSession(db.Model):
+    __tablename__ = "chat_sessions"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    session_name = db.Column(db.String(255), default="New Chat")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    messages = db.relationship("ChatMessage", backref="session", lazy=True, cascade="all, delete-orphan")
+    user = db.relationship("Users", backref="chat_sessions")
 
 
+class ChatMessage(db.Model):
+    __tablename__ = "chat_messages"
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey("chat_sessions.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    
+    # Message Content
+    message_type = db.Column(db.String(20), nullable=False)  # 'text', 'image', 'audio', 'file'
+    content = db.Column(db.Text, nullable=True)  # Text content or file description
+    file_path = db.Column(db.String(500), nullable=True)  # Path to uploaded files
+    file_name = db.Column(db.String(255), nullable=True)  # Original filename
+    
+    # AI Response
+    ai_response = db.Column(db.Text, nullable=True)
+    context_used = db.Column(db.Text, nullable=True)  # RAG context sources
+    
+    # Metadata
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    processing_time = db.Column(db.Float, nullable=True)  # Response time in seconds
+    
+    # User Relationship
+    user = db.relationship("Users", backref="chat_messages")
+
+
+class UserDocument(db.Model):
+    """User-specific documents for personalized RAG"""
+    __tablename__ = "user_documents"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    
+    # Document Info
+    filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_type = db.Column(db.String(50), nullable=False)  # 'pdf', 'image', 'text'
+    file_size = db.Column(db.Integer, nullable=False)
+    
+    # Processing Status
+    is_processed = db.Column(db.Boolean, default=False)
+    processing_status = db.Column(db.String(50), default='pending')  # 'pending', 'processing', 'completed', 'failed'
+    
+    # Metadata
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    processed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Content extracted from the document
+    extracted_text = db.Column(db.Text, nullable=True)
+    
+    # Relationships
+    user = db.relationship("Users", backref="documents")
+    embeddings = db.relationship("DocumentEmbedding", backref="document", cascade="all, delete-orphan")
+
+
+class DocumentEmbedding(db.Model):
+    """Vector embeddings for user documents and institutional knowledge"""
+    __tablename__ = "document_embeddings"
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Source Information
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)  # NULL for institutional docs
+    document_id = db.Column(db.Integer, db.ForeignKey("user_documents.id"), nullable=True)  # NULL for institutional docs
+    institutional_knowledge_id = db.Column(db.Integer, db.ForeignKey("institutional_knowledge.id"), nullable=True)  # For institutional docs
+    
+    # Content
+    content_chunk = db.Column(db.Text, nullable=False)
+    chunk_index = db.Column(db.Integer, nullable=False)
+    
+    # Embedding Data (using pgvector)
+    embedding_vector = db.Column(Vector(384))  # 384 dimensions for sentence-transformers all-MiniLM-L6-v2
+    
+    # Source Type
+    source_type = db.Column(db.String(20), nullable=False)  # 'institutional', 'user_document'
+    source_metadata = db.Column(db.Text, nullable=True)  # JSON metadata
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship("Users", backref="embeddings")
+    institutional_knowledge = db.relationship("InstitutionalKnowledge", backref="embeddings")
+
+
+class InstitutionalKnowledge(db.Model):
+    """MIST-specific institutional knowledge base"""
+    __tablename__ = "institutional_knowledge"
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Document Information
+    title = db.Column(db.String(255), nullable=False)
+    content_type = db.Column(db.String(50), nullable=False)  # 'website', 'pdf', 'manual'
+    source_url = db.Column(db.String(500), nullable=True)
+    file_path = db.Column(db.String(500), nullable=True)
+    
+    # Content
+    content = db.Column(db.Text, nullable=False)
+    summary = db.Column(db.Text, nullable=True)
+    content_hash = db.Column(db.String(32), nullable=True)  # MD5 hash for duplicate detection
+    
+    # Categories for MIST
+    category = db.Column(db.String(100), nullable=False)  # 'academic', 'admission', 'campus', 'research'
+    subcategory = db.Column(db.String(100), nullable=True)
+    
+    # Processing
+    is_processed = db.Column(db.Boolean, default=False)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Version Control
+    version = db.Column(db.String(50), default='1.0')
+
+
+# Enhanced Profile System
+class Profile(db.Model):
+    """Enhanced user profile with comprehensive information"""
+    __tablename__ = "profiles"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
+    
+    # Basic Information
+    student_id = db.Column(db.String(20), nullable=True)
+    batch = db.Column(db.String(10), nullable=True)
+    department = db.Column(db.String(100), nullable=True)
+    bio = db.Column(db.Text, nullable=True)
+    date_of_birth = db.Column(db.Date, nullable=True)
+    hometown = db.Column(db.String(100), nullable=True)
+    
+    # Profile Picture (stored as binary in database)
+    profile_picture = db.Column(db.LargeBinary, nullable=True)
+    profile_picture_mime_type = db.Column(db.String(50), nullable=True)
+    
+    # Social Links
+    linkedin_url = db.Column(db.String(200), nullable=True)
+    facebook_url = db.Column(db.String(200), nullable=True)
+    github_url = db.Column(db.String(200), nullable=True)
+    portfolio_url = db.Column(db.String(200), nullable=True)
+    
+    # Academic Info
+    current_semester = db.Column(db.String(10), nullable=True)
+    cgpa = db.Column(db.Float, nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship("Users", backref=db.backref("profile", uselist=False))
+    achievements = db.relationship("Achievement", backref="profile", lazy=True, cascade="all, delete-orphan")
+    skills = db.relationship("Skill", backref="profile", lazy=True, cascade="all, delete-orphan")
+
+
+class Achievement(db.Model):
+    """User achievements with different categories"""
+    __tablename__ = "achievements"
+    id = db.Column(db.Integer, primary_key=True)
+    profile_id = db.Column(db.Integer, db.ForeignKey("profiles.id"), nullable=False)
+    
+    # Achievement Details
+    category = db.Column(db.String(50), nullable=False)  # 'education', 'work', 'project', 'award', 'certification'
+    title = db.Column(db.String(255), nullable=False)
+    organization = db.Column(db.String(255), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    
+    # Timeline
+    start_date = db.Column(db.Date, nullable=True)
+    end_date = db.Column(db.Date, nullable=True)
+    is_current = db.Column(db.Boolean, default=False)
+    
+    # Additional Info
+    grade_or_result = db.Column(db.String(50), nullable=True)  # GPA, Grade, Result
+    location = db.Column(db.String(100), nullable=True)
+    skills_learned = db.Column(db.Text, nullable=True)  # JSON array of skills
+    
+    # Display Order
+    display_order = db.Column(db.Integer, default=0)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Skill(db.Model):
+    """User skills with proficiency levels"""
+    __tablename__ = "skills"
+    id = db.Column(db.Integer, primary_key=True)
+    profile_id = db.Column(db.Integer, db.ForeignKey("profiles.id"), nullable=False)
+    
+    # Skill Details
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # 'technical', 'language', 'soft_skill'
+    proficiency_level = db.Column(db.Integer, nullable=False)  # 1-5 scale
+    
+    # Additional Info
+    description = db.Column(db.Text, nullable=True)
+    years_of_experience = db.Column(db.Integer, nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class CVTemplate(db.Model):
+    """CV Templates for different formats"""
+    __tablename__ = "cv_templates"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    template_file = db.Column(db.String(255), nullable=False)  # HTML template file path
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

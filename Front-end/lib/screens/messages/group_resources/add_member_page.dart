@@ -8,10 +8,10 @@ class AddMemberPage extends StatefulWidget {
   final int? conversationId;
 
   const AddMemberPage({
-    Key? key,
+    super.key,
     required this.groupName,
     this.conversationId,
-  }) : super(key: key);
+  });
 
   @override
   State<AddMemberPage> createState() => _AddMemberPageState();

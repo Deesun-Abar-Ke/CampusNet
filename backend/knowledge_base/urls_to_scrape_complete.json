@@ -1,0 +1,360 @@
+{
+  "mist_urls": [
+    {
+      "url": "https://mist.ac.bd/",
+      "category": "institutional",
+      "subcategory": "homepage",
+      "description": "MIST main homepage"
+    },
+    {
+      "url": "https://mist.ac.bd/page/about",
+      "category": "institutional", 
+      "subcategory": "about",
+      "description": "About MIST"
+    },
+    {
+      "url": "https://mist.ac.bd/page/commandant",
+      "category": "institutional",
+      "subcategory": "leadership",
+      "description": "Commandant information"
+    },
+    {
+      "url": "https://mist.ac.bd/page/list-of-mist-offices",
+      "category": "institutional",
+      "subcategory": "administration",
+      "description": "List of MIST offices"
+    },
+    {
+      "url": "https://mist.ac.bd/page/apa",
+      "category": "institutional",
+      "subcategory": "administration", 
+      "description": "APA information"
+    },
+    {
+      "url": "https://mist.ac.bd/page/admission1",
+      "category": "academic",
+      "subcategory": "admission",
+      "description": "Admission information"
+    },
+    {
+      "url": "https://mist.ac.bd/page/undergraduate-programs",
+      "category": "academic",
+      "subcategory": "programs",
+      "description": "Undergraduate programs"
+    },
+    {
+      "url": "https://mist.ac.bd/page/graduate-post-graduate",
+      "category": "academic",
+      "subcategory": "programs", 
+      "description": "Graduate and post-graduate programs"
+    },
+    {
+      "url": "https://mist.ac.bd/page/fees-financial-aids",
+      "category": "academic",
+      "subcategory": "financial",
+      "description": "Fees and financial aids"
+    },
+    {
+      "url": "https://mist.ac.bd/page/international-students",
+      "category": "academic",
+      "subcategory": "international",
+      "description": "International students information"
+    },
+    {
+      "url": "https://mist.ac.bd/page/professional-courses",
+      "category": "academic",
+      "subcategory": "courses",
+      "description": "Professional courses"
+    },
+    {
+      "url": "https://mist.ac.bd/department/ce",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Civil Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/ewce",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Environmental, Water and Coastal Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/da",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Architecture Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/pme",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Petroleum and Mining Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/cse",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Computer Science and Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/eece",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Electrical, Electronic and Communication Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/me",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Mechanical Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/ae",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Aeronautical Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/name",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Naval Architecture and Marine Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/ipe",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Industrial and Production Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/nse",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Nuclear Science and Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/bme",
+      "category": "academic",
+      "subcategory": "departments", 
+      "description": "Biomedical Engineering Department"
+    },
+    {
+      "url": "https://mist.ac.bd/department/sh",
+      "category": "academic",
+      "subcategory": "departments",
+      "description": "Science and Humanities Department"
+    },
+    {
+      "url": "https://mist.ac.bd/faculty_and_staff",
+      "category": "institutional",
+      "subcategory": "faculty",
+      "description": "Faculty and staff information"
+    },
+    {
+      "url": "https://mist.ac.bd/career",
+      "category": "institutional",
+      "subcategory": "career",
+      "description": "Career opportunities"
+    },
+    {
+      "url": "https://mist.ac.bd/page/clubs",
+      "category": "campus_life",
+      "subcategory": "clubs",
+      "description": "Student clubs and organizations"
+    },
+    {
+      "url": "https://mist.ac.bd/page/campus-hour",
+      "category": "campus_life",
+      "subcategory": "activities",
+      "description": "Campus hour activities"
+    },
+    {
+      "url": "https://mist.ac.bd/page/plaza-cafeteria",
+      "category": "campus_life",
+      "subcategory": "facilities",
+      "description": "Plaza and cafeteria"
+    },
+    {
+      "url": "https://mist.ac.bd/page/books-and-stationery",
+      "category": "campus_life",
+      "subcategory": "facilities",
+      "description": "Books and stationery"
+    },
+    {
+      "url": "https://mist.ac.bd/page/bank",
+      "category": "campus_life",
+      "subcategory": "facilities",
+      "description": "Banking facilities"
+    },
+    {
+      "url": "https://mist.ac.bd/page/campus-tour",
+      "category": "campus_life",
+      "subcategory": "facilities",
+      "description": "Campus tour information"
+    },
+    {
+      "url": "https://mist.ac.bd/page/hostels",
+      "category": "campus_life",
+      "subcategory": "accommodation",
+      "description": "Hostel facilities"
+    },
+    {
+      "url": "https://mist.ac.bd/page/games-and-sports",
+      "category": "campus_life",
+      "subcategory": "sports",
+      "description": "Games and sports facilities"
+    },
+    {
+      "url": "https://mist.ac.bd/page/medical-and-daycare",
+      "category": "campus_life",
+      "subcategory": "facilities",
+      "description": "Medical and daycare facilities"
+    },
+    {
+      "url": "https://mist.ac.bd/page/event-calendar",
+      "category": "campus_life",
+      "subcategory": "events",
+      "description": "Event calendar"
+    },
+    {
+      "url": "https://mist.ac.bd/page/awards",
+      "category": "achievements",
+      "subcategory": "awards",
+      "description": "Awards and recognitions"
+    },
+    {
+      "url": "https://mist.ac.bd/achievements",
+      "category": "achievements",
+      "subcategory": "general",
+      "description": "General achievements"
+    },
+    {
+      "url": "https://mist.ac.bd/page/research",
+      "category": "research",
+      "subcategory": "general",
+      "description": "Research overview"
+    },
+    {
+      "url": "https://mist.ac.bd/page/research-grant-2022-2023",
+      "category": "research",
+      "subcategory": "grants",
+      "description": "Research grants 2022-2023"
+    },
+    {
+      "url": "https://mist.ac.bd/page/awarded-papers-and-research-archive",
+      "category": "research",
+      "subcategory": "publications",
+      "description": "Awarded papers and research archive"
+    },
+    {
+      "url": "https://mist.ac.bd/page/support-and-facilities-for-research",
+      "category": "research",
+      "subcategory": "facilities",
+      "description": "Support and facilities for research"
+    },
+    {
+      "url": "https://mist.ac.bd/page/current-research-list",
+      "category": "research",
+      "subcategory": "current",
+      "description": "Current research list"
+    },
+    {
+      "url": "https://mist.ac.bd/page/research-consultancy1",
+      "category": "research",
+      "subcategory": "consultancy",
+      "description": "Research consultancy"
+    },
+    {
+      "url": "https://publications.mist.ac.bd/",
+      "category": "research",
+      "subcategory": "publications",
+      "description": "MIST publications portal"
+    },
+    {
+      "url": "https://mist.ac.bd/page/official-correspondences",
+      "category": "institutional",
+      "subcategory": "administration",
+      "description": "Official correspondences"
+    },
+    {
+      "url": "https://mist.ac.bd/notice",
+      "category": "institutional",
+      "subcategory": "notices",
+      "description": "Official notices"
+    },
+    {
+      "url": "https://mist.ac.bd/news-events",
+      "category": "institutional",
+      "subcategory": "news",
+      "description": "News and events"
+    },
+    {
+      "url": "https://student.mist.ac.bd/",
+      "category": "digital_services",
+      "subcategory": "student_portal",
+      "description": "Student portal"
+    },
+    {
+      "url": "https://cats.mist.ac.bd/",
+      "category": "digital_services",
+      "subcategory": "research_portal",
+      "description": "CATS research portal"
+    },
+    {
+      "url": "https://library.mist.ac.bd/",
+      "category": "digital_services",
+      "subcategory": "library",
+      "description": "Central library portal"
+    },
+    {
+      "url": "https://dspace.mist.ac.bd/",
+      "category": "digital_services",
+      "subcategory": "repository",
+      "description": "Digital repository"
+    },
+    {
+      "url": "https://pgp.mist.ac.bd/",
+      "category": "digital_services",
+      "subcategory": "academic",
+      "description": "Post-graduate programs portal"
+    },
+    {
+      "url": "https://mijst.mist.ac.bd/mijst/index.php/mijst",
+      "category": "research",
+      "subcategory": "journal",
+      "description": "MIST International Journal of Science and Technology"
+    },
+    {
+      "url": "https://mistas.org/",
+      "category": "institutional",
+      "subcategory": "alumni",
+      "description": "MIST Alumni Association"
+    },
+    {
+      "url": "https://icmeas2025.mist.ac.bd/",
+      "category": "events",
+      "subcategory": "conferences",
+      "description": "ICMEAS 2025 Conference"
+    }
+  ],
+  "scraping_config": {
+    "delay_between_requests": 1,
+    "max_retries": 3,
+    "timeout": 30,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "exclude_patterns": [
+      "#",
+      "javascript:",
+      "mailto:",
+      "tel:",
+      ".pdf",
+      ".doc",
+      ".docx",
+      ".xls",
+      ".xlsx"
+    ],
+    "include_patterns": [
+      "mist.ac.bd"
+    ]
+  }
+}

@@ -8,10 +8,10 @@ class ViewMembersPage extends StatefulWidget {
   final int? conversationId;
 
   const ViewMembersPage({
-    Key? key,
+    super.key,
     required this.groupName,
     this.conversationId,
-  }) : super(key: key);
+  });
 
   @override
   State<ViewMembersPage> createState() => _ViewMembersPageState();
@@ -565,11 +565,11 @@ class MemberTile extends StatelessWidget {
   final VoidCallback onMoreOptions;
 
   const MemberTile({
-    Key? key,
+    super.key,
     required this.member,
     required this.onTap,
     required this.onMoreOptions,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
