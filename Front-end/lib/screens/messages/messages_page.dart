@@ -212,7 +212,7 @@ class _IndividualChatsTabState extends State<IndividualChatsTab> {
       if (!mounted) return; // Check again after async operation
       
       if (result['success']) {
-        final conversations = (result['conversations'] as List)
+        List<ConversationModel> conversations = (result['conversations'] as List)
             .map((conv) => ConversationModel.fromJson(conv))
             .where((conv) => conv.type == 'individual') // Only show individual chats
             .toList();
@@ -223,8 +223,9 @@ class _IndividualChatsTabState extends State<IndividualChatsTab> {
         
         print('DEBUG - Current User: ID=$currentUserId, Name=$currentUserName');
         
-        // Debug: Print conversation data to see what's being returned
-        for (var conv in conversations) {
+        // Fix conversation names to show other participant names
+        for (int i = 0; i < conversations.length; i++) {
+          var conv = conversations[i];
           print('DEBUG - Individual Chat: ID=${conv.id}, Name="${conv.name}", Type=${conv.type}');
           
           // Find the OTHER participant (not current user)
@@ -239,7 +240,7 @@ class _IndividualChatsTabState extends State<IndividualChatsTab> {
           
           // If conversation name is null or equals current user, use other participant name
           if (conv.name == null || conv.name == currentUserName || conv.name == 'moon') {
-            conv = ConversationModel(
+            conversations[i] = ConversationModel(
               id: conv.id,
               name: otherParticipantName ?? 'Unknown User',
               type: conv.type,
@@ -252,7 +253,7 @@ class _IndividualChatsTabState extends State<IndividualChatsTab> {
               participants: conv.participants,
               memberCount: conv.memberCount,
             );
-            print('  -> FIXED NAME TO: ${conv.name}');
+            print('  -> FIXED NAME TO: ${conversations[i].name}');
           }
         }
         
@@ -335,29 +336,19 @@ class _IndividualChatsTabState extends State<IndividualChatsTab> {
         itemBuilder: (context, index) {
           final conversation = _conversations[index];
           
-          // For individual chats, use the conversation name set by backend
-          // For group chats, use the conversation name as well
-          String displayName;
-          String displayAvatar;
+          // Use the conversation name and avatar (already fixed in the load function)
+          String displayName = conversation.name ?? 'Unknown User';
+          String displayAvatar = conversation.avatar ?? '👨‍🎓';
           bool isOnline = false;
           
-          if (conversation.type == 'individual') {
-            // For individual chats, backend should have set the name to the other participant
-            displayName = conversation.name ?? 'Unknown User';
-            displayAvatar = conversation.avatar;
-            
-            // Try to get online status from participants
-            for (var participant in conversation.participants) {
-              // Find the participant who is not the current user (will need current user ID)
-              if (participant.name == displayName) {
-                isOnline = participant.isOnline;
-                break;
-              }
+          // Try to get online status from participants
+          for (var participant in conversation.participants) {
+            // Find the participant who is not the current user
+            final currentUserId = CurrentUserService.getCurrentUserId();
+            if (participant.id != currentUserId) {
+              isOnline = participant.isOnline;
+              break;
             }
-          } else {
-            // For group chats, use conversation name and avatar
-            displayName = conversation.name ?? 'Group Chat';
-            displayAvatar = conversation.avatar;
           }
           
           return ChatTile(

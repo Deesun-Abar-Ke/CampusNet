@@ -168,6 +168,51 @@ class MessageRead(db.Model):
     # Unique constraint to prevent duplicate reads
     __table_args__ = (db.UniqueConstraint('message_id', 'user_id', name='unique_message_read'),)
 
+# Group Resource Models
+class GroupFolder(db.Model):
+    __tablename__ = "group_folders"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey("conversations.id"), nullable=False)
+    parent_folder_id = db.Column(db.Integer, db.ForeignKey("group_folders.id"), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    conversation = db.relationship("Conversation", backref="folders")
+    creator = db.relationship("Users", backref="created_folders")
+    parent_folder = db.relationship("GroupFolder", remote_side=[id], backref="subfolders")
+    files = db.relationship("GroupFile", backref="folder", cascade="all, delete-orphan")
+    
+    # Unique constraint: folder name must be unique within parent folder and conversation
+    __table_args__ = (db.UniqueConstraint('name', 'conversation_id', 'parent_folder_id', name='unique_folder_name'),)
+
+class GroupFile(db.Model):
+    __tablename__ = "group_files"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)  # Display name
+    original_filename = db.Column(db.String(255), nullable=False)  # Original uploaded filename
+    file_path = db.Column(db.String(500), nullable=False)  # Server file path
+    file_url = db.Column(db.String(500), nullable=False)  # URL to access file
+    file_type = db.Column(db.String(50), nullable=False)  # Extension (pdf, jpg, etc.)
+    file_size = db.Column(db.BigInteger, nullable=False)  # File size in bytes
+    mime_type = db.Column(db.String(100), nullable=True)  # MIME type
+    checksum = db.Column(db.String(128), nullable=True)  # SHA256 checksum for integrity
+    
+    conversation_id = db.Column(db.Integer, db.ForeignKey("conversations.id"), nullable=False)
+    folder_id = db.Column(db.Integer, db.ForeignKey("group_folders.id"), nullable=False)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    description = db.Column(db.Text, nullable=True)
+    
+    # Relationships
+    conversation = db.relationship("Conversation", backref="files")
+    uploader = db.relationship("Users", backref="uploaded_files")
+    
+    # Unique constraint: file name must be unique within folder
+    __table_args__ = (db.UniqueConstraint('name', 'folder_id', name='unique_file_name'),)
+
 
 
 

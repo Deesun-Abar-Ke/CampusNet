@@ -143,6 +143,8 @@ class MessageService {
         if (referenceData != null) 'reference_data': referenceData,
       };
 
+      print('DEBUG - MessageService sending payload: ${json.encode(body)}');
+
       final response = await http.post(
         Uri.parse('$baseUrl/api/messages/conversations/$conversationId/messages'),
         headers: headers,

@@ -62,7 +62,7 @@ class AuthService {
         // Store current user info
         if (body['user'] != null) {
           final user = body['user'];
-          CurrentUserService.setCurrentUser(
+          await CurrentUserService.setCurrentUser(
             userId: user['id'],
             userName: user['name'],
             userEmail: user['email'],
@@ -98,7 +98,7 @@ class AuthService {
           final body = jsonDecode(res.body);
           if (body['user'] != null) {
             final user = body['user'];
-            CurrentUserService.setCurrentUser(
+            await CurrentUserService.setCurrentUser(
               userId: user['id'],
               userName: user['name'],
               userEmail: user['email'],
@@ -119,6 +119,6 @@ class AuthService {
   // -------------------- LOGOUT --------------------
   static Future<void> logout() async {
     await _storage.delete(key: _tokenKey);
-    CurrentUserService.clearCurrentUser();
+    await CurrentUserService.clearCurrentUser();
   }
 }

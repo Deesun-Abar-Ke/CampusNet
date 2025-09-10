@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../home/profile/profile_page.dart';
 import '../../services/message_service.dart';
+import '../../services/current_user_service.dart';
 import '../../models/user_model.dart';
 import '../../config.dart';
 
@@ -77,8 +78,25 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return; // Check if widget is still mounted
       
       if (result['success']) {
+        final currentUserId = await CurrentUserService.getCurrentUserId();
         final messages = (result['messages'] as List)
-            .map((msg) => MessageModel.fromJson(msg))
+            .map((msg) {
+              final message = MessageModel.fromJson(msg);
+              // Override isMe based on frontend user check
+              final actualIsMe = currentUserId != null && msg['sender_id'] == currentUserId;
+              return MessageModel(
+                id: message.id,
+                content: message.content,
+                sentAt: message.sentAt,
+                senderName: message.senderName,
+                messageType: message.messageType,
+                isMe: actualIsMe,
+                fileUrl: message.fileUrl,
+                fileName: message.fileName,
+                fileType: message.fileType,
+                fileSize: message.fileSize,
+              );
+            })
             .toList();
         
         setState(() {
@@ -102,10 +120,30 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _openFileUrl(String url) async {
     try {
-      final uri = Uri.parse(url);
-      // Try to launch the URL; on mobile this will open system browser which can download/open the file
+      // Fix localhost URLs - replace with configured server IP from Config
+      var fixedUrl = url;
+      if (fixedUrl.contains('localhost')) {
+        // Extract the server host from Config.baseUrl
+        final configUri = Uri.parse(Config.baseUrl);
+        final serverHost = '${configUri.host}:${configUri.port}';
+        fixedUrl = fixedUrl.replaceAll('localhost:5000', serverHost);
+      }
+      
+      final uri = Uri.parse(fixedUrl);
+      
+      // Check if it's a PDF file by URL extension
+      final isPdf = fixedUrl.toLowerCase().contains('.pdf');
+      
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (isPdf) {
+          // For PDFs, use platformDefault for better viewing experience
+          await launchUrl(uri, mode: LaunchMode.platformDefault).catchError((e) {
+            // Fallback to external application if platformDefault fails
+            return launchUrl(uri, mode: LaunchMode.externalApplication);
+          });
+        } else {
+          await launchUrl(uri, mode: LaunchMode.platformDefault);
+        }
       } else {
         _showErrorSnackBar('Could not open file');
       }
@@ -173,22 +211,6 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.videocam),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Video call feature coming soon!')),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.call),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Voice call feature coming soon!')),
-              );
-            },
-          ),
           PopupMenuButton(
             itemBuilder: (context) => [
               const PopupMenuItem(

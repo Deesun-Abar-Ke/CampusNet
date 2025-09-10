@@ -10,6 +10,7 @@ from routes.study_materials import study_bp
 from routes.tution import tution_bp
 from routes.ai import ai_bp
 from routes.messages import messages_bp
+from routes.group_resource import group_resource_bp
 
 # Load env
 load_dotenv()
@@ -53,10 +54,16 @@ def create_tables():
 def home():
     return jsonify({"msg": "CampusNet API", "status": "up"}), 200
 
-# Route to serve uploaded files
+# Route to serve uploaded files (public access)
 @app.route("/static/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+# Route to serve group resource files (public access for viewing)
+@app.route("/files/<path:filename>")
+def serve_group_file(filename):
+    upload_folder = app.config.get("UPLOAD_FOLDER", os.path.join(os.getcwd(), "static", "uploads"))
+    return send_from_directory(upload_folder, filename)
 
 # Register blueprints
 app.register_blueprint(auth_bp)
@@ -65,6 +72,7 @@ app.register_blueprint(study_bp)
 app.register_blueprint(tution_bp)
 app.register_blueprint(ai_bp)
 app.register_blueprint(messages_bp)
+app.register_blueprint(group_resource_bp, url_prefix='/api')
 
 # Error handlers
 @app.errorhandler(404)

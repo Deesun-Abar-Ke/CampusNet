@@ -921,25 +921,15 @@ class ResourceFileTile extends StatelessWidget {
               ),
               onTap: () => _askAI(context, file),
             ),
+            // Download removed; open -> Post Reference flow available
             PopupMenuItem(
-              value: 'download',
-              onTap: onDownload,
-              child: const Row(
-                children: [
-                  Icon(Icons.download, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Download'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'copy_reference',
+              value: 'post_reference',
               onTap: onCopyReference,
               child: const Row(
                 children: [
                   Icon(Icons.link, color: Colors.blue),
                   SizedBox(width: 8),
-                  Text('Copy Ref'),
+                  Text('Post Reference'),
                 ],
               ),
             ),

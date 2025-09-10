@@ -6,8 +6,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'group_resources/group_resources_page.dart';
 import 'group_resources/add_member_page.dart';
 import 'group_resources/view_members_page.dart';
+import 'dynamic_group_resource.dart';
 import '../../widgets/reference_message_bubble.dart';
 import '../../services/message_service.dart';
+import '../../services/current_user_service.dart';
+import '../../config.dart';
 import 'chat_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
@@ -16,7 +19,8 @@ class GroupChatScreen extends StatefulWidget {
   final int memberCount;
   final String avatar;
   final String courseFolder;
-  final String currentUserId;
+  final Map<String, dynamic>? initialReference;
+  final String? currentUserId;
 
   const GroupChatScreen({
     super.key,
@@ -25,7 +29,8 @@ class GroupChatScreen extends StatefulWidget {
     required this.memberCount,
     required this.avatar,
     required this.courseFolder,
-    this.currentUserId = 'current_user',
+  this.initialReference,
+    this.currentUserId,
   });
 
   @override
@@ -39,11 +44,21 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   bool _isLoading = true;
   bool _isSendingMessage = false;
   String? _errorMessage;
+  Map<String, dynamic>? _pendingReference;
 
   @override
   void initState() {
     super.initState();
     _loadMessages();
+    // If launched with a reference, keep it pending and prefill composer
+    if (widget.initialReference != null) {
+      _pendingReference = widget.initialReference;
+      // optionally prefill composer text with file or folder name
+      final prefill = widget.initialReference!['file_name'] ?? widget.initialReference!['folder_name'] ?? '';
+      if (prefill.isNotEmpty) {
+        _messageController.text = prefill;
+      }
+    }
   }
 
   @override
@@ -70,19 +85,25 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       final result = await _messageService.getMessages(widget.conversationId!);
       
       if (result['success']) {
+        // Get current user ID for message comparison
+        final currentUserId = CurrentUserService.getCurrentUserId();
+        
         final messages = (result['messages'] as List)
             .map((message) => {
               'id': message['id'],
               'text': message['content'] ?? '',
               'sender': message['sender_name'] ?? 'Unknown',
               'senderId': message['sender_id'],
-              'isMe': message['sender_id'].toString() == widget.currentUserId,
-              'time': _formatTime(message['created_at'] ?? ''),
-              'type': message['file_url'] != null ? 'file' : 'text',
-              'timestamp': message['created_at'],
+              'isMe': message['sender_id'] == currentUserId, // Proper comparison: int == int
+              'time': _formatTime(message['sent_at'] ?? ''),
+              'type': message['message_type'] ?? 'text',
+              'timestamp': message['sent_at'],
               'fileUrl': message['file_url'],
               'fileName': message['file_name'],
               'fileType': message['file_type'],
+              // Map reference_data to folderPath for ReferenceMessageBubble
+              'folderPath': message['reference_data'] != null ? message['reference_data']['folder_path'] : null,
+              'reference': message['reference_data'] != null ? (message['reference_data']['file_name'] ?? message['content']) : null,
             })
             .toList();
 
@@ -123,39 +144,49 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty || _isSendingMessage || widget.conversationId == null) {
+    if ((_messageController.text.trim().isEmpty && _pendingReference == null) || _isSendingMessage || widget.conversationId == null) {
       return;
     }
 
     final messageText = _messageController.text.trim();
-    _messageController.clear();
+    // don't clear before sending; clear after success
 
     setState(() {
       _isSendingMessage = true;
     });
 
     try {
+      print('DEBUG - Sending message with pending reference: $_pendingReference');
       final result = await _messageService.sendMessage(
         conversationId: widget.conversationId!,
-        content: messageText,
+        content: messageText.isNotEmpty ? messageText : (_pendingReference != null ? (_pendingReference!['file_name'] ?? 'Reference') : ''),
+        messageType: _pendingReference != null ? 'reference' : 'text',
+        referenceData: _pendingReference,
       );
 
       if (result['success']) {
+        // Get current user ID for the new message
+        final currentUserId = CurrentUserService.getCurrentUserId();
+        
         // Add the message to the local list immediately for better UX
         final newMessage = {
-          'id': result['message_id'],
-          'text': messageText,
+          'id': result['message_id'] ?? DateTime.now().millisecondsSinceEpoch,
+          'text': messageText.isNotEmpty ? messageText : (_pendingReference != null ? (_pendingReference!['file_name'] ?? 'Reference') : ''),
           'sender': 'You',
-          'senderId': widget.currentUserId,
+          'senderId': currentUserId,
           'isMe': true,
           'time': 'now',
-          'type': 'text',
+          'type': _pendingReference != null ? 'reference' : 'text',
           'timestamp': DateTime.now().toIso8601String(),
+          'folderPath': _pendingReference != null ? _pendingReference!['folder_path'] : null,
+          'reference': _pendingReference != null ? (_pendingReference!['file_name'] ?? '') : null,
         };
 
         setState(() {
           _messages.add(newMessage);
           _isSendingMessage = false;
+          _pendingReference = null; // clear pending after send
+          _messageController.clear();
         });
       } else {
         setState(() {
@@ -169,6 +200,58 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       });
       _showErrorSnackBar('Error sending message: $e');
     }
+  }
+
+  void _composeReference(Map<String, dynamic> ref) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Post Reference'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Posting reference: ${ref['file_name'] ?? ''}'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Add a description (optional)',
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final description = controller.text.trim();
+              Navigator.pop(context);
+              // Send message with reference_data
+              final result = await _messageService.sendMessage(
+                conversationId: widget.conversationId!,
+                content: description.isNotEmpty ? description : '${ref['file_name'] ?? 'Reference'}',
+                messageType: 'reference',
+                referenceData: ref,
+              );
+
+              if (result['success']) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Reference posted')),
+                );
+                _loadMessages();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to post reference: ${result['message']}')),
+                );
+              }
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showErrorSnackBar(String message) {
@@ -257,6 +340,33 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               },
               tooltip: 'Group Resources',
             ),
+          // New Dynamic Group Resources Icon
+          IconButton(
+            icon: const Icon(Icons.folder_shared),
+            onPressed: () {
+              print('DEBUG - Conversation ID: ${widget.conversationId}');
+              if (widget.conversationId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DynamicGroupResourcePage(
+                      groupName: widget.groupName,
+                      conversationId: widget.conversationId!,
+                    ),
+                    settings: const RouteSettings(name: '/dynamic_group_resources'),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Conversation ID not available'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            tooltip: 'Dynamic Resources',
+          ),
           PopupMenuButton(
             itemBuilder: (context) => [
               const PopupMenuItem(
@@ -428,7 +538,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                       sender: message['sender'] ?? 'Unknown',
                                       isMe: message['isMe'] ?? false,
                                       time: message['time'] ?? '',
-                                      folderPath: message['folderPath'] ?? '',
+                                      folderPath: message['folderPath'] != null
+                                          ? List<Map<String, dynamic>>.from(message['folderPath'])
+                                          : null,
+                                      conversationId: widget.conversationId,
                                     );
                                   } else {
                                     return GroupMessageBubble(
@@ -436,7 +549,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                       sender: message['sender'] ?? 'Unknown',
                                       isMe: message['isMe'] ?? false,
                                       time: message['time'] ?? '',
-                                      currentUserId: widget.currentUserId,
                                       fileUrl: message['fileUrl'],
                                       fileName: message['fileName'],
                                       fileType: message['fileType'],
@@ -446,6 +558,38 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                               ),
                       ),
                     ),
+                    // Composer area with optional pending reference preview
+                    if (_pendingReference != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Icon(Icons.link, color: Colors.teal),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _pendingReference!['file_name'] ?? _pendingReference!['folder_name'] ?? 'Reference',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  setState(() {
+                                    _pendingReference = null;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -589,18 +733,23 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
     if (confirmed == true && widget.conversationId != null) {
       try {
-        final result = await _messageService.removeParticipant(
-          widget.conversationId!,
-          int.parse(widget.currentUserId),
-        );
-
-        if (result['success']) {
-          Navigator.pop(context); // Go back to messages list
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Left ${widget.groupName}')),
+        final currentUserId = CurrentUserService.getCurrentUserId();
+        if (currentUserId != null) {
+          final result = await _messageService.removeParticipant(
+            widget.conversationId!,
+            currentUserId,
           );
+
+          if (result['success']) {
+            Navigator.pop(context); // Go back to messages list
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Left ${widget.groupName}')),
+            );
+          } else {
+            _showErrorSnackBar(result['message'] ?? 'Failed to leave group');
+          }
         } else {
-          _showErrorSnackBar(result['message'] ?? 'Failed to leave group');
+          _showErrorSnackBar('Unable to get current user information');
         }
       } catch (e) {
         _showErrorSnackBar('Error leaving group: $e');
@@ -1256,7 +1405,6 @@ class GroupMessageBubble extends StatelessWidget {
   final String sender;
   final bool isMe;
   final String time;
-  final String currentUserId;
   final String? fileUrl;
   final String? fileName;
   final String? fileType;
@@ -1267,7 +1415,6 @@ class GroupMessageBubble extends StatelessWidget {
     required this.sender,
     required this.isMe,
     required this.time,
-    required this.currentUserId,
     this.fileUrl,
     this.fileName,
     this.fileType,
@@ -1276,7 +1423,10 @@ class GroupMessageBubble extends StatelessWidget {
   String _getAvatarForSender(String sender) {
     // Return different avatars for different senders
     // First check if this sender is the current user
-    if (sender == currentUserId || sender == 'You') {
+    final currentUserId = CurrentUserService.getCurrentUserId();
+    final currentUserName = CurrentUserService.getCurrentUserName();
+    
+    if (sender == currentUserId?.toString() || sender == currentUserName || sender == 'You') {
       return '👨‍🎓';
     }
     
@@ -1301,11 +1451,32 @@ class GroupMessageBubble extends StatelessWidget {
 
   Future<void> _openFileUrl(String url) async {
     try {
-      final Uri uri = Uri.parse(url);
+      // Fix localhost URLs - replace with configured server IP from Config
+      var fixedUrl = url;
+      if (fixedUrl.contains('localhost')) {
+        // Extract the server host from Config.baseUrl
+        final configUri = Uri.parse(Config.baseUrl);
+        final serverHost = '${configUri.host}:${configUri.port}';
+        fixedUrl = fixedUrl.replaceAll('localhost:5000', serverHost);
+      }
+      
+      final Uri uri = Uri.parse(fixedUrl);
+      
+      // Check if it's a PDF file by URL extension
+      final isPdf = fixedUrl.toLowerCase().contains('.pdf');
+      
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (isPdf) {
+          // For PDFs, use platformDefault for better viewing experience
+          await launchUrl(uri, mode: LaunchMode.platformDefault).catchError((e) {
+            // Fallback to external application if platformDefault fails
+            return launchUrl(uri, mode: LaunchMode.externalApplication);
+          });
+        } else {
+          await launchUrl(uri, mode: LaunchMode.platformDefault);
+        }
       } else {
-        throw 'Could not launch $url';
+        throw 'Could not launch $fixedUrl';
       }
     } catch (e) {
       print('Error opening file: $e');
