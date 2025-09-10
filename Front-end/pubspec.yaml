@@ -34,6 +34,7 @@ dependencies:
   http: ^1.5.0
   flutter_secure_storage: ^9.2.4
   url_launcher: ^6.3.2
+  path_provider: ^2.1.4
 
   image_picker: ^1.1.2 # Use the latest version
   speech_to_text: ^7.2.0 # Use the latest version

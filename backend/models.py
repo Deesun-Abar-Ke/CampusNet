@@ -10,6 +10,7 @@ VALID_BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 VALID_REQUEST_STATUSES = ['pending', 'fulfilled', 'cancelled']
 
 class Users(db.Model):
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
@@ -211,3 +212,103 @@ class InstitutionalKnowledge(db.Model):
     
     # Version Control
     version = db.Column(db.String(50), default='1.0')
+
+
+# Enhanced Profile System
+class Profile(db.Model):
+    """Enhanced user profile with comprehensive information"""
+    __tablename__ = "profiles"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
+    
+    # Basic Information
+    student_id = db.Column(db.String(20), nullable=True)
+    batch = db.Column(db.String(10), nullable=True)
+    department = db.Column(db.String(100), nullable=True)
+    bio = db.Column(db.Text, nullable=True)
+    date_of_birth = db.Column(db.Date, nullable=True)
+    hometown = db.Column(db.String(100), nullable=True)
+    
+    # Profile Picture (stored as binary in database)
+    profile_picture = db.Column(db.LargeBinary, nullable=True)
+    profile_picture_mime_type = db.Column(db.String(50), nullable=True)
+    
+    # Social Links
+    linkedin_url = db.Column(db.String(200), nullable=True)
+    facebook_url = db.Column(db.String(200), nullable=True)
+    github_url = db.Column(db.String(200), nullable=True)
+    portfolio_url = db.Column(db.String(200), nullable=True)
+    
+    # Academic Info
+    current_semester = db.Column(db.String(10), nullable=True)
+    cgpa = db.Column(db.Float, nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship("Users", backref=db.backref("profile", uselist=False))
+    achievements = db.relationship("Achievement", backref="profile", lazy=True, cascade="all, delete-orphan")
+    skills = db.relationship("Skill", backref="profile", lazy=True, cascade="all, delete-orphan")
+
+
+class Achievement(db.Model):
+    """User achievements with different categories"""
+    __tablename__ = "achievements"
+    id = db.Column(db.Integer, primary_key=True)
+    profile_id = db.Column(db.Integer, db.ForeignKey("profiles.id"), nullable=False)
+    
+    # Achievement Details
+    category = db.Column(db.String(50), nullable=False)  # 'education', 'work', 'project', 'award', 'certification'
+    title = db.Column(db.String(255), nullable=False)
+    organization = db.Column(db.String(255), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    
+    # Timeline
+    start_date = db.Column(db.Date, nullable=True)
+    end_date = db.Column(db.Date, nullable=True)
+    is_current = db.Column(db.Boolean, default=False)
+    
+    # Additional Info
+    grade_or_result = db.Column(db.String(50), nullable=True)  # GPA, Grade, Result
+    location = db.Column(db.String(100), nullable=True)
+    skills_learned = db.Column(db.Text, nullable=True)  # JSON array of skills
+    
+    # Display Order
+    display_order = db.Column(db.Integer, default=0)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Skill(db.Model):
+    """User skills with proficiency levels"""
+    __tablename__ = "skills"
+    id = db.Column(db.Integer, primary_key=True)
+    profile_id = db.Column(db.Integer, db.ForeignKey("profiles.id"), nullable=False)
+    
+    # Skill Details
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # 'technical', 'language', 'soft_skill'
+    proficiency_level = db.Column(db.Integer, nullable=False)  # 1-5 scale
+    
+    # Additional Info
+    description = db.Column(db.Text, nullable=True)
+    years_of_experience = db.Column(db.Integer, nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class CVTemplate(db.Model):
+    """CV Templates for different formats"""
+    __tablename__ = "cv_templates"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    template_file = db.Column(db.String(255), nullable=False)  # HTML template file path
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

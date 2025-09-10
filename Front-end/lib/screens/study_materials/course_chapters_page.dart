@@ -87,8 +87,8 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   Future<void> _openFile(String? fileUrl) async {
     // Use default PDF if fileUrl is null or empty
     final urlToOpen = (fileUrl == null || fileUrl.isEmpty)
-        ? '$baseUrl/study/notes/default'
-        : '$baseUrl$fileUrl';
+        ? '${Config.baseUrl}/study/notes/default'
+        : '${Config.baseUrl}$fileUrl';
 
     final uri = Uri.parse(urlToOpen);
 

@@ -11,6 +11,7 @@ from routes.tution import tution_bp
 from routes.ai import ai_bp
 from routes.knowledge_base import kb_bp
 from routes.chat_routes import chat_bp
+from routes.profile import profile_bp
 from config import Config
 
 # Load env
@@ -43,6 +44,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "your_secret_key_here")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your_secret_key_here")  # For JWT token_required
 
 db.init_app(app)
 jwt = JWTManager(app)
@@ -61,6 +63,9 @@ def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
     return jsonify({"msg": "CampusNet AI-Powered API", "status": "up", "features": ["Blood Bank", "Study Materials", "Tuition", "AI Chatbot"]}), 200
 
+# Disable strict slashes to avoid 308 redirects
+app.url_map.strict_slashes = False
+
 # Register blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(blood_bp)
@@ -69,6 +74,7 @@ app.register_blueprint(tution_bp)
 app.register_blueprint(ai_bp)
 app.register_blueprint(kb_bp)  # Knowledge Base Management
 app.register_blueprint(chat_bp)  # AI Chat routes
+app.register_blueprint(profile_bp, url_prefix='/api/profile')  # Profile Management
 
 # Error handlers
 @app.errorhandler(404)

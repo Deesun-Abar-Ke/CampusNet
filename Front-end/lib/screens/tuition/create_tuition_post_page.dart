@@ -475,7 +475,7 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
       isRefining = true;
     });
 
-    final uri = Uri.parse('$baseUrl/ai/refine');
+    final uri = Uri.parse('${Config.baseUrl}/ai/refine');
     http
         .post(uri,
             headers: {'Content-Type': 'application/json'},

@@ -107,7 +107,7 @@ class StudyMaterialsService {
     final token = await AuthService.getToken();
     if (token == null) throw Exception('Not authenticated');
 
-    final url = Uri.parse('$baseUrl/notes/$noteId');
+    final url = Uri.parse('${Config.baseUrl}/notes/$noteId');
 
     final res = await http.delete(
       url,
