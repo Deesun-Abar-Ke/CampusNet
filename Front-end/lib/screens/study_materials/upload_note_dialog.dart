@@ -80,23 +80,22 @@ class _UploadNoteDialogState extends State<UploadNoteDialog> {
           ],
         ),
       )
-          : Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Pick a file from your device to upload.'),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.upload_file),
-            label: const Text('Select File'),
-            onPressed: () => _uploadNote(context),
-          ),
-        ],
-      ),
+          : const Text('Pick a file from your device to upload.'),
       actions: !_isUploading
           ? [
-        TextButton(
-          child: const Text('Cancel'),
-          onPressed: () => Navigator.pop(context, false),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton.icon(
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Select File'),
+              onPressed: () => _uploadNote(context),
+            ),
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+          ],
         ),
       ]
           : null,
