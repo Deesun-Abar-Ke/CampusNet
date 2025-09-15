@@ -1,0 +1,140 @@
+# MIST Academic Programs and Curriculum
+
+## Computer Science and Engineering (CSE)
+
+### Program Overview
+The CSE program at MIST is designed to produce skilled software engineers and computer scientists capable of addressing the technological challenges of the modern world.
+
+### Curriculum Highlights
+- Programming Languages: C, C++, Java, Python, JavaScript
+- Data Structures and Algorithms
+- Database Management Systems
+- Software Engineering
+- Computer Networks
+- Artificial Intelligence and Machine Learning
+- Web Development
+- Mobile Application Development
+- Cybersecurity
+- Computer Graphics
+
+### Career Opportunities
+- Software Developer
+- System Analyst
+- Network Administrator
+- Database Administrator
+- AI/ML Engineer
+- Cybersecurity Specialist
+- Research Scientist
+
+## Electrical, Electronic and Communication Engineering (EECE)
+
+### Program Overview
+EECE program focuses on electrical systems, electronics, and communication technologies.
+
+### Curriculum Highlights
+- Circuit Analysis
+- Digital Electronics
+- Microprocessors and Microcontrollers
+- Communication Systems
+- Signal Processing
+- Power Systems
+- Control Systems
+- VLSI Design
+- Embedded Systems
+
+### Laboratories
+- Electronics Lab
+- Communication Lab
+- Microprocessor Lab
+- Power Systems Lab
+- Control Systems Lab
+
+## Mechanical Engineering (ME)
+
+### Program Overview
+ME program covers design, manufacturing, and maintenance of mechanical systems.
+
+### Curriculum Highlights
+- Thermodynamics
+- Fluid Mechanics
+- Heat Transfer
+- Manufacturing Processes
+- Machine Design
+- Automotive Engineering
+- Robotics and Automation
+- Materials Science
+
+### Facilities
+- Manufacturing Lab
+- Thermal Engineering Lab
+- Fluid Mechanics Lab
+- CAD/CAM Lab
+
+## Civil Engineering (CE)
+
+### Program Overview
+CE program focuses on infrastructure development and construction technology.
+
+### Curriculum Highlights
+- Structural Engineering
+- Geotechnical Engineering
+- Transportation Engineering
+- Water Resources Engineering
+- Construction Management
+- Environmental Engineering
+- Surveying
+- Building Materials
+
+### Laboratories
+- Concrete Lab
+- Soil Mechanics Lab
+- Highway Engineering Lab
+- Environmental Engineering Lab
+
+## Research Opportunities
+
+### Undergraduate Research
+- Final year thesis project
+- Research assistantships
+- Collaboration with faculty members
+- Participation in research conferences
+
+### Graduate Research
+- Master's thesis
+- PhD dissertation
+- Research publications
+- International collaborations
+
+## Industry Partnerships
+
+MIST maintains strong partnerships with:
+- Leading technology companies
+- Government organizations
+- International universities
+- Research institutions
+
+These partnerships provide:
+- Internship opportunities
+- Job placement
+- Research collaboration
+- Technology transfer
+
+## Academic Support Services
+
+### Library Services
+- Digital library access
+- Research databases
+- Inter-library loan services
+- Reference assistance
+
+### Computing Services
+- High-speed internet
+- Computing labs
+- Software licenses
+- Technical support
+
+### Academic Advising
+- Course planning
+- Career guidance
+- Graduate school preparation
+- Research mentoring

@@ -4,7 +4,6 @@ import '../../../widgets/common_app_bar.dart';
 import '../../chatbot_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../chatbot_page.dart';
 import 'add_member_page.dart';
 import 'view_members_page.dart';
 
@@ -921,25 +920,15 @@ class ResourceFileTile extends StatelessWidget {
               ),
               onTap: () => _askAI(context, file),
             ),
+            // Download removed; open -> Post Reference flow available
             PopupMenuItem(
-              value: 'download',
-              onTap: onDownload,
-              child: const Row(
-                children: [
-                  Icon(Icons.download, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Download'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'copy_reference',
+              value: 'post_reference',
               onTap: onCopyReference,
               child: const Row(
                 children: [
                   Icon(Icons.link, color: Colors.blue),
                   SizedBox(width: 8),
-                  Text('Copy Ref'),
+                  Text('Post Reference'),
                 ],
               ),
             ),

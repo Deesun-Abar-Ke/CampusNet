@@ -6,7 +6,7 @@ import '../config.dart';
 class StudyMaterialsService {
   // ------------------ DEPARTMENTS ------------------
   static Future<List<dynamic>> fetchDepartments() async {
-    final url = Uri.parse('$baseUrl/departments');
+    final url = Uri.parse('${Config.baseUrl}/departments');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as List<dynamic>;
@@ -16,7 +16,7 @@ class StudyMaterialsService {
   }
 
   static Future<void> addDepartment(String name, String icon) async {
-    final url = Uri.parse('$baseUrl/departments');
+    final url = Uri.parse('${Config.baseUrl}/departments');
     final headers = {'Content-Type': 'application/json'};
     final body = jsonEncode({'name': name, 'icon': icon});
 
@@ -30,7 +30,7 @@ class StudyMaterialsService {
 
   // ------------------ COURSES ------------------
   static Future<List<dynamic>> fetchCourses(int departmentId) async {
-    final url = Uri.parse('$baseUrl/courses?department_id=$departmentId');
+    final url = Uri.parse('${Config.baseUrl}/courses?department_id=$departmentId');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as List<dynamic>;
@@ -43,7 +43,7 @@ class StudyMaterialsService {
     required String name,
     required int departmentId,
   }) async {
-    final url = Uri.parse('$baseUrl/courses');
+    final url = Uri.parse('${Config.baseUrl}/courses');
     final headers = {'Content-Type': 'application/json'};
     final body = jsonEncode({'name': name, 'department_id': departmentId});
 
@@ -57,7 +57,7 @@ class StudyMaterialsService {
 
   // ------------------ NOTES ------------------
   static Future<List<dynamic>> fetchNotes(int courseId) async {
-    final url = Uri.parse('$baseUrl/notes?course_id=$courseId');
+    final url = Uri.parse('${Config.baseUrl}/notes?course_id=$courseId');
     final res = await http.get(url);
     if (res.statusCode == 200) {
       final notes = jsonDecode(res.body) as List<dynamic>;
@@ -72,13 +72,13 @@ class StudyMaterialsService {
     }
   }
 
-  static Future<void> uploadNote({
+  static Future<String> uploadNote({
     required String filename,
     required String fileUrl,
     required String fileType,
     required int courseId,
   }) async {
-    final url = Uri.parse('$baseUrl/notes');
+    final url = Uri.parse('${Config.baseUrl}/notes');
     final token = await AuthService.getToken();
     if (token == null) throw Exception('Not authenticated');
 
@@ -96,7 +96,10 @@ class StudyMaterialsService {
 
     final res = await http.post(url, headers: headers, body: body);
 
-    if (res.statusCode != 201 && res.statusCode != 200) {
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      final responseData = jsonDecode(res.body);
+      return responseData['file_url'] ?? '/study/notes/default';
+    } else {
       final msg = _extractErrorMessage(res.body);
       throw Exception('Failed to upload note: $msg');
     }
@@ -107,7 +110,7 @@ class StudyMaterialsService {
     final token = await AuthService.getToken();
     if (token == null) throw Exception('Not authenticated');
 
-    final url = Uri.parse('$baseUrl/notes/$noteId');
+    final url = Uri.parse('${Config.baseUrl}/notes/$noteId');
 
     final res = await http.delete(
       url,

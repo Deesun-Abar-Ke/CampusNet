@@ -86,7 +86,7 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
   }
 
   void _openFile(String filename) {
-    final url = '$baseUrl/static/note.pdf'; // default PDF
+    final url = '${Config.baseUrl}/static/note.pdf'; // default PDF
     Navigator.push(
       context,
       MaterialPageRoute(

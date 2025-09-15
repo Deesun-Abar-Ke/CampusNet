@@ -475,7 +475,7 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
       isRefining = true;
     });
 
-    final uri = Uri.parse('$baseUrl/ai/refine');
+    final uri = Uri.parse('${Config.baseUrl}/ai/refine');
     http
         .post(uri,
             headers: {'Content-Type': 'application/json'},
@@ -552,7 +552,7 @@ class _CreateTuitionPostPageState extends State<CreateTuitionPostPage> {
       'req_type': isTutor ? 'offer' : 'request',
     };
     print(body);
-    final url = Uri.parse('$baseUrl/tutions');
+    final url = Uri.parse('${Config.baseUrl}/tutions');
     try {
       final res = await http.post(url,
           headers: {

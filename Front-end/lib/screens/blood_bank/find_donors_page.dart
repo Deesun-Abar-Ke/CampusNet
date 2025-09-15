@@ -54,10 +54,9 @@ class _FindDonorsPageState extends State<FindDonorsPage> {
         return;
       }
 
-      Uri url = Uri.parse('$baseUrl/donors');
-      if (bloodGroup != null && bloodGroup.isNotEmpty) {
-        url = Uri.parse('$baseUrl/donors')
-            .replace(queryParameters: {'blood_group': bloodGroup});
+      Uri url = Uri.parse('${Config.baseUrl}/donors');
+      if (selectedBloodGroup != null) {
+        url = Uri.parse('${Config.baseUrl}/donors');
       }
 
       final response = await http.get(
