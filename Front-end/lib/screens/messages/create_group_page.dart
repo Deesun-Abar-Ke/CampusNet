@@ -21,6 +21,38 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   bool _isLoading = true;
   bool _isCreatingGroup = false;
   String? _errorMessage;
+  
+  // Filter states
+  String? _selectedDepartment;
+  String? _selectedDesignation;
+  String? _selectedLevel;  // Changed to String to match dropdown
+  String? _selectedSession;
+  bool _showFilters = false;
+
+  // Get unique values for filters
+  List<String> get _departments => _allUsers
+      .where((user) => user.department != null && user.department!.isNotEmpty)
+      .map((user) => user.department!)
+      .toSet()
+      .toList()..sort();
+
+  List<String> get _designations => _allUsers
+      .where((user) => user.designation != null && user.designation!.isNotEmpty)
+      .map((user) => user.designation!)
+      .toSet()
+      .toList()..sort();
+
+  List<String> get _sessions => _allUsers
+      .where((user) => user.session != null && user.session!.isNotEmpty)
+      .map((user) => user.session!)
+      .toSet()
+      .toList()..sort();
+
+  List<String> get _levels => _allUsers
+      .where((user) => user.level != null)
+      .map((user) => user.level.toString())
+      .toSet()
+      .toList()..sort();
 
   @override
   void initState() {
@@ -73,12 +105,33 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   }
 
   void _filterUsers() {
+    final searchTerm = _searchController.text.toLowerCase();
+    
     List<UserModel> filtered = _allUsers.where((user) {
-      bool matchesSearch = user.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                          user.email.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                          (user.designation?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false);
-                          
-      return matchesSearch;
+      // Text search filter
+      bool matchesSearch = searchTerm.isEmpty ||
+          user.name.toLowerCase().contains(searchTerm) ||
+          user.email.toLowerCase().contains(searchTerm) ||
+          (user.designation?.toLowerCase().contains(searchTerm) ?? false);
+      
+      // Department filter
+      bool matchesDepartment = _selectedDepartment == null || 
+          user.department == _selectedDepartment;
+      
+      // Designation filter
+      bool matchesDesignation = _selectedDesignation == null || 
+          user.designation == _selectedDesignation;
+      
+      // Level filter
+      bool matchesLevel = _selectedLevel == null || 
+          user.level?.toString() == _selectedLevel;
+      
+      // Session filter
+      bool matchesSession = _selectedSession == null || 
+          user.session == _selectedSession;
+      
+      return matchesSearch && matchesDepartment && matchesDesignation && 
+             matchesLevel && matchesSession;
     }).toList();
 
     filtered.sort((a, b) => a.name.compareTo(b.name));
@@ -86,6 +139,17 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     setState(() {
       _filteredUsers = filtered;
     });
+  }
+  
+  void _clearFilters() {
+    _searchController.clear();
+    setState(() {
+      _selectedDepartment = null;
+      _selectedDesignation = null;
+      _selectedLevel = null;
+      _selectedSession = null;
+    });
+    _filterUsers();
   }
 
   Future<void> _createGroup() async {
@@ -213,6 +277,62 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                   fontSize: 12,
                 ),
               ),
+            Row(
+              children: [
+                if (user.department != null) ...[
+                  Icon(Icons.business, size: 12, color: Colors.grey[600]),
+                  const SizedBox(width: 2),
+                  Text(
+                    user.department!,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (user.designation != null) ...[
+                  Icon(Icons.person, size: 12, color: Colors.grey[600]),
+                  const SizedBox(width: 2),
+                  Text(
+                    user.designation!,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            ),
+            if (user.session != null || user.level != null)
+              Row(
+                children: [
+                  if (user.session != null) ...[
+                    Icon(Icons.school, size: 12, color: Colors.grey[600]),
+                    const SizedBox(width: 2),
+                    Text(
+                      'Session: ${user.session}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  if (user.level != null) ...[
+                    Icon(Icons.grade, size: 12, color: Colors.grey[600]),
+                    const SizedBox(width: 2),
+                    Text(
+                      'Level: ${user.level}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
           ],
         ),
         trailing: isSelected
@@ -287,16 +407,195 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                   ),
                 ),
                 
-                // Search field
+                // Search field and filters
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: const InputDecoration(
-                      labelText: 'Search users...',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.search),
-                    ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          labelText: 'Search users...',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.filter_list,
+                                  color: _showFilters ? Colors.teal : Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _showFilters = !_showFilters;
+                                  });
+                                },
+                              ),
+                              if (_searchController.text.isNotEmpty)
+                                IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () => _searchController.clear(),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      // Filter options
+                      if (_showFilters) ...[
+                        const SizedBox(height: 16),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.filter_alt, color: Colors.teal),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Filters',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    TextButton(
+                                      onPressed: _clearFilters,
+                                      child: const Text('Clear All'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                
+                                // Department and Designation filters
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedDepartment,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Department',
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        ),
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('All Departments'),
+                                          ),
+                                          ..._departments.map((dept) => DropdownMenuItem(
+                                            value: dept,
+                                            child: Text(dept),
+                                          )),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedDepartment = value;
+                                          });
+                                          _filterUsers();
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedDesignation,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Role',
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        ),
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('All Roles'),
+                                          ),
+                                          ..._designations.map((designation) => DropdownMenuItem(
+                                            value: designation,
+                                            child: Text(designation),
+                                          )),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedDesignation = value;
+                                          });
+                                          _filterUsers();
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                
+                                // Level and Session filters
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedLevel,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Level',
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        ),
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('All Levels'),
+                                          ),
+                                          ..._levels.map((level) => DropdownMenuItem<String>(
+                                            value: level,
+                                            child: Text('Level $level'),
+                                          )),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedLevel = value;
+                                          });
+                                          _filterUsers();
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedSession,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Session',
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        ),
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('All Sessions'),
+                                          ),
+                                          ..._sessions.map((session) => DropdownMenuItem(
+                                            value: session,
+                                            child: Text(session),
+                                          )),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedSession = value;
+                                          });
+                                          _filterUsers();
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 

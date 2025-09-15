@@ -20,6 +20,13 @@ class _NewChatPageState extends State<NewChatPage> {
   bool _isLoading = true;
   Set<int> _creatingChatUserIds = {}; // Track which users are currently being processed
   String? _errorMessage;
+  
+  // Filter states
+  String? _selectedDepartment;
+  String? _selectedDesignation;
+  int? _selectedLevel;
+  String? _selectedSession;
+  bool _showFilters = false;
 
   @override
   void initState() {
@@ -71,22 +78,70 @@ class _NewChatPageState extends State<NewChatPage> {
     final searchTerm = _searchController.text.toLowerCase();
     
     setState(() {
-      if (searchTerm.isEmpty) {
-        _filteredUsers = List.from(_allUsers);
-      } else {
-        _filteredUsers = _allUsers.where((user) {
-          return user.name.toLowerCase().contains(searchTerm) ||
-              user.email.toLowerCase().contains(searchTerm) ||
-              (user.designation?.toLowerCase().contains(searchTerm) ?? false);
-        }).toList();
-      }
+      _filteredUsers = _allUsers.where((user) {
+        // Text search filter
+        bool matchesSearch = searchTerm.isEmpty ||
+            user.name.toLowerCase().contains(searchTerm) ||
+            user.email.toLowerCase().contains(searchTerm) ||
+            (user.designation?.toLowerCase().contains(searchTerm) ?? false);
+        
+        // Department filter
+        bool matchesDepartment = _selectedDepartment == null || 
+            user.department == _selectedDepartment;
+        
+        // Designation filter
+        bool matchesDesignation = _selectedDesignation == null || 
+            user.designation == _selectedDesignation;
+        
+        // Level filter
+        bool matchesLevel = _selectedLevel == null || 
+            user.level == _selectedLevel;
+        
+        // Session filter
+        bool matchesSession = _selectedSession == null || 
+            user.session == _selectedSession;
+        
+        return matchesSearch && matchesDepartment && matchesDesignation && 
+               matchesLevel && matchesSession;
+      }).toList();
     });
   }
 
   void _clearFilters() {
     _searchController.clear();
+    setState(() {
+      _selectedDepartment = null;
+      _selectedDesignation = null;
+      _selectedLevel = null;
+      _selectedSession = null;
+    });
     _filterUsers();
   }
+  
+  // Get unique values for filter dropdowns
+  List<String> get _departments => _allUsers
+      .where((user) => user.department != null)
+      .map((user) => user.department!)
+      .toSet()
+      .toList()..sort();
+  
+  List<String> get _designations => _allUsers
+      .where((user) => user.designation != null)
+      .map((user) => user.designation!)
+      .toSet()
+      .toList()..sort();
+  
+  List<int> get _levels => _allUsers
+      .where((user) => user.level != null)
+      .map((user) => user.level!)
+      .toSet()
+      .toList()..sort();
+  
+  List<String> get _sessions => _allUsers
+      .where((user) => user.session != null)
+      .map((user) => user.session!)
+      .toSet()
+      .toList()..sort();
 
   Future<void> _startChat(UserModel user) async {
     if (_creatingChatUserIds.contains(user.id)) return;
@@ -207,24 +262,194 @@ class _NewChatPageState extends State<NewChatPage> {
                 )
               : Column(
                   children: [
-                    // Search Bar
+                    // Search Bar and Filters
                     Container(
                       padding: const EdgeInsets.all(16),
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search by name or email...',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () => _searchController.clear(),
-                                )
-                              : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
+                      child: Column(
+                        children: [
+                          // Search field
+                          TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Search by name or email...',
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.filter_list,
+                                      color: _showFilters ? Colors.teal : Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _showFilters = !_showFilters;
+                                      });
+                                    },
+                                  ),
+                                  if (_searchController.text.isNotEmpty)
+                                    IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () => _searchController.clear(),
+                                    ),
+                                ],
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
                           ),
-                        ),
+                          
+                          // Filter options
+                          if (_showFilters) ...[
+                            const SizedBox(height: 16),
+                            Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.filter_alt, color: Colors.teal),
+                                        const SizedBox(width: 8),
+                                        const Text(
+                                          'Filters',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.teal,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        TextButton(
+                                          onPressed: _clearFilters,
+                                          child: const Text('Clear All'),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    
+                                    // Department filter
+                                    DropdownButtonFormField<String>(
+                                      value: _selectedDepartment,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Department',
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      ),
+                                      items: [
+                                        const DropdownMenuItem<String>(
+                                          value: null,
+                                          child: Text('All Departments'),
+                                        ),
+                                        ..._departments.map((dept) => DropdownMenuItem(
+                                          value: dept,
+                                          child: Text(dept),
+                                        )),
+                                      ],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedDepartment = value;
+                                        });
+                                        _filterUsers();
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    
+                                    // Designation filter
+                                    DropdownButtonFormField<String>(
+                                      value: _selectedDesignation,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Role/Designation',
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      ),
+                                      items: [
+                                        const DropdownMenuItem<String>(
+                                          value: null,
+                                          child: Text('All Roles'),
+                                        ),
+                                        ..._designations.map((designation) => DropdownMenuItem(
+                                          value: designation,
+                                          child: Text(designation),
+                                        )),
+                                      ],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedDesignation = value;
+                                        });
+                                        _filterUsers();
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    
+                                    Row(
+                                      children: [
+                                        // Level filter
+                                        Expanded(
+                                          child: DropdownButtonFormField<int>(
+                                            value: _selectedLevel,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Level',
+                                              border: OutlineInputBorder(),
+                                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            ),
+                                            items: [
+                                              const DropdownMenuItem<int>(
+                                                value: null,
+                                                child: Text('All Levels'),
+                                              ),
+                                              ..._levels.map((level) => DropdownMenuItem(
+                                                value: level,
+                                                child: Text('Level $level'),
+                                              )),
+                                            ],
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _selectedLevel = value;
+                                              });
+                                              _filterUsers();
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        
+                                        // Session filter
+                                        Expanded(
+                                          child: DropdownButtonFormField<String>(
+                                            value: _selectedSession,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Session',
+                                              border: OutlineInputBorder(),
+                                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            ),
+                                            items: [
+                                              const DropdownMenuItem<String>(
+                                                value: null,
+                                                child: Text('All Sessions'),
+                                              ),
+                                              ..._sessions.map((session) => DropdownMenuItem(
+                                                value: session,
+                                                child: Text(session),
+                                              )),
+                                            ],
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _selectedSession = value;
+                                              });
+                                              _filterUsers();
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     // Results count
@@ -346,13 +571,79 @@ class UserTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(user.email),
+            const SizedBox(height: 4),
+            
+            // Role/Designation
             if (user.designation != null)
-              Text(
-                user.designation!,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+              Row(
+                children: [
+                  Icon(Icons.work_outline, size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      user.designation!,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            
+            // Department
+            if (user.department != null)
+              Row(
+                children: [
+                  Icon(Icons.business_outlined, size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      user.department!,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            
+            // Level and Session
+            if (user.level != null || user.session != null)
+              Row(
+                children: [
+                  if (user.level != null) ...[
+                    Icon(Icons.school_outlined, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Level ${user.level}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                  if (user.level != null && user.session != null)
+                    Text(
+                      ' • ',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  if (user.session != null) ...[
+                    Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      user.session!,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
               ),
           ],
         ),

@@ -18,10 +18,6 @@ class Users(db.Model):
     designation = db.Column(db.String(100), nullable=True)
     password = db.Column(db.String(120), nullable=False)
     
-    # Additional name fields
-    first_name = db.Column(db.String(50), nullable=True)
-    last_name = db.Column(db.String(50), nullable=True)
-    
     # New filter fields for messaging
     department = db.Column(db.String(100), nullable=True)
     level = db.Column(db.Integer, nullable=True)  # e.g., 1, 2, 3, 4 for year levels

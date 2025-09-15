@@ -92,11 +92,23 @@ def uploaded_file(filename):
 app.url_map.strict_slashes = False
 
 # Route to serve group resource files (public access for viewing)
-# Route to serve group resource files (public access for viewing)
 @app.route("/files/<path:filename>")
 def serve_group_file(filename):
+    # First try group resources directory
+    group_resources_folder = os.path.join(app.root_path, "uploads", "group_resources")
+    group_resources_path = os.path.join(group_resources_folder, filename)
+    
+    if os.path.isfile(group_resources_path):
+        return send_from_directory(group_resources_folder, filename)
+    
+    # Fallback to static uploads folder
     upload_folder = app.config.get("UPLOAD_FOLDER", os.path.join(os.getcwd(), "static", "uploads"))
-    return send_from_directory(upload_folder, filename)
+    static_path = os.path.join(upload_folder, filename)
+    
+    if os.path.isfile(static_path):
+        return send_from_directory(upload_folder, filename)
+    
+    return jsonify({"error": "File not found"}), 404
 
 # Register blueprints
 app.register_blueprint(auth_bp)

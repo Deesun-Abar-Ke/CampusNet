@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'group_chat_screen.dart';
@@ -926,7 +927,23 @@ class _GroupResourcePageState extends State<GroupResourcePage> {
   void _openResource(GroupResourceFile resource) {
     try {
       final url = resource.fileUrl;
-  launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).then((_) {
+      
+      // Handle PDF files differently - open in built-in PDF viewer
+      if (resource.fileType.toLowerCase() == 'pdf') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PdfViewPage(
+              url: url,
+              title: resource.name,
+            ),
+          ),
+        );
+        return;
+      }
+      
+      // For non-PDF files, use external launcher
+      launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).then((_) {
         showModalBottomSheet(
           context: context,
           builder: (context) => SafeArea(
@@ -991,8 +1008,9 @@ class _GroupResourcePageState extends State<GroupResourcePage> {
   void _downloadResource(GroupResourceFile resource) async {
     try {
       await GroupResourceService.downloadFile(
+        widget.conversationId,
+        resource.id,
         resource.fileUrl.split('/').last,
-        resource.originalFilename,
       );
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1336,6 +1354,21 @@ class ResourceSearchDelegate extends SearchDelegate {
           },
         );
       },
+    );
+  }
+}
+
+class PdfViewPage extends StatelessWidget {
+  final String url;
+  final String title;
+
+  const PdfViewPage({super.key, required this.url, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: SfPdfViewer.network(url),
     );
   }
 }
