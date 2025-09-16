@@ -268,6 +268,50 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     await _loadMessages();
   }
 
+  Future<void> _deleteMessageFromList(int messageId) async {
+    try {
+      // Call the API to delete the message
+      final result = await _messageService.deleteMessage(messageId);
+      
+      if (result['success']) {
+        // Remove the message from the local list and refresh UI
+        setState(() {
+          _messages.removeWhere((message) => message['id'] == messageId);
+        });
+        
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Message deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Failed to delete message'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Show network error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting message: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   IconData _getFileIcon(String fileType) {
     switch (fileType.toLowerCase()) {
       case 'pdf':
@@ -552,6 +596,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                       fileUrl: message['fileUrl'],
                                       fileName: message['fileName'],
                                       fileType: message['fileType'],
+                                      messageId: message['id'],
+                                      onDelete: () => _deleteMessageFromList(message['id']),
                                     );
                                   }
                                 },
@@ -1408,6 +1454,8 @@ class GroupMessageBubble extends StatelessWidget {
   final String? fileUrl;
   final String? fileName;
   final String? fileType;
+  final int? messageId;
+  final VoidCallback? onDelete;
 
   const GroupMessageBubble({
     super.key,
@@ -1418,6 +1466,8 @@ class GroupMessageBubble extends StatelessWidget {
     this.fileUrl,
     this.fileName,
     this.fileType,
+    this.messageId,
+    this.onDelete,
   });
 
   String _getAvatarForSender(String sender) {
@@ -1728,6 +1778,16 @@ class GroupMessageBubble extends StatelessWidget {
   }
 
   void _deleteMessage(BuildContext context) {
+    if (messageId == null || onDelete == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot delete this message'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1741,9 +1801,7 @@ class GroupMessageBubble extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Message deleted')),
-              );
+              onDelete!(); // Call the delete callback
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),

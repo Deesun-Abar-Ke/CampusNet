@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../config.dart';
+import '../../services/message_service.dart'; // Add MessageService import
+import '../../services/current_user_service.dart'; // Add CurrentUserService import
 import '../messages/messages_page.dart';
 import '../messages/chat_screen.dart';
 import '../home/landing_page.dart';
@@ -243,6 +245,7 @@ class _TutorsListState extends State<TutorsList> {
                       location: (t['location'] ?? '').toString(),
                       remuneration: (t['remuneration'] ?? t['renumeration'] ?? '').toString(),
                       description: (t['description'] ?? '').toString(),
+                      userId: t['user_id'], // Pass the user ID
                     );
                   },
                 );
@@ -449,6 +452,7 @@ class _RequestsListState extends State<RequestsList> {
                       location: (t['location'] ?? '').toString(),
                       remuneration: (t['remuneration'] ?? t['renumeration'] ?? '').toString(),
                       description: (t['description'] ?? '').toString(),
+                      userId: t['user_id'], // Pass the user ID
                     );
                   },
                 );
@@ -491,6 +495,7 @@ class TutionCard extends StatelessWidget {
   final String location;
   final String remuneration;
   final String description;
+  final int? userId; // Add user ID for chat functionality
 
   const TutionCard({
     super.key,
@@ -501,6 +506,7 @@ class TutionCard extends StatelessWidget {
     required this.location,
     required this.remuneration,
     required this.description,
+    this.userId, // Add user ID parameter
   });
 
   @override
@@ -568,14 +574,17 @@ class TutionCard extends StatelessWidget {
                       color: messageIconColor,
                       size: 20,
                     ),
-                    onPressed: () {
-                      // Navigate to chat with the poster's name
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MessagesPageWrapper(contactName: userName.isNotEmpty ? userName : 'User'),
-                        ),
-                      );
+                    onPressed: () async {
+                      if (userId != null) {
+                        await _openChatWithUser(context, userId!, userName);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Unable to start chat: User ID not available'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                     tooltip: 'Send Message',
                   ),
@@ -691,6 +700,102 @@ class TutionCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  // Helper method to open chat with a specific user
+  static Future<void> _openChatWithUser(BuildContext context, int userId, String userName) async {
+    try {
+      // Check if user is trying to message themselves
+      final currentUserId = await CurrentUserService.getCurrentUserId();
+      if (currentUserId == userId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You cannot send a message to yourself'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Opening chat...'),
+            ],
+          ),
+        ),
+      );
+
+      final messageService = MessageService();
+      
+      // Create or find existing conversation
+      final result = await messageService.createConversation(
+        type: 'individual',
+        participantIds: [userId],
+      );
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      if (result['success']) {
+        final conversationId = result['conversation']['id'];
+        
+        // Navigate to chat screen with conversation ID
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatScreen(
+                conversationId: conversationId,
+                contactName: userName.isNotEmpty ? userName : 'User',
+                avatar: _getAvatarForContact(userName),
+                isOnline: true,
+                initialMessage: 'Hi! I saw your tuition post and I\'m interested in your services.',
+              ),
+            ),
+          );
+        }
+      } else {
+        // Show error message
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Failed to create chat'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if open
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening chat: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Helper method to get avatar for contact
+  static String _getAvatarForContact(String name) {
+    if (name.contains('Rahman')) return '👨‍🏫';
+    if (name.contains('Ahmed')) return '👨‍🔬';
+    if (name.contains('Sarah')) return '👩‍💻';
+    if (name.contains('Nadia')) return '👩‍🎓';
+    if (name.contains('Khan')) return '👨‍💼';
+    return '👨‍🎓';
   }
 }
 

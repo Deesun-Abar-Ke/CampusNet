@@ -140,6 +140,7 @@ class Message(db.Model):
     sent_at = db.Column(db.DateTime, default=datetime.utcnow)
     edited_at = db.Column(db.DateTime, nullable=True)
     deleted_at = db.Column(db.DateTime, nullable=True)
+    deleted_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)  # Who deleted the message
     
     # For file/image messages
     file_url = db.Column(db.String(500), nullable=True)
@@ -150,7 +151,8 @@ class Message(db.Model):
     reference_data = db.Column(db.Text, nullable=True)  # JSON data for references
     
     # Relationships
-    sender = db.relationship("Users", backref="sent_messages")
+    sender = db.relationship("Users", backref="sent_messages", foreign_keys=[sender_id])
+    deleter = db.relationship("Users", backref="deleted_messages", foreign_keys=[deleted_by])
     reads = db.relationship("MessageRead", backref="message", cascade="all, delete-orphan")
 
 class MessageRead(db.Model):

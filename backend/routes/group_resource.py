@@ -107,7 +107,14 @@ def get_folders(conversation_id):
         
         # Format file response
         file_data = []
+        # Get current server base URL for dynamic file URL generation
+        server_base_url = current_app.config.get("SERVER_BASE_URL", "http://localhost:5000")
+        
         for file in files:
+            # Generate file URL dynamically using current server config
+            filename = file.file_url.split('/')[-1] if file.file_url else f"{file.id}_{file.original_filename}"
+            dynamic_file_url = f"{server_base_url}/files/{filename}"
+            
             file_data.append({
                 'id': file.id,
                 'name': file.name,
@@ -115,7 +122,7 @@ def get_folders(conversation_id):
                 'file_type': file.file_type,
                 'file_size': file.file_size,
                 'file_size_readable': get_human_readable_size(file.file_size),
-                'file_url': file.file_url,
+                'file_url': dynamic_file_url,  # Dynamic URL based on current config
                 'uploaded_by': file.uploader.name,
                 'uploaded_at': file.uploaded_at.isoformat(),
                 'description': file.description,
@@ -244,8 +251,9 @@ def upload_file(conversation_id, folder_id):
         with open(file_path, 'rb') as f:
             file_hash = hashlib.sha256(f.read()).hexdigest()
         
-        # Create file URL using public serving route (no auth required for viewing)
-        file_url = f"{request.host_url}files/{unique_filename}"
+        # Create file URL using configured server base URL instead of request host
+        server_base_url = current_app.config.get("SERVER_BASE_URL", "http://localhost:5000")
+        file_url = f"{server_base_url}/files/{unique_filename}"
         
         # Check if file with same name exists in folder
         existing_file = GroupFile.query.filter_by(
@@ -277,6 +285,11 @@ def upload_file(conversation_id, folder_id):
         db.session.add(new_file)
         db.session.commit()
         
+        # Generate dynamic file URL for response
+        current_server_base_url = current_app.config.get("SERVER_BASE_URL", "http://localhost:5000")
+        filename = new_file.file_url.split('/')[-1]
+        dynamic_file_url = f"{current_server_base_url}/files/{filename}"
+        
         return jsonify({
             'id': new_file.id,
             'name': new_file.name,
@@ -284,7 +297,7 @@ def upload_file(conversation_id, folder_id):
             'file_type': new_file.file_type,
             'file_size': new_file.file_size,
             'file_size_readable': get_human_readable_size(new_file.file_size),
-            'file_url': new_file.file_url,
+            'file_url': dynamic_file_url,  # Dynamic URL
             'uploaded_by': new_file.uploader.name,
             'uploaded_at': new_file.uploaded_at.isoformat(),
             'description': new_file.description,

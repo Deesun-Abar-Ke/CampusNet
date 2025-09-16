@@ -3,6 +3,11 @@ from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
+
+# Load env
+load_dotenv()
+
+# Import models and routes
 from models import db
 from routes.auth import auth_bp
 from routes.blood import blood_bp
@@ -14,10 +19,6 @@ from routes.group_resource import group_resource_bp
 from routes.knowledge_base import kb_bp
 from routes.chat_routes import chat_bp
 from routes.profile import profile_bp
-from config import Config
-
-# Load env
-load_dotenv()
 
 #database config - Updated for new config system
 try:
@@ -68,15 +69,38 @@ if not DATABASE_URL:
 
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Optimize database connection pool for Supabase (very conservative for free tier)
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_size": 10,          # Very small pool size for Supabase free tier
+    "max_overflow": 0,       # No overflow connections
+    "pool_recycle": 300,      # Recycle connections every 1 minute to free them up quickly
+    "pool_pre_ping": True,   # Verify connections before use
+    "pool_timeout": 10,      # Timeout after 10 seconds if no connection available
+}
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "your_secret_key_here")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your_secret_key_here")  # For JWT token_required
+app.config["SERVER_BASE_URL"] = os.environ.get("SERVER_BASE_URL", "http://192.168.0.113:5000")  # Updated to match frontend
 
+print(f"🔧 SERVER_BASE_URL is set to: {app.config['SERVER_BASE_URL']}")
+print(f"🔧 Database pool configured: pool_size=5, max_overflow=0, pool_recycle=60s")
 db.init_app(app)
 jwt = JWTManager(app)
 
-# Create tables (updated for newer Flask versions)
-with app.app_context():
-    db.create_all()
+# Create/update database tables (important for new fields like deleted_by)
+try:
+    with app.app_context():
+        print("🔄 Creating/updating database tables...")
+        db.create_all()
+        print("✅ Database tables created/updated successfully")
+        print("📝 This includes the new deleted_by field for message deletion feature")
+except Exception as e:
+    print(f"⚠️ Database table creation failed: {e}")
+    if "MaxClientsInSessionMode" in str(e) or "max clients reached" in str(e):
+        print("💡 Connection pool issue - tables may already exist")
+        print("🔄 Server will continue, but new features may not work properly")
+    else:
+        print("❌ Unexpected database error - please check your connection")
+        print("💡 This may affect functionality, especially new features")
 
 @app.route("/")
 def home():
@@ -86,7 +110,6 @@ def home():
 @app.route("/static/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-    return jsonify({"msg": "CampusNet AI-Powered API", "status": "up", "features": ["Blood Bank", "Study Materials", "Tuition", "AI Chatbot"]}), 200
 
 # Disable strict slashes to avoid 308 redirects
 app.url_map.strict_slashes = False

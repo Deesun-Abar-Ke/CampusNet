@@ -10,6 +10,7 @@ import '../home/profile/profile_page.dart';
 import '../../services/message_service.dart';
 import '../../services/current_user_service.dart';
 import '../../models/user_model.dart';
+import '../../models/user_model.dart'; // Add MessageModel import
 import '../../config.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -293,6 +294,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           fileUrl: message.fileUrl,
                           fileName: message.fileName,
                           fileType: message.fileType,
+                          messageId: message.id,
+                          onDelete: () => _deleteMessageFromList(message.id),
                         );
                       },
                     ),
@@ -407,6 +410,50 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _isSending = false;
       });
+    }
+  }
+
+  Future<void> _deleteMessageFromList(int messageId) async {
+    try {
+      // Call the API to delete the message
+      final result = await _messageService.deleteMessage(messageId);
+      
+      if (result['success']) {
+        // Remove the message from the local list and refresh UI
+        setState(() {
+          _messages.removeWhere((message) => message.id == messageId);
+        });
+        
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Message deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Failed to delete message'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Show network error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting message: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -1246,6 +1293,8 @@ class MessageBubble extends StatelessWidget {
   final String? fileUrl;
   final String? fileName;
   final String? fileType;
+  final int? messageId;
+  final VoidCallback? onDelete;
 
   const MessageBubble({
     super.key,
@@ -1257,6 +1306,8 @@ class MessageBubble extends StatelessWidget {
     this.fileUrl,
     this.fileName,
     this.fileType,
+    this.messageId,
+    this.onDelete,
   });
 
   @override
@@ -1475,6 +1526,16 @@ class MessageBubble extends StatelessWidget {
   }
 
   void _deleteMessage(BuildContext context) {
+    if (messageId == null || onDelete == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot delete this message'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1488,9 +1549,7 @@ class MessageBubble extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Message deleted')),
-              );
+              onDelete!(); // Call the delete callback
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
