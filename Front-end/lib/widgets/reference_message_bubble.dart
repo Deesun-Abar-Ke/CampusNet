@@ -221,14 +221,6 @@ class ReferenceMessageBubble extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.forward, color: Colors.blue),
-              title: const Text('Forward'),
-              onTap: () {
-                Navigator.pop(context);
-                _forwardMessage(context);
-              },
-            ),
             if (isMe)
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
@@ -249,12 +241,6 @@ class ReferenceMessageBubble extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  void _forwardMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Forward reference functionality coming soon!')),
     );
   }
 

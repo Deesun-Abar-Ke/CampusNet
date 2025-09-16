@@ -1739,14 +1739,6 @@ class GroupMessageBubble extends StatelessWidget {
                 _copyMessage(context);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.forward),
-              title: const Text('Forward'),
-              onTap: () {
-                Navigator.pop(context);
-                _forwardMessage(context);
-              },
-            ),
             if (!isMe)
               ListTile(
                 leading: const Icon(Icons.chat),
@@ -1768,12 +1760,6 @@ class GroupMessageBubble extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  void _forwardMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Forward message functionality coming soon!')),
     );
   }
 

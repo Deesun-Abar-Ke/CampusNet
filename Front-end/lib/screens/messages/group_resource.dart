@@ -10,7 +10,6 @@ import 'package:flutter/services.dart';
 import 'group_chat_screen.dart';
 import '../../widgets/common_app_bar.dart';
 import '../../services/group_resource_service.dart';
-import '../chatbot_page.dart';
 
 class GroupResourceFolder {
   final int id;
@@ -1178,17 +1177,6 @@ class ResourceFileTile extends StatelessWidget {
         ),
         trailing: PopupMenuButton(
           itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'ask_ai',
-              child: const Row(
-                children: [
-                  Icon(Icons.psychology, color: Colors.purple),
-                  SizedBox(width: 8),
-                  Text('Ask AI'),
-                ],
-              ),
-              onTap: () => _askAI(context, file),
-            ),
             // Download removed; use Open -> Post Reference instead
             PopupMenuItem(
               value: 'post_reference',
@@ -1215,15 +1203,6 @@ class ResourceFileTile extends StatelessWidget {
           ],
         ),
         onTap: onTap,
-      ),
-    );
-  }
-
-  void _askAI(BuildContext context, GroupResourceFile file) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ChatbotPage(),
       ),
     );
   }
