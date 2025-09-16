@@ -1,6 +1,8 @@
 class Config {
   // Base URL for the Flask backend
-  static const String baseUrl = 'http://192.168.0.101:5000';
+  // ⚠️ CHANGE THIS IP WHEN YOU SWITCH WiFi NETWORKS ⚠️
+  // Find your new IP with: ip addr show | grep inet
+  static const String baseUrl = 'http://192.168.0.115:5000';
   
   // API endpoints
   static const String authEndpoint = '/api/auth';

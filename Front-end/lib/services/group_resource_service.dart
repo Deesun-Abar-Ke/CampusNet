@@ -7,6 +7,7 @@ import '../config.dart';
 import 'auth_service.dart';
 
 class GroupResourceService {
+  // Simple static base URL from config
   static const String baseUrl = '${Config.baseUrl}/api';
 
   // Helper to get headers with JWT authorization
@@ -147,9 +148,10 @@ class GroupResourceService {
   // Delete folder
   static Future<void> deleteFolder(int conversationId, int folderId) async {
     try {
+      final apiBaseUrl = await baseUrl;
       final headers = await _getHeaders();
       final response = await http.delete(
-        Uri.parse('$baseUrl/conversations/$conversationId/folders/$folderId'),
+        Uri.parse('$apiBaseUrl/conversations/$conversationId/folders/$folderId'),
         headers: headers,
       );
 
