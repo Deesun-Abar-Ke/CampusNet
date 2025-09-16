@@ -156,7 +156,13 @@ def create_folder(conversation_id):
         data = request.get_json()
         folder_name = data.get('name', '').strip()
         parent_folder_id = data.get('parent_folder_id')
-        description = data.get('description', '').strip()
+        description = data.get('description')
+        
+        # Handle description properly - it can be None, empty string, or actual text
+        if description is not None:
+            description = description.strip()
+            if not description:  # Empty string after stripping
+                description = None
         
         if not folder_name:
             return jsonify({'error': 'Folder name is required'}), 400
@@ -177,7 +183,7 @@ def create_folder(conversation_id):
             conversation_id=conversation_id,
             parent_folder_id=parent_folder_id,
             created_by=user_id,
-            description=description if description else None
+            description=description
         )
         
         db.session.add(new_folder)
