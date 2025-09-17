@@ -34,6 +34,7 @@ dependencies:
   http: ^1.5.0
   flutter_secure_storage: ^9.2.4
   url_launcher: ^6.3.2
+  syncfusion_flutter_pdfviewer: ^31.1.19
   path_provider: ^2.1.4
 
   image_picker: ^1.1.2 # Use the latest version
@@ -44,6 +45,7 @@ dependencies:
   intl: ^0.20.2 # For date formatting
   file_picker: ^8.1.2 # For file selection
   flutter_downloader: ^1.11.8 # For better file downloads
+  share_plus: ^10.0.2 # For sharing files
   
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -82,7 +84,6 @@ flutter:
     - assets/images/towers/tower.webp
     - assets/images/towers/tower4.webp
     - assets/images/towers/tower1.jpg
-    - assets/Message/
     - assets/Tution/
 
   # An image asset can refer to one or more resolution-specific "variants", see

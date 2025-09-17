@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../../services/study_materials_service.dart';
 import '../../widgets/common_app_bar.dart';
 import 'upload_note_dialog.dart';
@@ -21,11 +21,18 @@ class CourseChaptersPage extends StatefulWidget {
 
 class _CourseChaptersPageState extends State<CourseChaptersPage> {
   late Future<List<dynamic>> _notesFuture;
+  String searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _notesFuture = StudyMaterialsService.fetchNotes(widget.courseId);
+  }
+
+  Future<void> _refreshNotes() async {
+    setState(() {
+      _notesFuture = StudyMaterialsService.fetchNotes(widget.courseId);
+    });
   }
 
   IconData getFileIcon(String filename) {
@@ -37,12 +44,6 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
       return Icons.picture_as_pdf;
     }
     return Icons.insert_drive_file;
-  }
-
-  Future<void> _refreshNotes() async {
-    setState(() {
-      _notesFuture = StudyMaterialsService.fetchNotes(widget.courseId);
-    });
   }
 
   void _showDeleteDialog(int index, List<dynamic> notes) {
@@ -58,7 +59,7 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
                 leading: const Icon(Icons.delete_forever, color: Colors.red),
                 title: Text("Delete ${note['filename']}"),
                 onTap: () async {
-                  Navigator.pop(context); // Close the bottom sheet
+                  Navigator.pop(context);
                   try {
                     await StudyMaterialsService.deleteNote(note['id']);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -84,21 +85,14 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
     );
   }
 
-  Future<void> _openFile(String? fileUrl) async {
-    // Use default PDF if fileUrl is null or empty
-    final urlToOpen = (fileUrl == null || fileUrl.isEmpty)
-        ? '${Config.baseUrl}/study/notes/default'
-        : '${Config.baseUrl}$fileUrl';
-
-    final uri = Uri.parse(urlToOpen);
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open file')),
-      );
-    }
+  void _openFile(String filename) {
+    final url = '${Config.baseUrl}/static/note.pdf'; // default PDF
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PdfViewPage(url: url, title: filename),
+      ),
+    );
   }
 
   @override
@@ -116,61 +110,98 @@ class _CourseChaptersPageState extends State<CourseChaptersPage> {
         centerTitle: true,
         backgroundColor: Colors.teal,
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: _notesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: (val) {
+                setState(() {
+                  searchQuery = val;
+                });
+              },
+              decoration: const InputDecoration(
+                hintText: 'Search notes...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          // Notes list
+          Expanded(
+            child: FutureBuilder<List<dynamic>>(
+              future: _notesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-          final notes = snapshot.data ?? [];
+                final notes = snapshot.data ?? [];
+                final filteredNotes = notes.where((note) {
+                  final filename = (note['filename'] ?? '').toString().toLowerCase();
+                  return filename.contains(searchQuery.toLowerCase());
+                }).toList();
 
-          if (notes.isEmpty) {
-            return const Center(child: Text('No notes available.'));
-          }
+                if (filteredNotes.isEmpty) {
+                  return const Center(child: Text('No notes found.'));
+                }
 
-          return ListView.builder(
-            itemCount: notes.length,
-            itemBuilder: (context, index) {
-              final note = notes[index];
-              final filename = note['filename'] ?? '';
-              final fileUrl = note['file_url'];
+                return ListView.builder(
+                  itemCount: filteredNotes.length,
+                  itemBuilder: (context, index) {
+                    final note = filteredNotes[index];
+                    final filename = note['filename'] ?? '';
 
-              return GestureDetector(
-                onLongPress: () {
-                  // Only show delete option if current user is uploader
-                  final currentUserId = note['uploaded_by']; // You may fetch current JWT user
-                  // Here we assume StudyMaterialsService.getCurrentUserId() exists
-                  _showDeleteDialog(index, notes);
-                },
-                child: ListTile(
-                  leading: Icon(getFileIcon(filename)),
-                  title: Text(filename),
-                  onTap: () => _openFile(fileUrl),
-                ),
-              );
-            },
-          );
-        },
+                    return GestureDetector(
+                      onLongPress: () {
+                        _showDeleteDialog(index, filteredNotes);
+                      },
+                      child: ListTile(
+                        leading: Icon(getFileIcon(filename)),
+                        title: Text(filename),
+                        onTap: () => _openFile(filename),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Show the upload dialog
           final uploaded = await showDialog<bool>(
             context: context,
             builder: (_) => UploadNoteDialog(courseId: widget.courseId),
           );
 
-          // Refresh notes only if upload succeeded
           if (uploaded == true) {
             _refreshNotes();
           }
         },
         child: const Icon(Icons.upload_file),
       ),
+    );
+  }
+}
+
+// ----------------- PDF VIEW PAGE -----------------
+class PdfViewPage extends StatelessWidget {
+  final String url;
+  final String title;
+
+  const PdfViewPage({super.key, required this.url, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)), // shows clicked chapter name
+      body: SfPdfViewer.network(url),
     );
   }
 }

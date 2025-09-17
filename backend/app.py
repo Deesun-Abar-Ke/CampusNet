@@ -8,15 +8,23 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from dotenv import load_dotenv
+
+# Load env
+load_dotenv()
+
+# Import models and routes
 from models import db
 from routes.auth import auth_bp
 from routes.blood import blood_bp
 from routes.study_materials import study_bp
 from routes.tution import tution_bp
 from routes.ai import ai_bp
+from routes.messages import messages_bp
+from routes.group_resource import group_resource_bp
 from routes.knowledge_base import kb_bp
 from routes.chat_routes import chat_bp
 from routes.profile import profile_bp
+<<<<<<< HEAD
 # from routes.feed import feed_bp  # Removed - functionality moved to social_routes
 from routes.social_routes import social_bp
 from utils.db_utils import cleanup_db_session, get_db_connection_info, force_close_connections
@@ -32,10 +40,41 @@ else:
     print("❌ DATABASE_URL environment variable not found or invalid!")
     print("   Please set DATABASE_URL to your Supabase PostgreSQL connection string.")
     exit(1)
+=======
+
+#database config - Updated for new config system
+try:
+    # Try new config system first
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL:
+        print(f"✅ Using DATABASE_URL from environment: {DATABASE_URL}")
+    else:
+        print("DATABASE_URL not found, trying individual variables...")
+        # Fallback to old system
+        USER = os.getenv("user") or os.getenv("POSTGRES_USER")
+        PASSWORD = os.getenv("password") or os.getenv("POSTGRES_PASSWORD")
+        HOST = os.getenv("host") or os.getenv("POSTGRES_HOST") or "localhost"
+        PORT = os.getenv("port") or os.getenv("POSTGRES_PORT") or "5432"
+        DBNAME = os.getenv("dbname") or os.getenv("POSTGRES_DB")
+        
+        if USER and PASSWORD and DBNAME:
+            DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+            print(f"✅ Built DATABASE_URL from components: postgresql+psycopg2://{USER}:***@{HOST}:{PORT}/{DBNAME}?sslmode=require")
+        else:
+            print(f"❌ Missing database credentials. USER={USER}, PASSWORD={'***' if PASSWORD else None}, DBNAME={DBNAME}")
+            DATABASE_URL = None
+except Exception as e:
+    print(f"❌ Error loading database config: {e}")
+    DATABASE_URL = None
+>>>>>>> 26f57bf697a30ad1aec525c273be075a4fcc3fc3
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, 
+     origins=["*"], 
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # Upload folder for study materials
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "static", "uploads")
@@ -43,11 +82,29 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # DB + JWT setup
+if not DATABASE_URL:
+    print("❌ ERROR: No database configuration found!")
+    print("Please set up your database configuration in one of the following ways:")
+    print("1. Set DATABASE_URL environment variable")
+    print("2. Set individual variables: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, etc.")
+    print("3. Create a .env file based on .env.example")
+    exit(1)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Optimize database connection pool for Supabase (very conservative for free tier)
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_size": 10,          # Very small pool size for Supabase free tier
+    "max_overflow": 0,       # No overflow connections
+    "pool_recycle": 300,      # Recycle connections every 1 minute to free them up quickly
+    "pool_pre_ping": True,   # Verify connections before use
+    "pool_timeout": 10,      # Timeout after 10 seconds if no connection available
+}
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "your_secret_key_here")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your_secret_key_here")  # For JWT token_required
+app.config["SERVER_BASE_URL"] = os.environ.get("SERVER_BASE_URL", "http://192.168.0.113:5000")  # Updated to match frontend
 
+<<<<<<< HEAD
 # JWT Token Expiration Settings
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)  # 24 hours instead of default 15 minutes
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)  # 30 days for refresh token
@@ -98,19 +155,59 @@ def reset_db_connections():
 # Create tables (updated for newer Flask versions)
 with app.app_context():
     db.create_all()
+=======
+print(f"🔧 SERVER_BASE_URL is set to: {app.config['SERVER_BASE_URL']}")
+print(f"🔧 Database pool configured: pool_size=5, max_overflow=0, pool_recycle=60s")
+db.init_app(app)
+jwt = JWTManager(app)
+
+# Create/update database tables (important for new fields like deleted_by)
+try:
+    with app.app_context():
+        print("🔄 Creating/updating database tables...")
+        db.create_all()
+        print("✅ Database tables created/updated successfully")
+        print("📝 This includes the new deleted_by field for message deletion feature")
+except Exception as e:
+    print(f"⚠️ Database table creation failed: {e}")
+    if "MaxClientsInSessionMode" in str(e) or "max clients reached" in str(e):
+        print("💡 Connection pool issue - tables may already exist")
+        print("🔄 Server will continue, but new features may not work properly")
+    else:
+        print("❌ Unexpected database error - please check your connection")
+        print("💡 This may affect functionality, especially new features")
+>>>>>>> 26f57bf697a30ad1aec525c273be075a4fcc3fc3
 
 @app.route("/")
 def home():
     return jsonify({"msg": "CampusNet API", "status": "up"}), 200
 
-# Route to serve uploaded files
+# Route to serve uploaded files (public access)
 @app.route("/static/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-    return jsonify({"msg": "CampusNet AI-Powered API", "status": "up", "features": ["Blood Bank", "Study Materials", "Tuition", "AI Chatbot"]}), 200
 
 # Disable strict slashes to avoid 308 redirects
 app.url_map.strict_slashes = False
+
+# Route to serve group resource files (public access for viewing)
+@app.route("/files/<path:filename>")
+def serve_group_file(filename):
+    # First try group resources directory
+    group_resources_folder = os.path.join(app.root_path, "uploads", "group_resources")
+    group_resources_path = os.path.join(group_resources_folder, filename)
+    
+    if os.path.isfile(group_resources_path):
+        return send_from_directory(group_resources_folder, filename)
+    
+    # Fallback to static uploads folder
+    upload_folder = app.config.get("UPLOAD_FOLDER", os.path.join(os.getcwd(), "static", "uploads"))
+    static_path = os.path.join(upload_folder, filename)
+    
+    if os.path.isfile(static_path):
+        return send_from_directory(upload_folder, filename)
+    
+    return jsonify({"error": "File not found"}), 404
 
 # Register blueprints
 app.register_blueprint(auth_bp)
@@ -118,6 +215,8 @@ app.register_blueprint(blood_bp)
 app.register_blueprint(study_bp)
 app.register_blueprint(tution_bp)
 app.register_blueprint(ai_bp)
+app.register_blueprint(messages_bp)
+app.register_blueprint(group_resource_bp, url_prefix='/api')
 app.register_blueprint(kb_bp)  # Knowledge Base Management
 app.register_blueprint(chat_bp)  # AI Chat routes
 app.register_blueprint(profile_bp, url_prefix='/api/profile')  # Profile Management

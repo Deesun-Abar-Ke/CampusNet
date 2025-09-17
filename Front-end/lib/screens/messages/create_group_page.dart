@@ -1,27 +1,7 @@
 import 'package:flutter/material.dart';
 import 'group_chat_screen.dart';
-
-class GroupUser {
-  final String id;
-  final String name;
-  final String avatar;
-  final bool isOnline;
-  final String department;
-  final String studentId;
-  final String level;
-  final String session;
-
-  GroupUser({
-    required this.id,
-    required this.name,
-    required this.avatar,
-    required this.isOnline,
-    required this.department,
-    required this.studentId,
-    required this.level,
-    required this.session,
-  });
-}
+import '../../services/message_service.dart';
+import '../../models/user_model.dart';
 
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
@@ -33,33 +13,55 @@ class CreateGroupPage extends StatefulWidget {
 class _CreateGroupPageState extends State<CreateGroupPage> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _groupNameController = TextEditingController();
-  final List<GroupUser> _selectedUsers = [];
+  final MessageService _messageService = MessageService();
+  final List<UserModel> _selectedUsers = [];
   
-  // Filter options
-  String _selectedSortOption = 'name'; // 'name', 'department', 'level', 'session'
-  String _selectedDepartment = 'all';
-  String _selectedLevel = 'all';
-  String _selectedSession = 'all';
+  List<UserModel> _allUsers = [];
+  List<UserModel> _filteredUsers = [];
+  bool _isLoading = true;
+  bool _isCreatingGroup = false;
+  String? _errorMessage;
   
-  final List<GroupUser> allUsers = [
-    GroupUser(id: '1', name: 'Rakib Ahmed', avatar: '👨‍🎓', isOnline: true, department: 'Computer Science', studentId: '190204001', level: 'Level 4', session: '2020-21'),
-    GroupUser(id: '2', name: 'Sarah Khan', avatar: '👩‍💻', isOnline: false, department: 'Computer Science', studentId: '190204002', level: 'Level 4', session: '2020-21'),
-    GroupUser(id: '3', name: 'Ahmed Hassan', avatar: '👨‍🔬', isOnline: true, department: 'Chemical Engineering', studentId: '210204003', level: 'Level 3', session: '2021-22'),
-    GroupUser(id: '4', name: 'Nadia Rahman', avatar: '👩‍🎓', isOnline: true, department: 'Architecture', studentId: '190404004', level: 'Level 4', session: '2020-21'),
-    GroupUser(id: '5', name: 'Karim Uddin', avatar: '👨‍💼', isOnline: false, department: 'Computer Science', studentId: '220204005', level: 'Level 2', session: '2022-23'),
-    GroupUser(id: '6', name: 'Fatima Islam', avatar: '👩‍🔬', isOnline: true, department: 'Electrical Engineering', studentId: '230204006', level: 'Level 3', session: '2021-22'),
-  ];
+  // Filter states
+  String? _selectedDepartment;
+  String? _selectedDesignation;
+  String? _selectedLevel;  // Changed to String to match dropdown
+  String? _selectedSession;
+  bool _showFilters = false;
 
-  List<String> get departments => ['All', ...allUsers.map((user) => user.department).toSet()];
-  List<String> get batches => ['All', ...allUsers.map((user) => user.session).toSet().toList()..sort()];
-  List<String> get levels => ['All', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
-  List<GroupUser> filteredUsers = [];
+  // Get unique values for filters
+  List<String> get _departments => _allUsers
+      .where((user) => user.department != null && user.department!.isNotEmpty)
+      .map((user) => user.department!)
+      .toSet()
+      .toList()..sort();
+
+  List<String> get _designations => _allUsers
+      .where((user) => user.designation != null && user.designation!.isNotEmpty)
+      .map((user) => user.designation!)
+      .toSet()
+      .toList()..sort();
+
+  List<String> get _sessions => _allUsers
+      .where((user) => user.session != null && user.session!.isNotEmpty)
+      .map((user) => user.session!)
+      .toSet()
+      .toList()..sort();
+
+  List<String> get _levels => _allUsers
+      .where((user) => user.level != null)
+      .map((user) => user.level.toString())
+      .toSet()
+      .toList()..sort();
 
   @override
   void initState() {
     super.initState();
-    filteredUsers = allUsers;
+    _loadUsers();
     _searchController.addListener(_filterUsers);
+    _groupNameController.addListener(() {
+      setState(() {}); // Rebuild to update FloatingActionButton state
+    });
   }
 
   @override
@@ -69,65 +71,166 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     super.dispose();
   }
 
-  void _filterUsers() {
-    List<GroupUser> filtered = allUsers.where((user) {
-      bool matchesSearch = user.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                          user.department.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                          user.studentId.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                          user.level.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                          user.session.toLowerCase().contains(_searchController.text.toLowerCase());
-                          
-      bool matchesDepartment = _selectedDepartment == 'all' || user.department == _selectedDepartment;
-      bool matchesLevel = _selectedLevel == 'all' || user.level == _selectedLevel;
-      bool matchesSession = _selectedSession == 'all' || user.session == _selectedSession;
+  Future<void> _loadUsers() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _messageService.searchUsers();
       
-      return matchesSearch && matchesDepartment && matchesLevel && matchesSession;
+      if (result['success']) {
+        final users = (result['users'] as List)
+            .map((user) => UserModel.fromJson(user))
+            .toList();
+        
+        setState(() {
+          _allUsers = users;
+          _filteredUsers = users;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = result['message'] ?? 'Failed to load users';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error loading users: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _filterUsers() {
+    final searchTerm = _searchController.text.toLowerCase();
+    
+    List<UserModel> filtered = _allUsers.where((user) {
+      // Text search filter
+      bool matchesSearch = searchTerm.isEmpty ||
+          user.name.toLowerCase().contains(searchTerm) ||
+          user.email.toLowerCase().contains(searchTerm) ||
+          (user.designation?.toLowerCase().contains(searchTerm) ?? false);
+      
+      // Department filter
+      bool matchesDepartment = _selectedDepartment == null || 
+          user.department == _selectedDepartment;
+      
+      // Designation filter
+      bool matchesDesignation = _selectedDesignation == null || 
+          user.designation == _selectedDesignation;
+      
+      // Level filter
+      bool matchesLevel = _selectedLevel == null || 
+          user.level?.toString() == _selectedLevel;
+      
+      // Session filter
+      bool matchesSession = _selectedSession == null || 
+          user.session == _selectedSession;
+      
+      return matchesSearch && matchesDepartment && matchesDesignation && 
+             matchesLevel && matchesSession;
     }).toList();
 
-    // Apply sorting
-    switch (_selectedSortOption) {
-      case 'name':
-        filtered.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case 'department':
-        filtered.sort((a, b) => a.department.compareTo(b.department));
-        break;
-      case 'level':
-        filtered.sort((a, b) => a.level.compareTo(b.level));
-        break;
-      case 'session':
-        filtered.sort((a, b) => a.session.compareTo(b.session));
-        break;
+    filtered.sort((a, b) => a.name.compareTo(b.name));
+
+    setState(() {
+      _filteredUsers = filtered;
+    });
+  }
+  
+  void _clearFilters() {
+    _searchController.clear();
+    setState(() {
+      _selectedDepartment = null;
+      _selectedDesignation = null;
+      _selectedLevel = null;
+      _selectedSession = null;
+    });
+    _filterUsers();
+  }
+
+  Future<void> _createGroup() async {
+    if (_selectedUsers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one member'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
     }
 
+    if (_groupNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a group name'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_isCreatingGroup) return;
+
     setState(() {
-      filteredUsers = filtered;
+      _isCreatingGroup = true;
     });
+
+    try {
+      final participantIds = _selectedUsers.map((user) => user.id).toList();
+      
+      final result = await _messageService.createConversation(
+        type: 'group',
+        participantIds: participantIds,
+        name: _groupNameController.text.trim(),
+        avatar: '👥', // Default group avatar
+      );
+
+      setState(() {
+        _isCreatingGroup = false;
+      });
+
+      if (result['success']) {
+        final conversationId = result['conversation']['id'];
+        // Go back to messages page first, then navigate to group chat
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GroupChatScreen(
+              conversationId: conversationId,
+              groupName: _groupNameController.text.trim(),
+              memberCount: _selectedUsers.length + 1, // +1 for current user
+              avatar: '👥',
+              courseFolder: '',
+            ),
+          ),
+        );
+      } else {
+        _showErrorSnackBar(result['message'] ?? 'Failed to create group');
+      }
+    } catch (e) {
+      setState(() {
+        _isCreatingGroup = false;
+      });
+      _showErrorSnackBar('Error creating group: $e');
+    }
   }
 
-  void _clearFilters() {
-    setState(() {
-      _selectedSortOption = 'name';
-      _selectedDepartment = 'all';
-      _selectedLevel = 'all';
-      _selectedSession = 'all';
-      _searchController.clear();
-    });
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
-  List<String> get uniqueDepartments {
-    return ['all', ...allUsers.map((user) => user.department).toSet().toList()..sort()];
-  }
-
-  List<String> get uniqueLevels {
-    return ['all', ...allUsers.map((user) => user.level).toSet().toList()..sort()];
-  }
-
-  List<String> get uniqueSessions {
-    return ['all', ...allUsers.map((user) => user.session).toSet().toList()..sort()];
-  }
-
-  Widget _buildUserCard(GroupUser user) {
+  Widget _buildUserCard(UserModel user) {
     final isSelected = _selectedUsers.any((u) => u.id == user.id);
     
     return Card(
@@ -136,7 +239,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         leading: Stack(
           children: [
             CircleAvatar(
-              backgroundColor: Colors.grey[300],
+              backgroundColor: Colors.teal[100],
               child: Text(
                 user.avatar,
                 style: const TextStyle(fontSize: 20),
@@ -165,9 +268,71 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('ID: ${user.studentId}'),
-            Text(user.department),
-            Text('${user.level} • ${user.session}'),
+            Text(user.email),
+            if (user.designation != null)
+              Text(
+                user.designation!,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+            Row(
+              children: [
+                if (user.department != null) ...[
+                  Icon(Icons.business, size: 12, color: Colors.grey[600]),
+                  const SizedBox(width: 2),
+                  Text(
+                    user.department!,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (user.designation != null) ...[
+                  Icon(Icons.person, size: 12, color: Colors.grey[600]),
+                  const SizedBox(width: 2),
+                  Text(
+                    user.designation!,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            ),
+            if (user.session != null || user.level != null)
+              Row(
+                children: [
+                  if (user.session != null) ...[
+                    Icon(Icons.school, size: 12, color: Colors.grey[600]),
+                    const SizedBox(width: 2),
+                    Text(
+                      'Session: ${user.session}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  if (user.level != null) ...[
+                    Icon(Icons.grade, size: 12, color: Colors.grey[600]),
+                    const SizedBox(width: 2),
+                    Text(
+                      'Level: ${user.level}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
           ],
         ),
         trailing: isSelected
@@ -197,243 +362,310 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
-      body: Column(
-        children: [
-          // Group name input
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _groupNameController,
-              decoration: const InputDecoration(
-                labelText: 'Group Name',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.group),
-              ),
-            ),
-          ),
-          
-          // Search field
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search users...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-            ),
-          ),
-          
-          // Filter controls
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // Sort filter only
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedSortOption,
-                        decoration: const InputDecoration(
-                          labelText: 'Sort by',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'name', child: Text('Name')),
-                          DropdownMenuItem(value: 'department', child: Text('Department')),
-                          DropdownMenuItem(value: 'level', child: Text('Level')),
-                          DropdownMenuItem(value: 'session', child: Text('Session')),
-                        ],
-                        onChanged: (value) {
-                          setState(() => _selectedSortOption = value!);
-                          _filterUsers();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                
-                // Department and Level filters
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedDepartment,
-                        decoration: const InputDecoration(
-                          labelText: 'Dept',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                          labelStyle: TextStyle(fontSize: 11),
-                        ),
-                        items: uniqueDepartments.map((dept) => DropdownMenuItem(
-                          value: dept,
-                          child: Text(
-                            dept == 'all' ? 'All' : dept,
-                            style: const TextStyle(fontSize: 10),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )).toList(),
-                        onChanged: (value) {
-                          setState(() => _selectedDepartment = value!);
-                          _filterUsers();
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    Expanded(
-                      flex: 1,
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedLevel,
-                        decoration: const InputDecoration(
-                          labelText: 'Lvl',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                          labelStyle: TextStyle(fontSize: 11),
-                        ),
-                        items: uniqueLevels.map((level) => DropdownMenuItem(
-                          value: level,
-                          child: Text(
-                            level == 'all' ? 'All' : level,
-                            style: const TextStyle(fontSize: 10),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )).toList(),
-                        onChanged: (value) {
-                          setState(() => _selectedLevel = value!);
-                          _filterUsers();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                
-                // Session filter and Clear button
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedSession,
-                        decoration: const InputDecoration(
-                          labelText: 'Sess',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                          labelStyle: TextStyle(fontSize: 11),
-                        ),
-                        items: uniqueSessions.map((session) => DropdownMenuItem(
-                          value: session,
-                          child: Text(
-                            session == 'all' ? 'All' : session,
-                            style: const TextStyle(fontSize: 10),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )).toList(),
-                        onChanged: (value) {
-                          setState(() => _selectedSession = value!);
-                          _filterUsers();
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    ElevatedButton(
-                      onPressed: _clearFilters,
-                      child: const Text('Clear Filters'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          // Results summary
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              '${filteredUsers.length} users found • ${_selectedUsers.length} selected',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          
-          // User list
-          Expanded(
-            child: ListView.builder(
-              itemCount: filteredUsers.length,
-              itemBuilder: (context, index) {
-                return _buildUserCard(filteredUsers[index]);
-              },
-            ),
-          ),
-          
-          // User list
-          Expanded(
-            child: ListView.builder(
-              itemCount: filteredUsers.length,
-              itemBuilder: (context, index) {
-                return _buildUserCard(filteredUsers[index]);
-              },
-            ),
-          ),
-          
-          // Selected users summary
-          if (_selectedUsers.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                border: Border(top: BorderSide(color: Colors.grey[300]!)),
-              ),
+      body: _isLoading
+        ? const Center(
+            child: CircularProgressIndicator(color: Colors.teal),
+          )
+        : _errorMessage != null
+          ? Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
                   Text(
-                    'Selected Users (${_selectedUsers.length}):',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    _errorMessage!,
+                    style: TextStyle(color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: _selectedUsers.map((user) => Chip(
-                      label: Text(user.name),
-                      onDeleted: () {
-                        setState(() {
-                          _selectedUsers.removeWhere((u) => u.id == user.id);
-                        });
-                      },
-                    )).toList(),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadUsers,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                    child: const Text('Retry', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
-            ),
-        ],
-      ),
-      floatingActionButton: _selectedUsers.isNotEmpty && _groupNameController.text.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                // Navigate to group chat with selected users
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => GroupChatScreen(
-                      groupName: _groupNameController.text,
-                      memberCount: _selectedUsers.length + 1, // +1 for current user
-                      avatar: '👥', // Default group avatar
-                      courseFolder: 'General', // Default folder
+            )
+          : Column(
+              children: [
+                // Group name input
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextField(
+                    controller: _groupNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Group Name',
+                      hintText: 'Enter a name for your group',
+                      helperText: 'Required to create the group',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.group),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.teal, width: 2),
+                      ),
                     ),
-                    settings: const RouteSettings(name: '/group_chat'),
                   ),
-                );
-              },
-              icon: const Icon(Icons.check),
-              label: const Text('Create Group'),
+                ),
+                
+                // Search field and filters
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          labelText: 'Search users...',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.filter_list,
+                                  color: _showFilters ? Colors.teal : Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _showFilters = !_showFilters;
+                                  });
+                                },
+                              ),
+                              if (_searchController.text.isNotEmpty)
+                                IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () => _searchController.clear(),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      // Filter options
+                      if (_showFilters) ...[
+                        const SizedBox(height: 16),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.filter_alt, color: Colors.teal),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Filters',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    TextButton(
+                                      onPressed: _clearFilters,
+                                      child: const Text('Clear All'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                
+                                // Department and Designation filters
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedDepartment,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Department',
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        ),
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('All Departments'),
+                                          ),
+                                          ..._departments.map((dept) => DropdownMenuItem(
+                                            value: dept,
+                                            child: Text(dept),
+                                          )),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedDepartment = value;
+                                          });
+                                          _filterUsers();
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedDesignation,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Role',
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        ),
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('All Roles'),
+                                          ),
+                                          ..._designations.map((designation) => DropdownMenuItem(
+                                            value: designation,
+                                            child: Text(designation),
+                                          )),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedDesignation = value;
+                                          });
+                                          _filterUsers();
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                
+                                // Level and Session filters
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedLevel,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Level',
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        ),
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('All Levels'),
+                                          ),
+                                          ..._levels.map((level) => DropdownMenuItem<String>(
+                                            value: level,
+                                            child: Text('Level $level'),
+                                          )),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedLevel = value;
+                                          });
+                                          _filterUsers();
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _selectedSession,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Session',
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        ),
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('All Sessions'),
+                                          ),
+                                          ..._sessions.map((session) => DropdownMenuItem(
+                                            value: session,
+                                            child: Text(session),
+                                          )),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedSession = value;
+                                          });
+                                          _filterUsers();
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                
+                // Selected users count
+                if (_selectedUsers.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      '${_selectedUsers.length} user${_selectedUsers.length != 1 ? 's' : ''} selected',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal,
+                      ),
+                    ),
+                  ),
+                
+                // Users list
+                Expanded(
+                  child: _filteredUsers.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.person_search, size: 64, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No users found',
+                                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _filteredUsers.length,
+                          itemBuilder: (context, index) {
+                            final user = _filteredUsers[index];
+                            return _buildUserCard(user);
+                          },
+                        ),
+                ),
+              ],
+            ),
+      floatingActionButton: _selectedUsers.isNotEmpty
+          ? FloatingActionButton.extended(
+              backgroundColor: _isCreatingGroup 
+                  ? Colors.grey 
+                  : _groupNameController.text.trim().isEmpty
+                      ? Colors.grey
+                      : Colors.teal,
+              onPressed: _isCreatingGroup || _groupNameController.text.trim().isEmpty 
+                  ? null 
+                  : _createGroup,
+              icon: _isCreatingGroup 
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.create, color: Colors.white),
+              label: Text(
+                _isCreatingGroup 
+                    ? 'Creating...' 
+                    : _groupNameController.text.trim().isEmpty
+                        ? 'Enter Group Name'
+                        : 'Create Group',
+                style: const TextStyle(color: Colors.white),
+              ),
             )
           : null,
     );

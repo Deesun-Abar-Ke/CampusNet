@@ -3,8 +3,14 @@ import 'screens/home/landing_page.dart';
 import 'screens/auth/signup_page.dart';
 import 'screens/auth/login_page.dart';
 import 'services/auth_service.dart';
+import 'services/current_user_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load user data from storage
+  await CurrentUserService.loadUserFromStorage();
+  
   runApp(const MyApp());
 }
 

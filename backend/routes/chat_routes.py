@@ -4,6 +4,7 @@ import time
 import json
 from datetime import datetime
 import logging
+from sqlalchemy import func, and_
 
 from models import db, ChatSession, ChatMessage, Users
 from services.enhanced_chatbot_service import get_enhanced_chatbot_service
@@ -28,37 +29,61 @@ chat_bp = Blueprint('chat', __name__, url_prefix='/api/chat')
 @chat_bp.route('/sessions', methods=['GET'])
 @jwt_required()
 def get_user_sessions():
-    """Get all chat sessions for the current user with enhanced details"""
+    """Get all chat sessions for the current user with optimized queries"""
     try:
         user_id = get_jwt_identity()
         
-        sessions = ChatSession.query.filter_by(
-            user_id=user_id, 
-            is_active=True
-        ).order_by(ChatSession.updated_at.desc()).all()
+        # Optimized query using a single query with aggregates
+        sessions_with_stats = db.session.query(
+            ChatSession,
+            func.count(ChatMessage.id).label('message_count'),
+            func.max(ChatMessage.timestamp).label('last_message_time')
+        ).outerjoin(
+            ChatMessage, ChatSession.id == ChatMessage.session_id
+        ).filter(
+            ChatSession.user_id == user_id,
+            ChatSession.is_active == True
+        ).group_by(ChatSession.id).order_by(ChatSession.updated_at.desc()).all()
+        
+        # Get session IDs for last message lookup
+        session_ids = [session.id for session, _, _ in sessions_with_stats if _ > 0]
+        
+        # Batch query for last messages
+        last_messages = {}
+        if session_ids:
+            last_message_subquery = db.session.query(
+                ChatMessage.session_id,
+                func.max(ChatMessage.timestamp).label('max_timestamp')
+            ).filter(
+                ChatMessage.session_id.in_(session_ids)
+            ).group_by(ChatMessage.session_id).subquery()
+            
+            last_msgs = db.session.query(ChatMessage).join(
+                last_message_subquery,
+                and_(
+                    ChatMessage.session_id == last_message_subquery.c.session_id,
+                    ChatMessage.timestamp == last_message_subquery.c.max_timestamp
+                )
+            ).all()
+            
+            last_messages = {msg.session_id: msg for msg in last_msgs}
         
         sessions_data = []
-        for session in sessions:
-            # Get last message for preview
-            last_message = ChatMessage.query.filter_by(
-                session_id=session.id
-            ).order_by(ChatMessage.timestamp.desc()).first()
-            
-            # Get message count efficiently
-            message_count = ChatMessage.query.filter_by(session_id=session.id).count()
+        for session, message_count, last_message_time in sessions_with_stats:
+            last_message = last_messages.get(session.id)
             
             sessions_data.append({
                 'id': session.id,
                 'name': session.session_name,
                 'created_at': session.created_at.isoformat(),
                 'updated_at': session.updated_at.isoformat(),
-                'message_count': message_count,
+                'message_count': message_count or 0,
                 'last_message': {
                     'content': last_message.content[:100] + '...' if last_message and len(last_message.content) > 100 else (last_message.content if last_message else 'No messages yet'),
                     'ai_response': last_message.ai_response[:100] + '...' if last_message and last_message.ai_response and len(last_message.ai_response) > 100 else (last_message.ai_response if last_message else None),
                     'timestamp': last_message.timestamp.isoformat() if last_message else None
                 } if last_message else {'content': 'No messages yet', 'ai_response': None, 'timestamp': None},
-                'has_messages': message_count > 0
+                'has_messages': (message_count or 0) > 0
             })
         
         return jsonify({

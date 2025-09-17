@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../screens/messages/group_resources/group_resources_page.dart';
+import '../screens/messages/dynamic_group_resource.dart';
 
 class ReferenceMessageBubble extends StatelessWidget {
   final String text;
@@ -8,7 +8,8 @@ class ReferenceMessageBubble extends StatelessWidget {
   final String sender;
   final bool isMe;
   final String time;
-  final List<String>? folderPath; // Add folder path for navigation
+  final List<Map<String, dynamic>>? folderPath; // Add folder path for navigation
+  final int? conversationId; // Add conversation ID for navigation
 
   const ReferenceMessageBubble({
     super.key,
@@ -18,6 +19,7 @@ class ReferenceMessageBubble extends StatelessWidget {
     required this.isMe,
     required this.time,
     this.folderPath,
+    this.conversationId,
   });
 
   String _getAvatarForSender(String sender) {
@@ -187,13 +189,13 @@ class ReferenceMessageBubble extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _navigateToResource(context);
-            },
-            child: Text(folderPath != null ? 'Open Folder' : 'Open Resource'),
-          ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _navigateToResource(context);
+              },
+              child: Text(folderPath != null ? 'Open Folder' : 'Open Resource'),
+            ),
         ],
       ),
     );
@@ -219,14 +221,6 @@ class ReferenceMessageBubble extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.forward, color: Colors.blue),
-              title: const Text('Forward'),
-              onTap: () {
-                Navigator.pop(context);
-                _forwardMessage(context);
-              },
-            ),
             if (isMe)
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
@@ -247,12 +241,6 @@ class ReferenceMessageBubble extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  void _forwardMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Forward reference functionality coming soon!')),
     );
   }
 
@@ -289,14 +277,14 @@ class ReferenceMessageBubble extends StatelessWidget {
   }
 
   void _navigateToResource(BuildContext context) {
-    if (folderPath != null) {
-      // Navigate directly to the group resources page with folder path
-      Navigator.push(
+    if (folderPath != null && folderPath!.isNotEmpty) {
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => GroupResourcesPage(
-            groupName: 'CSE 303 - Compilers', // This should be dynamic
-            initialPath: folderPath,
+          builder: (context) => DynamicGroupResourcePage(
+            groupName: 'Group Resources',
+            conversationId: conversationId ?? 0, // Use the passed conversation ID
+            initialPath: List<Map<String, dynamic>>.from(folderPath!),
           ),
           settings: const RouteSettings(name: '/group_resources'),
         ),

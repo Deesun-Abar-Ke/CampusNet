@@ -73,6 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
           }
         });
 
+<<<<<<< HEAD
         if (mounted) {
           setState(() {
             _profileData = profile;
@@ -86,6 +87,14 @@ class _ProfilePageState extends State<ProfilePage> {
           setState(() => _isLoading = false);
         }
       }
+=======
+      setState(() {
+        _profileData = profile;
+        _achievements = List<Map<String, dynamic>>.from(achievements);
+        _skills = List<Map<String, dynamic>>.from(skills);
+        _isLoading = false;
+      });
+>>>>>>> 26f57bf697a30ad1aec525c273be075a4fcc3fc3
     } catch (e) {
       print('Error loading profile data: $e');
       if (mounted) {

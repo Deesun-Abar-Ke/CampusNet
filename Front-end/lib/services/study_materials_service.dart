@@ -72,7 +72,7 @@ class StudyMaterialsService {
     }
   }
 
-  static Future<void> uploadNote({
+  static Future<String> uploadNote({
     required String filename,
     required String fileUrl,
     required String fileType,
@@ -96,7 +96,10 @@ class StudyMaterialsService {
 
     final res = await http.post(url, headers: headers, body: body);
 
-    if (res.statusCode != 201 && res.statusCode != 200) {
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      final responseData = jsonDecode(res.body);
+      return responseData['file_url'] ?? '/study/notes/default';
+    } else {
       final msg = _extractErrorMessage(res.body);
       throw Exception('Failed to upload note: $msg');
     }

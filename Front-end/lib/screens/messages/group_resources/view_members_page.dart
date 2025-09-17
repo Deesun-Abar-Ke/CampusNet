@@ -1,13 +1,16 @@
 // lib/screens/messages/group_resources/view_members_page.dart
 import 'package:flutter/material.dart';
+import '../../../services/message_service.dart';
 import '../chat_screen.dart';
 
 class ViewMembersPage extends StatefulWidget {
   final String groupName;
+  final int? conversationId;
 
   const ViewMembersPage({
     super.key,
     required this.groupName,
+    this.conversationId,
   });
 
   @override
@@ -16,91 +19,18 @@ class ViewMembersPage extends StatefulWidget {
 
 class _ViewMembersPageState extends State<ViewMembersPage> {
   final TextEditingController _searchController = TextEditingController();
+  final MessageService _messageService = MessageService();
   
-  // Sample group members data
-  final List<GroupMember> _allMembers = [
-    GroupMember(
-      id: '1',
-      name: 'Prof. Rahman',
-      email: 'prof.rahman@university.edu',
-      role: MemberRole.admin,
-      joinDate: DateTime.now().subtract(const Duration(days: 30)),
-      isOnline: true,
-      lastSeen: DateTime.now().subtract(const Duration(minutes: 5)),
-    ),
-    GroupMember(
-      id: '2',
-      name: 'Ahmed Hassan',
-      email: 'ahmed.hassan@student.edu',
-      role: MemberRole.moderator,
-      joinDate: DateTime.now().subtract(const Duration(days: 25)),
-      isOnline: false,
-      lastSeen: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    GroupMember(
-      id: '3',
-      name: 'Sarah Khan',
-      email: 'sarah.khan@student.edu',
-      role: MemberRole.member,
-      joinDate: DateTime.now().subtract(const Duration(days: 20)),
-      isOnline: true,
-      lastSeen: DateTime.now().subtract(const Duration(minutes: 1)),
-    ),
-    GroupMember(
-      id: '4',
-      name: 'Nadia Rahman',
-      email: 'nadia.rahman@student.edu',
-      role: MemberRole.member,
-      joinDate: DateTime.now().subtract(const Duration(days: 18)),
-      isOnline: false,
-      lastSeen: DateTime.now().subtract(const Duration(hours: 5)),
-    ),
-    GroupMember(
-      id: '5',
-      name: 'Karim Uddin',
-      email: 'karim.uddin@student.edu',
-      role: MemberRole.member,
-      joinDate: DateTime.now().subtract(const Duration(days: 15)),
-      isOnline: true,
-      lastSeen: DateTime.now().subtract(const Duration(minutes: 10)),
-    ),
-    GroupMember(
-      id: '6',
-      name: 'Fatima Ali',
-      email: 'fatima.ali@student.edu',
-      role: MemberRole.member,
-      joinDate: DateTime.now().subtract(const Duration(days: 12)),
-      isOnline: false,
-      lastSeen: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    GroupMember(
-      id: '7',
-      name: 'Omar Sheikh',
-      email: 'omar.sheikh@student.edu',
-      role: MemberRole.member,
-      joinDate: DateTime.now().subtract(const Duration(days: 10)),
-      isOnline: true,
-      lastSeen: DateTime.now().subtract(const Duration(minutes: 30)),
-    ),
-    GroupMember(
-      id: '8',
-      name: 'Zara Ahmed',
-      email: 'zara.ahmed@student.edu',
-      role: MemberRole.member,
-      joinDate: DateTime.now().subtract(const Duration(days: 8)),
-      isOnline: false,
-      lastSeen: DateTime.now().subtract(const Duration(hours: 12)),
-    ),
-  ];
-
+  List<GroupMember> _allMembers = [];
   List<GroupMember> _filteredMembers = [];
+  bool _isLoading = true;
+  String? _errorMessage;
   String _sortBy = 'name'; // name, role, join_date
 
   @override
   void initState() {
     super.initState();
-    _filteredMembers = List.from(_allMembers);
-    _sortMembers();
+    _loadMembers();
     _searchController.addListener(_filterMembers);
   }
 
@@ -110,30 +40,77 @@ class _ViewMembersPageState extends State<ViewMembersPage> {
     super.dispose();
   }
 
+  Future<void> _loadMembers() async {
+    if (widget.conversationId == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Invalid conversation ID';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _messageService.getConversationParticipants(widget.conversationId!);
+      
+      if (result['success']) {
+        final participants = (result['participants'] as List)
+            .map((participant) => GroupMember.fromJson(participant))
+            .toList();
+
+        setState(() {
+          _allMembers = participants;
+          _filteredMembers = participants;
+          _sortMembers();
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = result['message'] ?? 'Failed to load members';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error loading members: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
   void _filterMembers() {
     setState(() {
-      _filteredMembers = _allMembers
-          .where((member) =>
-              member.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-              member.email.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-              member.role.toString().toLowerCase().contains(_searchController.text.toLowerCase()))
-          .toList();
+      if (_searchController.text.isEmpty) {
+        _filteredMembers = List.from(_allMembers);
+      } else {
+        final searchTerm = _searchController.text.toLowerCase();
+        _filteredMembers = _allMembers
+            .where((member) =>
+                member.name.toLowerCase().contains(searchTerm) ||
+                member.email.toLowerCase().contains(searchTerm) ||
+                member.role.displayName.toLowerCase().contains(searchTerm))
+            .toList();
+      }
       _sortMembers();
     });
   }
 
   void _sortMembers() {
-    _filteredMembers.sort((a, b) {
-      switch (_sortBy) {
-        case 'role':
-          return a.role.index.compareTo(b.role.index);
-        case 'join_date':
-          return b.joinDate.compareTo(a.joinDate);
-        case 'name':
-        default:
-          return a.name.compareTo(b.name);
-      }
-    });
+    switch (_sortBy) {
+      case 'name':
+        _filteredMembers.sort((a, b) => a.name.compareTo(b.name));
+        break;
+      case 'role':
+        _filteredMembers.sort((a, b) => a.role.index.compareTo(b.role.index));
+        break;
+      case 'join_date':
+        _filteredMembers.sort((a, b) => b.joinDate.compareTo(a.joinDate));
+        break;
+    }
   }
 
   void _changeSortBy(String sortBy) {
@@ -143,143 +120,57 @@ class _ViewMembersPageState extends State<ViewMembersPage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final onlineCount = _allMembers.where((m) => m.isOnline).length;
-    
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Group Members',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              '${_allMembers.length} members • $onlineCount online',
-              style: const TextStyle(fontSize: 12, color: Colors.white70),
-            ),
-          ],
-        ),
+  Future<void> _removeMember(GroupMember member) async {
+    if (widget.conversationId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Member'),
+        content: Text('Are you sure you want to remove ${member.name} from the group?'),
         actions: [
-          PopupMenuButton(
-            icon: const Icon(Icons.sort),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'name',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.sort_by_alpha,
-                      color: _sortBy == 'name' ? Colors.teal : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Text('Sort by Name'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'role',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.admin_panel_settings,
-                      color: _sortBy == 'role' ? Colors.teal : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Text('Sort by Role'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'join_date',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.schedule,
-                      color: _sortBy == 'join_date' ? Colors.teal : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Text('Sort by Join Date'),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: _changeSortBy,
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
           ),
-          IconButton(
-            icon: const Icon(Icons.person_add),
-            onPressed: () {
-              Navigator.pushNamed(context, '/add_member');
-            },
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search Bar
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search members...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: const BorderSide(color: Colors.teal),
-                ),
-                filled: true,
-                fillColor: Colors.grey[50],
-              ),
-            ),
-          ),
+    );
 
-          // Members List
-          Expanded(
-            child: _filteredMembers.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No members found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _filteredMembers.length,
-                    itemBuilder: (context, index) {
-                      final member = _filteredMembers[index];
-                      return MemberTile(
-                        member: member,
-                        onTap: () => _showMemberDetails(member),
-                        onMoreOptions: () => _showMemberOptions(member),
-                      );
-                    },
-                  ),
-          ),
-        ],
+    if (confirmed == true) {
+      try {
+        final result = await _messageService.removeParticipant(
+          widget.conversationId!,
+          member.id,
+        );
+
+        if (result['success']) {
+          await _loadMembers(); // Refresh the list
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${member.name} has been removed from the group'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          _showErrorSnackBar(result['message'] ?? 'Failed to remove member');
+        }
+      } catch (e) {
+        _showErrorSnackBar('Error removing member: $e');
+      }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -327,9 +218,14 @@ class _ViewMembersPageState extends State<ViewMembersPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDetailRow('Email', member.email),
-            _buildDetailRow('Role', member.role.displayName),
-            _buildDetailRow('Joined', _formatJoinDate(member.joinDate)),
-            _buildDetailRow('Status', member.isOnline ? 'Online' : 'Last seen ${_formatLastSeen(member.lastSeen)}'),
+            const SizedBox(height: 8),
+            _buildDetailRow('Joined', _formatDate(member.joinDate)),
+            const SizedBox(height: 8),
+            _buildDetailRow('Status', member.isOnline ? 'Online' : 'Offline'),
+            if (!member.isOnline) ...[
+              const SizedBox(height: 8),
+              _buildDetailRow('Last seen', _formatLastSeen(member.lastSeen)),
+            ],
           ],
         ),
         actions: [
@@ -337,39 +233,66 @@ class _ViewMembersPageState extends State<ViewMembersPage> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
           ),
-          if (member.role != MemberRole.admin)
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showMemberOptions(member);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-              child: const Text('Manage'),
-            ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    contactName: member.name,
+                    avatar: member.name[0].toUpperCase(),
+                    isOnline: member.isOnline,
+                  ),
+                ),
+              );
+            },
+            child: const Text('Message'),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w500),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            '$label:',
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey,
             ),
           ),
-          Expanded(
-            child: Text(value),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w500),
           ),
-        ],
-      ),
+        ),
+      ],
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  String _formatLastSeen(DateTime lastSeen) {
+    final now = DateTime.now();
+    final difference = now.difference(lastSeen);
+
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} minutes ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hours ago';
+    } else {
+      return '${difference.inDays} days ago';
+    }
   }
 
   void _showMemberOptions(GroupMember member) {
@@ -383,195 +306,256 @@ class _ViewMembersPageState extends State<ViewMembersPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
             ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.teal[100],
-                child: Text(
-                  member.name[0].toUpperCase(),
-                  style: TextStyle(
-                    color: Colors.teal[700],
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              title: Text(member.name),
-              subtitle: Text(member.role.displayName),
-            ),
-            const Divider(),
-            if (member.role != MemberRole.admin) ...[
-              ListTile(
-                leading: const Icon(Icons.admin_panel_settings, color: Colors.blue),
-                title: const Text('Change Role'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showChangeRoleDialog(member);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.message, color: Colors.green),
-                title: const Text('Send Message'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        contactName: member.name,
-                        avatar: member.name[0].toUpperCase(),
-                        isOnline: member.isOnline,
-                      ),
-                      settings: const RouteSettings(name: '/chat'),
+              leading: const Icon(Icons.chat, color: Colors.blue),
+              title: const Text('Send Message'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      contactName: member.name,
+                      avatar: member.name[0].toUpperCase(),
+                      isOnline: member.isOnline,
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info, color: Colors.green),
+              title: const Text('View Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                _showMemberDetails(member);
+              },
+            ),
+            if (member.role != MemberRole.admin)
               ListTile(
-                leading: const Icon(Icons.remove_circle, color: Colors.red),
+                leading: const Icon(Icons.person_remove, color: Colors.red),
                 title: const Text('Remove from Group'),
                 onTap: () {
                   Navigator.pop(context);
-                  _showRemoveMemberDialog(member);
+                  _removeMember(member);
                 },
               ),
-            ] else ...[
-              ListTile(
-                leading: const Icon(Icons.info, color: Colors.grey),
-                title: const Text('Group Administrator'),
-                subtitle: const Text('Cannot be removed or modified'),
-                enabled: false,
-              ),
-            ],
           ],
         ),
       ),
     );
   }
 
-  void _showChangeRoleDialog(GroupMember member) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Change Role for ${member.name}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: MemberRole.values
-              .where((role) => role != MemberRole.admin)
-              .map((role) => RadioListTile<MemberRole>(
-                    title: Text(role.displayName),
-                    subtitle: Text(role.description),
-                    value: role,
-                    groupValue: member.role,
-                    onChanged: (value) {
-                      Navigator.pop(context);
-                      if (value != null) {
-                        _changeRole(member, value);
-                      }
-                    },
-                  ))
-              .toList(),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Group Members',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.groupName,
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
+            ),
+          ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'name',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.sort_by_alpha,
+                      color: _sortBy == 'name' ? Colors.teal : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text('Sort by Name'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'role',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.admin_panel_settings,
+                      color: _sortBy == 'role' ? Colors.teal : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text('Sort by Role'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'join_date',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.schedule,
+                      color: _sortBy == 'join_date' ? Colors.teal : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text('Sort by Join Date'),
+                  ],
+                ),
+              ),
+            ],
+            onSelected: _changeSortBy,
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showRemoveMemberDialog(GroupMember member) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Member'),
-        content: Text(
-          'Are you sure you want to remove ${member.name} from this group? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _removeMember(member);
+          IconButton(
+            icon: const Icon(Icons.person_add),
+            onPressed: () async {
+              final result = await Navigator.pushNamed(context, '/add_member');
+              if (result == true) {
+                _loadMembers(); // Refresh the list if members were added
+              }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Remove'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadMembers,
           ),
         ],
       ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.teal),
+            )
+          : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.grey[600]),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadMembers,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                        child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    // Search Bar
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search members...',
+                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: const BorderSide(color: Colors.teal),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                      ),
+                    ),
+
+                    // Members count
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.group, color: Colors.teal),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_filteredMembers.length} member${_filteredMembers.length != 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.teal,
+                            ),
+                          ),
+                          if (_searchController.text.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '(filtered from ${_allMembers.length})',
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    // Members List
+                    Expanded(
+                      child: _filteredMembers.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _searchController.text.isNotEmpty
+                                        ? 'No members found matching your search'
+                                        : 'No members in this group',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  if (_searchController.text.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    TextButton(
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _filterMembers();
+                                      },
+                                      child: const Text('Clear search'),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              onRefresh: _loadMembers,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                itemCount: _filteredMembers.length,
+                                itemBuilder: (context, index) {
+                                  final member = _filteredMembers[index];
+                                  return MemberTile(
+                                    member: member,
+                                    onTap: () => _showMemberDetails(member),
+                                    onMoreOptions: () => _showMemberOptions(member),
+                                  );
+                                },
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
     );
-  }
-
-  void _changeRole(GroupMember member, MemberRole newRole) {
-    setState(() {
-      member.role = newRole;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${member.name} is now a ${newRole.displayName}'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _removeMember(GroupMember member) {
-    setState(() {
-      _allMembers.remove(member);
-      _filteredMembers.remove(member);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${member.name} removed from group'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-  String _formatJoinDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date).inDays;
-    
-    if (difference == 0) {
-      return 'Today';
-    } else if (difference == 1) {
-      return 'Yesterday';
-    } else if (difference < 7) {
-      return '$difference days ago';
-    } else if (difference < 30) {
-      final weeks = (difference / 7).floor();
-      return '$weeks week${weeks > 1 ? 's' : ''} ago';
-    } else {
-      final months = (difference / 30).floor();
-      return '$months month${months > 1 ? 's' : ''} ago';
-    }
-  }
-
-  String _formatLastSeen(DateTime lastSeen) {
-    final now = DateTime.now();
-    final difference = now.difference(lastSeen);
-    
-    if (difference.inMinutes < 1) {
-      return 'just now';
-    } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
-    } else {
-      return '${difference.inDays}d ago';
-    }
   }
 }
 
@@ -590,7 +574,7 @@ class MemberTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: Stack(
           children: [
@@ -625,11 +609,11 @@ class MemberTile extends StatelessWidget {
             Expanded(
               child: Text(
                 member.name,
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: member.role.color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -638,9 +622,9 @@ class MemberTile extends StatelessWidget {
               child: Text(
                 member.role.displayName,
                 style: TextStyle(
-                  fontSize: 10,
                   color: member.role.color,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -650,23 +634,22 @@ class MemberTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(member.email),
+            const SizedBox(height: 4),
             Text(
-              member.isOnline
-                  ? 'Online'
+              member.isOnline 
+                  ? 'Online now' 
                   : 'Last seen ${_formatLastSeen(member.lastSeen)}',
               style: TextStyle(
-                fontSize: 12,
                 color: member.isOnline ? Colors.green : Colors.grey[600],
+                fontSize: 12,
               ),
             ),
           ],
         ),
-        trailing: member.role != MemberRole.admin
-            ? IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.grey),
-                onPressed: onMoreOptions,
-              )
-            : Icon(Icons.shield, color: member.role.color),
+        trailing: IconButton(
+          icon: const Icon(Icons.more_vert),
+          onPressed: onMoreOptions,
+        ),
         onTap: onTap,
       ),
     );
@@ -675,12 +658,10 @@ class MemberTile extends StatelessWidget {
   String _formatLastSeen(DateTime lastSeen) {
     final now = DateTime.now();
     final difference = now.difference(lastSeen);
-    
-    if (difference.inMinutes < 1) {
-      return 'just now';
-    } else if (difference.inHours < 1) {
+
+    if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
-    } else if (difference.inDays < 1) {
+    } else if (difference.inHours < 24) {
       return '${difference.inHours}h ago';
     } else {
       return '${difference.inDays}d ago';
@@ -730,10 +711,10 @@ extension MemberRoleExtension on MemberRole {
 }
 
 class GroupMember {
-  final String id;
+  final int id;
   final String name;
   final String email;
-  MemberRole role;
+  final MemberRole role;
   final DateTime joinDate;
   final bool isOnline;
   final DateTime lastSeen;
@@ -747,4 +728,27 @@ class GroupMember {
     required this.isOnline,
     required this.lastSeen,
   });
+
+  factory GroupMember.fromJson(Map<String, dynamic> json) {
+    return GroupMember(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? 'Unknown',
+      email: json['email'] ?? '',
+      role: _parseRole(json['role']),
+      joinDate: DateTime.tryParse(json['joined_at'] ?? '') ?? DateTime.now(),
+      isOnline: json['is_online'] ?? false,
+      lastSeen: DateTime.tryParse(json['last_seen'] ?? '') ?? DateTime.now(),
+    );
+  }
+
+  static MemberRole _parseRole(String? role) {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return MemberRole.admin;
+      case 'moderator':
+        return MemberRole.moderator;
+      default:
+        return MemberRole.member;
+    }
+  }
 }

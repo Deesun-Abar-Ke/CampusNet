@@ -53,17 +53,19 @@ def signup():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json() or {}
-    email = data.get("email", "").strip().lower()
-    password = data.get("password", "").strip()
+    try:
+        data = request.get_json() or {}
+        email = data.get("email", "").strip().lower()
+        password = data.get("password", "").strip()
 
-    if not email or not password:
-        return jsonify({"msg": "email and password are required"}), 400
+        if not email or not password:
+            return jsonify({"msg": "email and password are required"}), 400
 
-    user = Users.query.filter_by(email=email).first()
-    if not user or user.password != password:
-        return jsonify({"msg": "Invalid credentials"}), 401
+        user = Users.query.filter_by(email=email).first()
+        if not user or user.password != password:
+            return jsonify({"msg": "Invalid credentials"}), 401
 
+<<<<<<< HEAD
     # Create both access and refresh tokens
     access_token = create_access_token(identity=str(user.id))
     refresh_token = create_refresh_token(identity=str(user.id))
@@ -111,3 +113,22 @@ def logout():
     In a more advanced setup, you could implement token blacklisting here
     """
     return jsonify({"msg": "Successfully logged out"}), 200
+=======
+        access_token = create_access_token(identity=str(user.id))
+        return jsonify({
+            "msg": "Login successful", 
+            "access_token": access_token,
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "phone": user.phone,
+                "designation": user.designation
+            }
+        }), 200
+    except Exception as e:
+        print(f"Login error: {e}")
+        if "MaxClientsInSessionMode" in str(e) or "max clients reached" in str(e):
+            return jsonify({"msg": "Server is temporarily busy. Please try again in a few moments."}), 503
+        return jsonify({"msg": "Login failed. Please try again."}), 500
+>>>>>>> 26f57bf697a30ad1aec525c273be075a4fcc3fc3

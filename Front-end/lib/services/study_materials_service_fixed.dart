@@ -1,0 +1,136 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'auth_service.dart';
+import '../config.dart';
+
+class StudyMaterialsService {
+  // ------------------ DEPARTMENTS ------------------
+  static Future<List<dynamic>> fetchDepartments() async {
+    final url = Uri.parse('${Config.baseUrl}/departments');
+    final res = await http.get(url);
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    } else {
+      throw Exception('Failed to load departments');
+    }
+  }
+
+  static Future<void> addDepartment(String name, String icon) async {
+    final url = Uri.parse('${Config.baseUrl}/departments');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({'name': name, 'icon': icon});
+
+    final res = await http.post(url, headers: headers, body: body);
+
+    if (res.statusCode != 201 && res.statusCode != 200) {
+      final msg = _extractErrorMessage(res.body);
+      throw Exception('Failed to add department: $msg');
+    }
+  }
+
+  // ------------------ COURSES ------------------
+  static Future<List<dynamic>> fetchCourses(int departmentId) async {
+    final url = Uri.parse('${Config.baseUrl}/courses?department_id=$departmentId');
+    final res = await http.get(url);
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    } else {
+      throw Exception('Failed to load courses');
+    }
+  }
+
+  static Future<void> addCourse(String name, String code, int departmentId) async {
+    final url = Uri.parse('${Config.baseUrl}/courses');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({'name': name, 'code': code, 'department_id': departmentId});
+
+    final res = await http.post(url, headers: headers, body: body);
+
+    if (res.statusCode != 201 && res.statusCode != 200) {
+      final msg = _extractErrorMessage(res.body);
+      throw Exception('Failed to add course: $msg');
+    }
+  }
+
+  // ------------------ NOTES ------------------
+  static Future<List<dynamic>> fetchNotes(int courseId) async {
+    final url = Uri.parse('${Config.baseUrl}/notes?course_id=$courseId');
+    final res = await http.get(url);
+    if (res.statusCode == 200) {
+      final notes = jsonDecode(res.body) as List<dynamic>;
+      for (var note in notes) {
+        if (note['file_url'] == null || note['file_url'].toString().isEmpty) {
+          note['file_url'] = '/study/notes/default';
+        }
+      }
+      return notes;
+    } else {
+      throw Exception('Failed to load notes');
+    }
+  }
+
+  static Future<String> uploadNote(
+      String title, String description, int courseId, String filePath) async {
+    final url = Uri.parse('${Config.baseUrl}/notes');
+    final token = await AuthService.getToken();
+    if (token == null) throw Exception('Not authenticated');
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final body = jsonEncode({
+      'title': title,
+      'description': description,
+      'course_id': courseId,
+      'file_path': filePath,
+      'file_url': filePath.isNotEmpty ? filePath : '/study/notes/default',
+    });
+
+    final res = await http.post(url, headers: headers, body: body);
+
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      final responseData = jsonDecode(res.body);
+      return responseData['file_url'] ?? '/study/notes/default';
+    } else {
+      final msg = _extractErrorMessage(res.body);
+      throw Exception('Failed to upload note: $msg');
+    }
+  }
+
+  // ------------------ DELETE NOTE ------------------
+  static Future<void> deleteNote(int noteId) async {
+    final token = await AuthService.getToken();
+    if (token == null) throw Exception('Not authenticated');
+
+    final url = Uri.parse('${Config.baseUrl}/notes/$noteId');
+
+    final res = await http.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (res.statusCode == 403) {
+      throw Exception('You are not authorized to delete this note');
+    }
+
+    if (res.statusCode != 200 && res.statusCode != 204) {
+      final msg = _extractErrorMessage(res.body);
+      throw Exception('Failed to delete note: $msg');
+    }
+  }
+
+  // ------------------ HELPER ------------------
+  static String _extractErrorMessage(String responseBody) {
+    try {
+      final decoded = jsonDecode(responseBody);
+      return decoded['msg']?.toString() ?? responseBody;
+    } catch (_) {
+      return responseBody;
+    }
+  }
+}
