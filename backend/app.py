@@ -24,7 +24,6 @@ from routes.group_resource import group_resource_bp
 from routes.knowledge_base import kb_bp
 from routes.chat_routes import chat_bp
 from routes.profile import profile_bp
-<<<<<<< HEAD
 # from routes.feed import feed_bp  # Removed - functionality moved to social_routes
 from routes.social_routes import social_bp
 from utils.db_utils import cleanup_db_session, get_db_connection_info, force_close_connections
@@ -40,14 +39,6 @@ else:
     print("❌ DATABASE_URL environment variable not found or invalid!")
     print("   Please set DATABASE_URL to your Supabase PostgreSQL connection string.")
     exit(1)
-=======
-
-#database config - Updated for new config system
-try:
-    # Try new config system first
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    if DATABASE_URL:
-        print(f"✅ Using DATABASE_URL from environment: {DATABASE_URL}")
     else:
         print("DATABASE_URL not found, trying individual variables...")
         # Fallback to old system
@@ -155,7 +146,6 @@ def reset_db_connections():
 # Create tables (updated for newer Flask versions)
 with app.app_context():
     db.create_all()
-=======
 print(f"🔧 SERVER_BASE_URL is set to: {app.config['SERVER_BASE_URL']}")
 print(f"🔧 Database pool configured: pool_size=5, max_overflow=0, pool_recycle=60s")
 db.init_app(app)

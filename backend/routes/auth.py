@@ -65,18 +65,17 @@ def login():
         if not user or user.password != password:
             return jsonify({"msg": "Invalid credentials"}), 401
 
-<<<<<<< HEAD
-    # Create both access and refresh tokens
-    access_token = create_access_token(identity=str(user.id))
-    refresh_token = create_refresh_token(identity=str(user.id))
-    
-    return jsonify({
-        "msg": "Login successful", 
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "expires_in": 86400,  # 24 hours in seconds
-        "token_type": "Bearer"
-    }), 200
+        # Create both access and refresh tokens
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
+        
+        return jsonify({
+            "msg": "Login successful", 
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expires_in": 86400,  # 24 hours in seconds
+            "token_type": "Bearer"
+        }), 200
 
 @auth_bp.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
@@ -113,22 +112,3 @@ def logout():
     In a more advanced setup, you could implement token blacklisting here
     """
     return jsonify({"msg": "Successfully logged out"}), 200
-=======
-        access_token = create_access_token(identity=str(user.id))
-        return jsonify({
-            "msg": "Login successful", 
-            "access_token": access_token,
-            "user": {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "phone": user.phone,
-                "designation": user.designation
-            }
-        }), 200
-    except Exception as e:
-        print(f"Login error: {e}")
-        if "MaxClientsInSessionMode" in str(e) or "max clients reached" in str(e):
-            return jsonify({"msg": "Server is temporarily busy. Please try again in a few moments."}), 503
-        return jsonify({"msg": "Login failed. Please try again."}), 500
->>>>>>> 26f57bf697a30ad1aec525c273be075a4fcc3fc3
