@@ -57,7 +57,6 @@ else:
 except Exception as e:
     print(f"❌ Error loading database config: {e}")
     DATABASE_URL = None
->>>>>>> 26f57bf697a30ad1aec525c273be075a4fcc3fc3
 
 
 app = Flask(__name__)
@@ -95,7 +94,7 @@ app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "your_secret_key
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your_secret_key_here")  # For JWT token_required
 app.config["SERVER_BASE_URL"] = os.environ.get("SERVER_BASE_URL", "http://192.168.0.113:5000")  # Updated to match frontend
 
-<<<<<<< HEAD
+
 # JWT Token Expiration Settings
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)  # 24 hours instead of default 15 minutes
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)  # 30 days for refresh token
@@ -166,7 +165,6 @@ except Exception as e:
     else:
         print("❌ Unexpected database error - please check your connection")
         print("💡 This may affect functionality, especially new features")
->>>>>>> 26f57bf697a30ad1aec525c273be075a4fcc3fc3
 
 @app.route("/")
 def home():
