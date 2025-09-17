@@ -1,0 +1,17 @@
+# Alternative Database URLs for CampusNet Backend
+# 
+# IMPORTANT: Replace the current DATABASE_URL in your .env file with one of these:
+
+# Option 1: Transaction Mode (Recommended - Supports more connections)
+# Replace 'pooler.supabase.com:5432' with 'pooler.supabase.com:6543'
+DATABASE_URL_TRANSACTION=postgresql+psycopg2://postgres.xjhrvdhyqwpadujarmie:sdYzA0gF3gjaeHJN@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require
+
+# Option 2: Direct Connection (No pooling, but more reliable)
+# Replace 'pooler.supabase.com' with your direct database host
+# DATABASE_URL_DIRECT=postgresql+psycopg2://postgres.xjhrvdhyqwpadujarmie:sdYzA0gF3gjaeHJN@aws-1-ap-southeast-1.aws.supabase.co:5432/postgres?sslmode=require
+
+# Instructions:
+# 1. Copy the Transaction Mode URL above
+# 2. Update your .env file: DATABASE_URL=<paste the URL here>
+# 3. Note the port change: 5432 → 6543 (Transaction Mode)
+# 4. Transaction mode allows many more concurrent connections

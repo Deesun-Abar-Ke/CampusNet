@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:typed_data';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io' show Directory, File;
 import 'edit_profile_sheet.dart';
 import '../../../widgets/common_app_bar.dart';
 import '../../../services/profile_service.dart';
 import '../../../services/auth_service.dart';
+
+// Web-specific imports with conditional compilation
+import 'dart:html' as html show AnchorElement, Url, Blob, document;
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -40,105 +47,412 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final profile = await ProfileService.getUserProfile(_token!);
-      final achievements = await ProfileService.getAchievements(_token!);
-      final skills = await ProfileService.getSkills(_token!);
+      
+      if (profile != null) {
+        // Extract achievements and skills from the profile response
+        final achievementsData = profile['achievements'] as Map<String, dynamic>? ?? {};
+        final skillsData = profile['skills'] as Map<String, dynamic>? ?? {};
+        
+        // Flatten achievements from categories
+        final achievements = <Map<String, dynamic>>[];
+        achievementsData.forEach((category, categoryAchievements) {
+          if (categoryAchievements is List) {
+            for (var achievement in categoryAchievements) {
+              achievements.add(Map<String, dynamic>.from(achievement));
+            }
+          }
+        });
+        
+        // Flatten skills from categories  
+        final skills = <Map<String, dynamic>>[];
+        skillsData.forEach((category, categorySkills) {
+          if (categorySkills is List) {
+            for (var skill in categorySkills) {
+              skills.add(Map<String, dynamic>.from(skill));
+            }
+          }
+        });
 
-      setState(() {
-        _profileData = profile;
-        _achievements = achievements;
-        _skills = skills;
-        _isLoading = false;
-      });
+        if (mounted) {
+          setState(() {
+            _profileData = profile;
+            _achievements = achievements;
+            _skills = skills;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     } catch (e) {
       print('Error loading profile data: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _generateCV() async {
     if (_token == null) return;
 
+    // Show progress dialog with steps
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Generating your professional CV...'),
+            SizedBox(height: 8),
+            Text('This may take a few seconds', 
+                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+        ),
       ),
     );
 
     try {
+      print('🎨 Starting CV generation process...');
+      
+      // Step 1: Generate CV from backend
       final cvBytes = await ProfileService.generateCV(_token!);
-      Navigator.pop(context); // Close loading dialog
-
+      
       if (cvBytes != null) {
-        // Save CV to downloads
+        print('✅ CV bytes received: ${cvBytes.length} bytes');
+        
+        // Update dialog to show download step
+        if (mounted) {
+          Navigator.pop(context); // Close current dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Saving CV to your device...'),
+                ],
+              ),
+            ),
+          );
+        }
+        
+        // Step 2: Save CV to downloads
         await _saveCVToDownloads(cvBytes);
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('CV generated and saved to Downloads!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (mounted) {
+          Navigator.pop(context); // Close download dialog
+        }
       } else {
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to generate CV. Please complete your profile first.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ CV generation error: $e');
+      if (mounted) {
+        Navigator.pop(context); // Close any open dialog
+        
+        String errorMessage = 'Error generating CV';
+        if (e.toString().contains('permission')) {
+          errorMessage = 'Storage permission required for download';
+        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+          errorMessage = 'Network error. Please check your connection';
+        } else if (e.toString().contains('server')) {
+          errorMessage = 'Server error. Please try again later';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to generate CV. Please try again.'),
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(errorMessage),
+                Text('Details: ${e.toString()}', 
+                     style: TextStyle(fontSize: 12)),
+              ],
+            ),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _generateCV,
+            ),
           ),
         );
       }
-    } catch (e) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
   Future<void> _saveCVToDownloads(Uint8List cvBytes) async {
     try {
-      Directory? directory;
-      if (Platform.isAndroid) {
-        directory = Directory('/storage/emulated/0/Download');
-      } else if (Platform.isIOS) {
-        directory = await getApplicationDocumentsDirectory();
+      final fileName = 'CV_${_profileData?['name']?.replaceAll(' ', '_') ?? 'Profile'}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      
+      if (kIsWeb) {
+        // Web platform - trigger download via browser
+        _downloadFileWeb(cvBytes, fileName);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('CV download started! Check your browser downloads.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       } else {
-        directory = await getDownloadsDirectory();
-      }
-
-      if (directory != null) {
-        final fileName = 'CV_${_profileData?['name']?.replaceAll(' ', '_') ?? 'Profile'}_${DateTime.now().millisecondsSinceEpoch}.pdf';
-        final file = File('${directory.path}/$fileName');
-        await file.writeAsBytes(cvBytes);
+        // Mobile/Desktop platforms
+        await _saveFileNative(cvBytes, fileName);
       }
     } catch (e) {
       print('Error saving CV: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving CV: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _downloadFileWeb(Uint8List bytes, String filename) {
+    if (kIsWeb) {
+      try {
+        // Create a blob from the PDF bytes
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        
+        // Create a download link
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute('download', filename)
+          ..style.display = 'none';
+        
+        // Add to DOM and click to trigger download
+        html.document.body?.children.add(anchor);
+        anchor.click();
+        
+        // Clean up
+        html.document.body?.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('CV downloaded successfully! Check your Downloads folder.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
+        print('Web download error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Download failed: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _saveFileNative(Uint8List bytes, String filename) async {
+    Directory? directory;
+    
+    try {
+      // Request storage permissions for Android
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        // Request permissions
+        Map<Permission, PermissionStatus> statuses = await [
+          Permission.storage,
+          Permission.manageExternalStorage,
+        ].request();
+
+        bool hasPermission = statuses[Permission.storage] == PermissionStatus.granted ||
+                           statuses[Permission.manageExternalStorage] == PermissionStatus.granted;
+        
+        if (!hasPermission) {
+          throw Exception('Storage permission denied. Please enable storage access in app settings.');
+        }
+      }
+
+      // Platform-specific directory selection
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        // For Android, try multiple approaches for maximum compatibility
+        try {
+          // Try public Downloads folder first
+          directory = Directory('/storage/emulated/0/Download');
+          if (!await directory.exists()) {
+            directory = Directory('/storage/emulated/0/Downloads');
+          }
+          if (!await directory.exists()) {
+            // Fallback to external storage directory
+            final externalDir = await getExternalStorageDirectory();
+            if (externalDir != null) {
+              directory = Directory('${externalDir.parent.parent.parent.parent.path}/Download');
+              if (!await directory.exists()) {
+                directory = Directory('${externalDir.path}/Downloads');
+              }
+            }
+          }
+          if (!await directory.exists()) {
+            // Last fallback to app documents
+            directory = await getApplicationDocumentsDirectory();
+          }
+        } catch (e) {
+          print('Android directory error: $e');
+          directory = await getApplicationDocumentsDirectory();
+        }
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        directory = await getApplicationDocumentsDirectory();
+      } else {
+        // Desktop platforms (Windows, macOS, Linux)
+        try {
+          directory = await getDownloadsDirectory();
+        } catch (e) {
+          // Fallback to documents directory
+          directory = await getApplicationDocumentsDirectory();
+        }
+      }
+
+      if (directory != null) {
+        // Ensure directory exists
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        
+        final file = File('${directory.path}/$filename');
+        await file.writeAsBytes(bytes);
+        
+        print('CV saved to: ${file.path}');
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('CV saved successfully!'),
+                  Text('Location: ${file.path}', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'Open Folder',
+                onPressed: () async {
+                  try {
+                    // Try to open the downloads folder
+                    if (defaultTargetPlatform == TargetPlatform.android) {
+                      // For Android, we can't directly open the file manager to the specific folder
+                      // But we can try to open the file
+                      await launchUrl(Uri.parse('file://${file.path}'));
+                    } else {
+                      // For desktop platforms, open the containing folder
+                      await launchUrl(Uri.parse('file://${directory!.path}'));
+                    }
+                  } catch (e) {
+                    print('Could not open folder: $e');
+                  }
+                },
+              ),
+            ),
+          );
+        }
+      } else {
+        throw Exception('Could not access downloads directory');
+      }
+    } catch (e) {
+      print('Native save error: $e');
+      throw Exception('Failed to save file: $e');
     }
   }
 
   Widget _buildProfilePicture() {
-    if (_profileData?['profile_picture'] != null) {
-      // If profile picture exists in backend, decode and display
-      final bytes = _profileData!['profile_picture'] as String;
-      // You might need to decode base64 here
-      return CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.grey[300],
-        child: const Icon(Icons.person, size: 50, color: Colors.white),
+    // Check if user has a profile picture
+    bool hasProfilePicture = _profileData?['has_profile_picture'] == true || 
+                            _profileData?['profile_picture'] != null;
+                            
+    if (hasProfilePicture && _token != null) {
+      // Load profile picture from backend API using FutureBuilder
+      return FutureBuilder<Uint8List?>(
+        future: _loadProfilePictureBytes(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.grey[300],
+              child: const CircularProgressIndicator(),
+            );
+          } else if (snapshot.hasData && snapshot.data != null) {
+            return CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.grey[300],
+              backgroundImage: MemoryImage(snapshot.data!),
+            );
+          } else {
+            // Fallback to default avatar
+            return _buildDefaultAvatar();
+          }
+        },
       );
     } else {
-      return CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.grey[300],
-        child: Text(
-          (_profileData?['name'] ?? 'U').substring(0, 1).toUpperCase(),
-          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+      return _buildDefaultAvatar();
+    }
+  }
+
+  Widget _buildDefaultAvatar() {
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: Colors.grey[300],
+      child: Text(
+        (_profileData?['name'] ?? 'U').substring(0, 1).toUpperCase(),
+        style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+
+  Future<Uint8List?> _loadProfilePictureBytes() async {
+    if (_token == null) return null;
+    
+    try {
+      final response = await http.get(
+        Uri.parse('${ProfileService.baseUrl}/api/profile/picture'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+        },
       );
+      
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        print('Failed to load profile picture: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error loading profile picture: $e');
+      return null;
     }
   }
 

@@ -11,9 +11,16 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // Global navigator key for automatic navigation
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
+    // Set up navigator key for AuthService
+    AuthService.setNavigatorKey(navigatorKey);
+
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Campus Net App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlueAccent),

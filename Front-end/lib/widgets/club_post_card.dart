@@ -74,12 +74,21 @@ class _ClubPostCardState extends State<ClubPostCard> {
                 vertical: 8,
               ),
               leading: CircleAvatar(
-                backgroundImage: widget.avatarUrl != null
+                backgroundImage: widget.avatarUrl != null && 
+                               widget.avatarUrl != 'default_avatar' &&
+                               !widget.avatarUrl!.startsWith('assets/')
                     ? AssetImage(widget.avatarUrl!)
                     : null,
-                backgroundColor: const Color.fromARGB(255, 201, 170, 170),
-                child: widget.avatarUrl == null
-                    ? Text(widget.clubName[0])
+                backgroundColor: Colors.blue.withOpacity(0.2),
+                child: widget.avatarUrl == null || 
+                       widget.avatarUrl == 'default_avatar'
+                    ? Text(
+                        widget.clubName[0].toUpperCase(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      )
                     : null,
               ),
               title: Text(

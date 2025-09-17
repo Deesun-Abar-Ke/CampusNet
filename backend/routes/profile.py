@@ -15,9 +15,34 @@ from PIL import Image
 import os
 
 from models import db, Users, Profile, Achievement, Skill
-from services.simple_cv_generator import SimpleCVGenerator
+
+# PDF Generation imports with fallback handling
+try:
+    from weasyprint import HTML, CSS
+    WEASYPRINT_AVAILABLE = True
+    print("✅ WeasyPrint is available")
+except Exception as e:
+    WEASYPRINT_AVAILABLE = False
+    print(f"❌ WeasyPrint not available: {e}")
+    print("📋 Will use ReportLab fallback for PDF generation")
+
+try:
+    from services.html_cv_generator import HTMLCVGenerator
+    HTML_CV_GENERATOR_AVAILABLE = True
+    print("✅ HTMLCVGenerator is available")
+except ImportError as e:
+    HTML_CV_GENERATOR_AVAILABLE = False
+    print(f"❌ HTMLCVGenerator not available: {e}")
 
 profile_bp = Blueprint('profile', __name__)
+
+def get_current_user_id():
+    """Helper function to get current user ID as integer from JWT"""
+    user_id = get_jwt_identity()
+    # Convert to integer if it's a string
+    if isinstance(user_id, str):
+        user_id = int(user_id)
+    return user_id
 
 def serialize_date(obj):
     """JSON serializer for date objects"""
@@ -30,7 +55,7 @@ def serialize_date(obj):
 def get_profile():
     """Get user profile with all related data"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = get_current_user_id()
         
         # Get user and profile
         user = Users.query.get(current_user_id)
@@ -128,6 +153,7 @@ def get_profile():
                 'cgpa': profile.cgpa,
                 'created_at': profile.created_at.isoformat(),
                 'updated_at': profile.updated_at.isoformat(),
+                'has_profile_picture': profile.profile_picture is not None,
                 'profile_picture': profile_picture_data
             },
             'achievements': achievements_by_category,
@@ -146,16 +172,30 @@ def get_profile():
 @profile_bp.route('/', methods=['PUT'])
 @jwt_required()
 def update_profile():
-    """Update user profile information"""
+    """Update user profile information with validation"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = get_current_user_id()
+        current_app.logger.info(f"Profile update request from user_id: {current_user_id}")
+        
         data = request.get_json()
+        if not data:
+            current_app.logger.error("No JSON data received")
+            return jsonify({'error': 'No data provided'}), 400
+            
+        current_app.logger.info(f"Update data keys: {list(data.keys())}")
         
         profile = Profile.query.filter_by(user_id=current_user_id).first()
         if not profile:
             profile = Profile()
             profile.user_id = current_user_id
             db.session.add(profile)
+            current_app.logger.info("Created new profile")
+        
+        # URL length validation (max 2048 characters for URLs)
+        url_fields = ['linkedin_url', 'facebook_url', 'github_url', 'portfolio_url']
+        for field in url_fields:
+            if field in data and data[field] and len(data[field]) > 2048:
+                return jsonify({'error': f'{field} is too long (max 2048 characters)'}), 400
         
         # Update profile fields
         if 'student_id' in data:
@@ -165,6 +205,9 @@ def update_profile():
         if 'department' in data:
             profile.department = data['department']
         if 'bio' in data:
+            # Validate bio length (max 2000 characters)
+            if len(data['bio']) > 2000:
+                return jsonify({'error': 'Bio is too long (max 2000 characters)'}), 400
             profile.bio = data['bio']
         if 'date_of_birth' in data and data['date_of_birth']:
             profile.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d').date()
@@ -186,6 +229,7 @@ def update_profile():
         profile.updated_at = datetime.utcnow()
         
         db.session.commit()
+        current_app.logger.info("Profile updated successfully")
         
         return jsonify({
             'success': True,
@@ -195,7 +239,7 @@ def update_profile():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error updating profile: {e}")
-        return jsonify({'error': 'Failed to update profile'}), 500
+        return jsonify({'error': f'Failed to update profile: {str(e)}'}), 500
 
 @profile_bp.route('/picture', methods=['POST'])
 @jwt_required()
@@ -598,56 +642,143 @@ def delete_skill(skill_id):
 @profile_bp.route('/cv/generate', methods=['POST'])
 @jwt_required()
 def generate_cv():
-    """Generate CV from profile data"""
+    """Generate professional PDF CV from profile data"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = get_current_user_id()
         
         # Get user profile data
         user = Users.query.get(current_user_id)
         profile = Profile.query.filter_by(user_id=current_user_id).first()
+        achievements = Achievement.query.filter_by(profile_id=profile.id).order_by(Achievement.start_date.desc()).all() if profile else []
+        skills = Skill.query.filter_by(profile_id=profile.id).all() if profile else []
         
-        if not user or not profile:
-            return jsonify({'error': 'Profile not found'}), 404
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
-        # Generate CV
-        cv_generator = SimpleCVGenerator()
-        result = cv_generator.generate_cv(current_user_id)
+        if not profile:
+            return jsonify({'error': 'Profile not found. Please complete your profile first.'}), 404
         
-        if not result['success']:
-            return jsonify({'error': result['message']}), 500
-        
-        # Return HTML file
-        return send_file(
-            result['file_path'],
-            mimetype='text/html',
-            as_attachment=True,
-            download_name=f"{user.name.replace(' ', '_')}_CV.html" if user.name else "CV.html"
-        )
+        # Use the new HTMLCVGenerator with WeasyPrint if available
+        if HTML_CV_GENERATOR_AVAILABLE and WEASYPRINT_AVAILABLE:
+            try:
+                current_app.logger.info("📄 Using HTMLCVGenerator + WeasyPrint for professional CV")
+                
+                # Generate HTML using new HTMLCVGenerator
+                cv_generator = HTMLCVGenerator()
+                html_content = cv_generator.generate_html(user, profile, achievements, skills)
+                
+                # Convert HTML to PDF using WeasyPrint
+                pdf_bytes = HTML(string=html_content).write_pdf()
+                
+                if pdf_bytes is None:
+                    raise Exception("WeasyPrint returned None for PDF bytes")
+                
+                # Create filename
+                safe_name = ''.join(c for c in user.name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                filename = f"{safe_name}_CV_Professional.pdf"
+                
+                # Create response
+                return send_file(
+                    io.BytesIO(pdf_bytes),
+                    mimetype='application/pdf',
+                    as_attachment=True,
+                    download_name=filename
+                )
+                
+            except Exception as e:
+                current_app.logger.error(f"HTMLCVGenerator + WeasyPrint failed: {e}")
+                return jsonify({'error': f'Failed to generate CV: {str(e)}'}), 500
         
     except Exception as e:
         current_app.logger.error(f"Error generating CV: {e}")
-        return jsonify({'error': 'Failed to generate CV'}), 500
+        return jsonify({'error': f'Failed to generate CV: {str(e)}'}), 500
 
-# Also add the route the frontend expects
+# Alternative routes for frontend compatibility
 @profile_bp.route('/generate-cv', methods=['POST'])
 @jwt_required()
 def generate_cv_alt():
     """Generate CV from profile data (alternative route for frontend compatibility)"""
     return generate_cv()
 
+@profile_bp.route('/cv/professional', methods=['POST'])
+@jwt_required()
+def generate_professional_cv():
+    """Generate professional HTML/CSS CV using WeasyPrint with fallback to ReportLab"""
+    try:
+        current_user_id = get_current_user_id()
+        
+        # Get user data
+        user = Users.query.get(current_user_id)
+        profile = Profile.query.filter_by(user_id=current_user_id).first()
+        achievements = Achievement.query.filter_by(profile_id=profile.id).order_by(Achievement.start_date.desc()).all() if profile else []
+        skills = Skill.query.filter_by(profile_id=profile.id).all() if profile else []
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if not profile:
+            return jsonify({'error': 'Profile not found. Please complete your profile first.'}), 404
+        
+        # Check if HTML CV Generator and WeasyPrint are available
+        if HTML_CV_GENERATOR_AVAILABLE and WEASYPRINT_AVAILABLE:
+            try:
+                # Generate HTML using new HTMLCVGenerator
+                cv_generator = HTMLCVGenerator()
+                html_content = cv_generator.generate_html(user, profile, achievements, skills)
+                
+                # Convert HTML to PDF using WeasyPrint
+                pdf_bytes = HTML(string=html_content).write_pdf()
+                
+                if pdf_bytes is None:
+                    raise Exception("WeasyPrint returned None for PDF bytes")
+                
+                # Create filename
+                safe_name = ''.join(c for c in user.name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                filename = f"{safe_name}_CV_Professional.pdf"
+                
+                # Create a BytesIO buffer for the response
+                pdf_buffer = io.BytesIO(pdf_bytes)
+                pdf_buffer.seek(0)
+                
+                current_app.logger.info(f"✅ Generated professional CV using HTMLCVGenerator + WeasyPrint for user {user.name}")
+                
+                return send_file(
+                    pdf_buffer,
+                    mimetype='application/pdf',
+                    as_attachment=True,
+                    download_name=filename
+                )
+                
+            except Exception as e:
+                current_app.logger.error(f"HTMLCVGenerator + WeasyPrint PDF generation failed: {e}")
+                return jsonify({'error': f'Failed to generate professional CV: {str(e)}'}), 500
+            
+    except Exception as e:
+        current_app.logger.error(f"Professional CV generation failed: {e}")
+        return jsonify({'error': f'CV generation failed: {str(e)}'}), 500
+
 @profile_bp.route('/cv/templates', methods=['GET'])
 def get_cv_templates():
     """Get available CV templates"""
     try:
-        # Return simple template info since we only have one template
+        # Return available CV template options
         return jsonify({
             'success': True,
             'templates': [
                 {
                     'id': 1,
-                    'name': 'Professional Modern',
-                    'description': 'A clean, modern CV template suitable for professional use',
-                    'is_default': True
+                    'name': 'Modern Professional (ReportLab)',
+                    'description': 'Clean, modern PDF CV with professional styling using ReportLab',
+                    'is_default': True,
+                    'endpoint': '/api/profile/cv/generate'
+                },
+                {
+                    'id': 2,
+                    'name': 'Professional HTML/CSS Design',
+                    'description': 'Modern, clean CV with optimized A4 formatting, professional typography, and clean section styling - perfect for professional use',
+                    'is_default': False,
+                    'endpoint': '/api/profile/cv/professional',
+                    'requires': 'WeasyPrint library'
                 }
             ]
         }), 200
@@ -655,10 +786,3 @@ def get_cv_templates():
     except Exception as e:
         current_app.logger.error(f"Error getting CV templates: {e}")
         return jsonify({'error': 'Failed to get CV templates'}), 500
-
-
-@profile_bp.route('/generate-cv', methods=['POST'])
-@jwt_required()
-def generate_cv_frontend():
-    """CV generation endpoint for frontend compatibility"""
-    return generate_cv()
