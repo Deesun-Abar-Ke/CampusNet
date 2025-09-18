@@ -28,9 +28,6 @@ from routes.profile import profile_bp
 from routes.social_routes import social_bp
 from utils.db_utils import cleanup_db_session, get_db_connection_info, force_close_connections
 
-# Load env
-load_dotenv()
-
 #database config - Supabase PostgreSQL only
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL and "postgresql" in DATABASE_URL:
@@ -39,24 +36,6 @@ else:
     print("❌ DATABASE_URL environment variable not found or invalid!")
     print("   Please set DATABASE_URL to your Supabase PostgreSQL connection string.")
     exit(1)
-    else:
-        print("DATABASE_URL not found, trying individual variables...")
-        # Fallback to old system
-        USER = os.getenv("user") or os.getenv("POSTGRES_USER")
-        PASSWORD = os.getenv("password") or os.getenv("POSTGRES_PASSWORD")
-        HOST = os.getenv("host") or os.getenv("POSTGRES_HOST") or "localhost"
-        PORT = os.getenv("port") or os.getenv("POSTGRES_PORT") or "5432"
-        DBNAME = os.getenv("dbname") or os.getenv("POSTGRES_DB")
-        
-        if USER and PASSWORD and DBNAME:
-            DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
-            print(f"✅ Built DATABASE_URL from components: postgresql+psycopg2://{USER}:***@{HOST}:{PORT}/{DBNAME}?sslmode=require")
-        else:
-            print(f"❌ Missing database credentials. USER={USER}, PASSWORD={'***' if PASSWORD else None}, DBNAME={DBNAME}")
-            DATABASE_URL = None
-except Exception as e:
-    print(f"❌ Error loading database config: {e}")
-    DATABASE_URL = None
 
 
 app = Flask(__name__)
@@ -84,21 +63,21 @@ app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Optimize database connection pool for Supabase (very conservative for free tier)
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_size": 10,          # Very small pool size for Supabase free tier
+    "pool_size": 5,          # Small pool size for Supabase free tier
     "max_overflow": 0,       # No overflow connections
-    "pool_recycle": 300,      # Recycle connections every 1 minute to free them up quickly
+    "pool_recycle": 60,      # Recycle connections every 1 minute to free them up quickly
     "pool_pre_ping": True,   # Verify connections before use
     "pool_timeout": 10,      # Timeout after 10 seconds if no connection available
 }
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "your_secret_key_here")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your_secret_key_here")  # For JWT token_required
-app.config["SERVER_BASE_URL"] = os.environ.get("SERVER_BASE_URL", "http://192.168.0.113:5000")  # Updated to match frontend
-
+app.config["SERVER_BASE_URL"] = os.environ.get("SERVER_BASE_URL", "http://192.168.0.101:5000")  # Updated to match frontend
 
 # JWT Token Expiration Settings
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)  # 24 hours instead of default 15 minutes
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)  # 30 days for refresh token
 
+# Initialize database and JWT
 db.init_app(app)
 jwt = JWTManager(app)
 
@@ -142,13 +121,8 @@ def reset_db_connections():
         })
     return jsonify({'error': 'Not available in production'}), 403
 
-# Create tables (updated for newer Flask versions)
-with app.app_context():
-    db.create_all()
 print(f"🔧 SERVER_BASE_URL is set to: {app.config['SERVER_BASE_URL']}")
 print(f"🔧 Database pool configured: pool_size=5, max_overflow=0, pool_recycle=60s")
-db.init_app(app)
-jwt = JWTManager(app)
 
 # Create/update database tables (important for new fields like deleted_by)
 try:

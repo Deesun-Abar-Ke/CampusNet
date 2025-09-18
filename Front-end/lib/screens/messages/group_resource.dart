@@ -1007,9 +1007,8 @@ class _GroupResourcePageState extends State<GroupResourcePage> {
   void _downloadResource(GroupResourceFile resource) async {
     try {
       await GroupResourceService.downloadFile(
-        widget.conversationId,
-        resource.id,
-        resource.fileUrl.split('/').last,
+        resource.fileUrl.split('/').last, // filename
+        resource.name, // originalFilename
       );
       
       ScaffoldMessenger.of(context).showSnackBar(

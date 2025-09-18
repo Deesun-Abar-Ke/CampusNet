@@ -76,6 +76,10 @@ def login():
             "expires_in": 86400,  # 24 hours in seconds
             "token_type": "Bearer"
         }), 200
+        
+    except Exception as e:
+        print(f"Login error: {e}")
+        return jsonify({"msg": "Error during login. Please try again."}), 500
 
 @auth_bp.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)

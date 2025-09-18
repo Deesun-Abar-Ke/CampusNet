@@ -5,12 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'dart:io' show Directory, File;
 import 'edit_profile_sheet.dart';
 import '../../../widgets/common_app_bar.dart';
 import '../../../services/profile_service.dart';
 import '../../../services/auth_service.dart';
+import '../../../config.dart';
 
 // Web-specific imports with conditional compilation
 import 'dart:html' as html show AnchorElement, Url, Blob, document;
@@ -46,12 +46,15 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     try {
-      final profile = await ProfileService.getUserProfile(_token!);
+      final profileResponse = await ProfileService.getUserProfile(_token!);
       
-      if (profile != null) {
-        // Extract achievements and skills from the profile response
-        final achievementsData = profile['achievements'] as Map<String, dynamic>? ?? {};
-        final skillsData = profile['skills'] as Map<String, dynamic>? ?? {};
+      if (profileResponse != null) {
+        // Extract the data field from the response
+        final profileData = profileResponse['data'] as Map<String, dynamic>? ?? {};
+        
+        // Extract achievements and skills from the profile data
+        final achievementsData = profileData['achievements'] as Map<String, dynamic>? ?? {};
+        final skillsData = profileData['skills'] as Map<String, dynamic>? ?? {};
         
         // Flatten achievements from categories
         final achievements = <Map<String, dynamic>>[];
@@ -75,7 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         if (mounted) {
           setState(() {
-            _profileData = profile;
+            _profileData = profileData;
             _achievements = achievements;
             _skills = skills;
             _isLoading = false;
@@ -201,7 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _saveCVToDownloads(Uint8List cvBytes) async {
     try {
-      final fileName = 'CV_${_profileData?['name']?.replaceAll(' ', '_') ?? 'Profile'}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final fileName = 'CV_${_profileData?['user']?['name']?.replaceAll(' ', '_') ?? 'Profile'}_${DateTime.now().millisecondsSinceEpoch}.pdf';
       
       if (kIsWeb) {
         // Web platform - trigger download via browser
@@ -391,8 +394,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildProfilePicture() {
     // Check if user has a profile picture
-    bool hasProfilePicture = _profileData?['has_profile_picture'] == true || 
-                            _profileData?['profile_picture'] != null;
+    bool hasProfilePicture = _profileData?['profile']?['has_profile_picture'] == true || 
+                            _profileData?['profile']?['profile_picture'] != null;
                             
     if (hasProfilePicture && _token != null) {
       // Load profile picture from backend API using FutureBuilder
@@ -427,7 +430,7 @@ class _ProfilePageState extends State<ProfilePage> {
       radius: 50,
       backgroundColor: Colors.grey[300],
       child: Text(
-        (_profileData?['name'] ?? 'U').substring(0, 1).toUpperCase(),
+        (_profileData?['user']?['name'] ?? 'U').substring(0, 1).toUpperCase(),
         style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
@@ -438,7 +441,7 @@ class _ProfilePageState extends State<ProfilePage> {
     
     try {
       final response = await http.get(
-        Uri.parse('${ProfileService.baseUrl}/api/profile/picture'),
+        Uri.parse('${Config.baseUrl}/api/profile/picture'),
         headers: {
           'Authorization': 'Bearer $_token',
         },
@@ -485,19 +488,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
             // Name and Role
             Text(
-              _profileData?['name'] ?? 'User Name',
+              _profileData?['user']?['name'] ?? 'User Name',
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              "${_profileData?['designation'] ?? 'Student'}, ${_profileData?['department'] ?? 'Department'}",
+              "${_profileData?['user']?['designation'] ?? 'Student'}, ${_profileData?['profile']?['department'] ?? 'Department'}",
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
 
             const SizedBox(height: 20),
 
             // Bio Section (if exists)
-            if (_profileData?['bio'] != null && _profileData!['bio'].isNotEmpty)
+            if (_profileData?['profile']?['bio'] != null && _profileData!['profile']['bio'].isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Card(
@@ -516,7 +519,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _profileData!['bio'],
+                          _profileData!['profile']['bio'],
                           style: const TextStyle(fontSize: 16),
                         ),
                       ],
@@ -545,43 +548,43 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
-                      if (_profileData?['student_id'] != null) ...[
+                      if (_profileData?['profile']?['student_id'] != null) ...[
                         _InfoRow(
                           icon: Icons.badge,
                           label: "Student ID",
-                          value: _profileData!['student_id'],
+                          value: _profileData!['profile']['student_id'],
                         ),
                         const Divider(),
                       ],
-                      if (_profileData?['department'] != null) ...[
+                      if (_profileData?['profile']?['department'] != null) ...[
                         _InfoRow(
                           icon: Icons.school,
                           label: "Department",
-                          value: _profileData!['department'],
+                          value: _profileData!['profile']['department'],
                         ),
                         const Divider(),
                       ],
-                      if (_profileData?['batch'] != null) ...[
+                      if (_profileData?['profile']?['batch'] != null) ...[
                         _InfoRow(
                           icon: Icons.calendar_today,
                           label: "Batch",
-                          value: _profileData!['batch'],
+                          value: _profileData!['profile']['batch'],
                         ),
                         const Divider(),
                       ],
-                      if (_profileData?['current_semester'] != null) ...[
+                      if (_profileData?['profile']?['current_semester'] != null) ...[
                         _InfoRow(
                           icon: Icons.bookmark,
                           label: "Current Semester",
-                          value: _profileData!['current_semester'],
+                          value: _profileData!['profile']['current_semester'],
                         ),
                         const Divider(),
                       ],
-                      if (_profileData?['cgpa'] != null) ...[
+                      if (_profileData?['profile']?['cgpa'] != null) ...[
                         _InfoRow(
                           icon: Icons.grade,
                           label: "CGPA",
-                          value: _profileData!['cgpa'].toString(),
+                          value: _profileData!['profile']['cgpa'].toString(),
                         ),
                         const Divider(),
                       ],
