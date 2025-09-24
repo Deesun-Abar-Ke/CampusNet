@@ -12,8 +12,8 @@ import '../../../services/profile_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../config.dart';
 
-// Web-specific imports with conditional compilation
-import 'dart:html' as html show AnchorElement, Url, Blob, document;
+// Conditional imports for web-specific functionality
+import 'web_download_stub.dart' if (dart.library.html) 'web_download_web.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -239,22 +239,8 @@ class _ProfilePageState extends State<ProfilePage> {
   void _downloadFileWeb(Uint8List bytes, String filename) {
     if (kIsWeb) {
       try {
-        // Create a blob from the PDF bytes
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        
-        // Create a download link
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', filename)
-          ..style.display = 'none';
-        
-        // Add to DOM and click to trigger download
-        html.document.body?.children.add(anchor);
-        anchor.click();
-        
-        // Clean up
-        html.document.body?.children.remove(anchor);
-        html.Url.revokeObjectUrl(url);
+        // Use the conditional import function
+        downloadFileWeb(bytes, filename);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

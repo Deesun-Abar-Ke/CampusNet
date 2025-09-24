@@ -58,8 +58,8 @@ class ProfileService {
   }
 
   static Future<Uint8List> generateCV(String token) async {
-    final url = Uri.parse('${Config.baseUrl}/api/profile/cv');
-    final response = await http.get(
+    final url = Uri.parse('${Config.baseUrl}/api/profile/cv/generate');
+    final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
@@ -175,8 +175,9 @@ class ProfileService {
     final request = http.MultipartRequest('POST', url);
     
     request.headers['Authorization'] = 'Bearer $token';
+    // The backend expects the file field to be named 'profile_picture'
     request.files.add(http.MultipartFile.fromBytes(
-      'picture', 
+      'profile_picture',
       imageBytes,
       filename: filename,
     ));

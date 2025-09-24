@@ -1,6 +1,6 @@
 class Config {
   // Base URL for the Flask backend
-  static const String baseUrl = 'http://192.168.0.101:5000';
+  static const String baseUrl = 'http://192.168.0.102:5000';
   
   // API endpoints
   static const String authEndpoint = '/api/auth';

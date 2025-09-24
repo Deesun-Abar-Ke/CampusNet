@@ -413,21 +413,25 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   Widget _buildDashboard() {
-    return Column(
-      children: [
-        // Top greeting & profile
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Welcome!',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+    return RefreshIndicator(
+      onRefresh: _refreshPosts,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+        children: [
+          // Top greeting & profile
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Welcome!',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
                   if (_currentUser != null)
                     Text(
                       _currentUser!['name'] ?? 'User',
@@ -452,7 +456,9 @@ class _LandingPageState extends State<LandingPage> {
                   radius: 24,
                   backgroundColor: Colors.blue[100],
                   backgroundImage: _currentUser?['profile_image'] != null 
-                      ? NetworkImage(_currentUser!['profile_image']) 
+                      ? MemoryImage(
+                          Uri.parse(_currentUser!['profile_image']).data!.contentAsBytes()
+                        )
                       : null,
                   child: _currentUser?['profile_image'] == null
                       ? Icon(
@@ -530,7 +536,7 @@ class _LandingPageState extends State<LandingPage> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         // Tags Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -562,157 +568,125 @@ class _LandingPageState extends State<LandingPage> {
                 ],
               ),
               const SizedBox(height: 12),
-              // Responsive tags with wrap for small screens
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  if (constraints.maxWidth < 600) {
-                    // Mobile view - use Wrap for multiple rows
-                    return Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _tags.map((tag) => _buildTagChip(tag)).toList(),
-                    );
-                  } else {
-                    // Desktop/tablet view - use horizontal scroll
-                    return SizedBox(
-                      height: 40,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _tags.length,
-                        itemBuilder: (context, index) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: _buildTagChip(_tags[index]),
-                        ),
-                      ),
-                    );
-                  }
-                },
+              // Horizontal scrollable tags
+              SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _tags.length,
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _buildTagChip(_tags[index]),
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        // Divider
-        Container(height: 8, color: Colors.grey.shade50),
-        // Blog Posts Section
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-            ),
-            child: Column(
+          const SizedBox(height: 12),
+          // Posts Section Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _selectedTag == null 
-                              ? 'All Posts' 
-                              : 'Posts in $_selectedTag',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F2937),
-                            ),
-                          ),
-                          if (_selectedTag != null)
-                            Text(
-                              'Filtered by tag',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                        ],
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _selectedTag == null 
+                        ? 'All Posts' 
+                        : 'Posts in $_selectedTag',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.add_circle_outline),
-                        onPressed: _showAddPostDialog,
-                        color: Colors.blue.shade700,
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: _isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _refreshPosts,
-                          child: _posts.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        _selectedTag == null 
-                                          ? Icons.post_add_outlined 
-                                          : Icons.filter_list_off,
-                                        size: 64,
-                                        color: Colors.grey.shade400,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        _selectedTag == null 
-                                          ? 'No posts available yet.\nBe the first to share something!' 
-                                          : 'No posts found for "$_selectedTag".\nTry selecting a different tag or create a new post.',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 16,
-                                          height: 1.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      if (_selectedTag != null)
-                                        TextButton(
-                                          onPressed: () => _onTagSelected(null),
-                                          child: const Text(
-                                            'View All Posts',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                )
-                              : ListView.builder(
-                                  itemCount: _posts.length,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  itemBuilder: (context, index) {
-                                    final post = _posts[index];
-                                    return SocialPostCard(
-                                      post: post,
-                                      onLikeChanged: () {
-                                        // Just refresh posts when likes change
-                                        _refreshPosts();
-                                      },
-                                      onCommentAdded: () {
-                                        // Just refresh posts when comments are added  
-                                        _refreshPosts();
-                                      },
-                                    );
-                                  },
-                                ),
+                    ),
+                    if (_selectedTag != null)
+                      Text(
+                        'Filtered by tag',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
                         ),
+                      ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: _showAddPostDialog,
+                  color: Colors.blue.shade700,
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          // Posts Content
+          _isLoading
+              ? const Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : _posts.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          Icon(
+                            _selectedTag == null 
+                              ? Icons.post_add_outlined 
+                              : Icons.filter_list_off,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _selectedTag == null 
+                              ? 'No posts available yet.\nBe the first to share something!' 
+                              : 'No posts found for "$_selectedTag".\nTry selecting a different tag or create a new post.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          if (_selectedTag != null)
+                            TextButton(
+                              onPressed: () => _onTagSelected(null),
+                              child: const Text(
+                                'View All Posts',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      children: _posts.map((post) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          child: SocialPostCard(
+                            post: post,
+                            onLikeChanged: () {
+                              _refreshPosts();
+                            },
+                            onCommentAdded: () {
+                              _refreshPosts();
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+          const SizedBox(height: 20), // Bottom padding
+        ],
         ),
-      ],
+      ),
     );
   }
 

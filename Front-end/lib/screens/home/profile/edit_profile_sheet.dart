@@ -132,8 +132,11 @@ class EditProfileSheetState extends State<EditProfileSheet> {
       profileData.removeWhere((key, value) => 
         value == null || (value is String && value.isEmpty));
 
-      // Update profile
-      final profileSuccess = await ProfileService.updateProfile(token, profileData);
+      // Update profile only if we have fields to update
+      bool profileSuccess = true;
+      if (profileData.isNotEmpty) {
+        profileSuccess = await ProfileService.updateProfile(token, profileData);
+      }
 
       // Upload profile picture if selected
       bool pictureSuccess = true;

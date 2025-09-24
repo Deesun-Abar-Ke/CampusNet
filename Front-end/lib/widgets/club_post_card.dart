@@ -96,12 +96,7 @@ class _ClubPostCardState extends State<ClubPostCard> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(widget.timeAgo),
-              trailing: IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () {
-                  // Show options menu
-                },
-              ),
+              trailing: null,
             ),
 
             // Content
@@ -161,19 +156,6 @@ class _ClubPostCardState extends State<ClubPostCard> {
                     ),
                   ),
                   const SizedBox(width: 24),
-                  // Share Button
-                  GestureDetector(
-                    onTap: () {
-                      // Implement share functionality
-                    },
-                    child: const Row(
-                      children: [
-                        Icon(Icons.share_outlined),
-                        SizedBox(width: 4),
-                        Text('Share'),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
